@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google"; 
 import "./globals.css";
-import LayoutProvider from "@/components/LayoutProvider";
+import LayoutProvider from "@/features/layout/presentation/components/LayoutProvider";
 
 // Configure Poppins font
 const poppins = Poppins({

@@ -1,27 +1,19 @@
-'use client';
+"use client";
 
-import React from 'react';
+import React from "react";
+import DashboardHeader from "@/features/dashboard/presentation/components/DashboardHeader";
+import DashboardStats from "@/features/dashboard/presentation/components/DashboardStats";
+import DashboardCharts from "@/features/dashboard/presentation/components/DashboardCharts";
 
-import Header from '@/components/ui/dashboard/Header';
-import StatsCards from '@/components/ui/dashboard/StatsCards';
-import ChartsSection from '@/components/ui/dashboard/ChartsSection';
-
-export default function DashboardPage () {
+export default function DashboardPage() {
   return (
-    <div className="min-h-screen bg-white p-4 md:p-4 ml-5">
-      <div className="max-w-9xl mx-auto space-y-5">
-        {/* Header */}
-        <Header />
-
-        {/* Stats Cards */}
-        <StatsCards/>
-
-        {/* Charts Section */}
-        <ChartsSection/>
-      </div>
-    </div>      
+    <div className="py-4 pl-8 pr-6 space-y-4">
+      <DashboardHeader />
+      <DashboardStats />
+      <DashboardCharts />
+    </div>
   );
-};
+}
 
 
 

@@ -1,27 +1,38 @@
 "use client";
 
-import EmployeListCard from "@/components/ui/employee/EmployeListCard";
-import Header from "@/components/ui/employee/Header";
-import StatsCards from "@/components/ui/employee/StatsCard";
+import React from "react";
+import EmployeesHeader from "@/features/employees/presentation/components/EmployeesHeader";
+import EmployeesStats from "@/features/employees/presentation/components/EmployeesStats";
+import { EmployeeList } from "@/features/employees/presentation/components/EmployeeList";
+import { useEmployees } from "@/features/employees/presentation/hooks/useEmployees";
 
 export default function EmployeesPage() {
-
-  
+  const {
+    employees,
+    searchTerm,
+    setSearchQuery,
+    statusFilter,
+    setStatusFilter,
+    divisionFilter,
+    setDivisionFilter,
+  } = useEmployees();
 
   return (
-    <div className="min-h-screen bg-white p-4 md:p-4 ml-5">
-      <Header />
+    <div className="py-4 pl-8 pr-6 space-y-4">
+      <EmployeesHeader />
 
-      {/* Main Content */}
-      <div className="py-6">
+      <EmployeesStats />
 
-        {/* Stats Cards */}
-        <StatsCards />
-
-        {/* Employee List Card */}
-        <EmployeListCard/>
-
-        
+      <div className="pb-10">
+        <EmployeeList
+          employees={employees}
+          searchTerm={searchTerm}
+          onSearchChange={setSearchQuery}
+          statusFilter={statusFilter}
+          onStatusChange={setStatusFilter}
+          divisionFilter={divisionFilter}
+          onDivisionChange={setDivisionFilter}
+        />
       </div>
     </div>
   );

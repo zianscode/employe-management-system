@@ -1,40 +1,44 @@
 "use client";
 
-import React, { useState } from "react";
-import Header from "@/components/ui/attendance/Header";
-import StatsCards from "@/components/ui/attendance/StatsCard";
-import Controls from "@/components/ui/attendance/Controls";
-import DataTable from "@/components/ui/attendance/DataTable";
+import React from "react";
+import AttendanceHeader from "@/features/attendance/presentation/components/AttendanceHeader";
+import AttendanceStats from "@/features/attendance/presentation/components/AttendanceStats";
+import AttendanceControls from "../../../features/attendance/presentation/components/AttendanceControls";
+import { AttendanceTable } from "@/features/attendance/presentation/components/AttendanceTable";
+import { useAttendance } from "@/features/attendance/presentation/hooks/use-attendance";
 
 export default function AttendancePage() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedDate, setSelectedDate] = useState("2024-01-15");
-  const [statusFilter, setStatusFilter] = useState("Semua Status");
+  const {
+    data,
+    isLoading,
+    searchQuery,
+    setSearchQuery,
+    selectedDate,
+    setSelectedDate,
+    statusFilter,
+    setStatusFilter,
+  } = useAttendance("2024-01-15");
 
   return (
-    <div className="min-h-screen bg-white p-4 md:p-4 ml-5">
-      {/* Header */}
-      <Header />
+    <div className="py-4 pl-8 pr-6 space-y-4">
+      <AttendanceHeader />
 
-      <div className="py-6">
-        {/* Stats Cards */}
-        <StatsCards />
+      <AttendanceStats />
 
-        {/* Controls */}
-        <Controls
-          searchQuery={searchQuery}
+      <AttendanceControls
+        searchQuery={searchQuery}
+        selectedDate={selectedDate}
+        statusFilter={statusFilter}
+        onSearchChange={setSearchQuery}
+        onDateChange={setSelectedDate}
+        onStatusChange={setStatusFilter}
+      />
+
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
+        <AttendanceTable
+          data={data}
+          isLoading={isLoading}
           selectedDate={selectedDate}
-          statusFilter={statusFilter}
-          onSearchChange={setSearchQuery}
-          onDateChange={setSelectedDate}
-          onStatusChange={setStatusFilter}
-        />
-
-        {/* Data Table */}
-        <DataTable
-          searchQuery={searchQuery}
-          selectedDate={selectedDate}
-          statusFilter={statusFilter}
         />
       </div>
     </div>

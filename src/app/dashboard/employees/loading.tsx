@@ -3,10 +3,8 @@ import React from "react";
 export default function EmployeesLoading() {
   return (
     <div className="py-4 pl-8 pr-6 space-y-6 animate-pulse">
-      {/* Page Header Skeleton */}
       <div className="bg-gray-100 h-24 rounded-2xl w-full"></div>
 
-      {/* Controls Skeleton */}
       <div className="flex justify-between items-center gap-4">
         <div className="h-12 w-64 bg-gray-100 rounded-xl"></div>
         <div className="flex gap-2">
@@ -15,7 +13,6 @@ export default function EmployeesLoading() {
         </div>
       </div>
 
-      {/* Table Skeleton */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="p-4 border-b border-gray-100 h-16 bg-gray-50/50"></div>
         <div className="divide-y divide-gray-100">

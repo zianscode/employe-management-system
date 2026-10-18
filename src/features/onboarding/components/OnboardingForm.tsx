@@ -12,7 +12,6 @@ import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
-// Subcomponents and Constants
 import { STEPS, OnboardingFormData } from "@/features/onboarding/constants";
 import { PersonalInfoStep } from "./steps/PersonalInfoStep";
 import { JobDetailsStep } from "./steps/JobDetailsStep";
@@ -61,7 +60,6 @@ export const OnboardingForm = () => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     
-    // Numeric-only fields
     if (name === "identityNumber" || name === "npwpNumber" || name === "bankAccount" || name === "emergencyPhone") {
       const cleanVal = value.replace(/\D/g, "");
       setFormData(prev => ({ ...prev, [name]: cleanVal }));
@@ -104,9 +102,7 @@ export const OnboardingForm = () => {
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let val = e.target.value;
-    // Keep only digits
     val = val.replace(/\D/g, "");
-    // Strip leading zero(s)
     if (val.startsWith("0")) {
       val = val.replace(/^0+/, "");
     }
@@ -359,7 +355,6 @@ export const OnboardingForm = () => {
 
   return (
     <div className="w-full max-w-4xl mx-auto space-y-10">
-      {/* Sleek Step Progress - Balanced Light Mode */}
       <div className="relative px-2">
         <div className="absolute top-[20px] left-8 right-8 h-[1px] bg-slate-200 overflow-hidden rounded-full">
             <div 
@@ -402,14 +397,11 @@ export const OnboardingForm = () => {
         </div>
       </div>
 
-      {/* Main Form Container - Modern Balanced Light Mode */}
       <form 
         onSubmit={handleSubmit} 
         className="relative bg-white/80 backdrop-blur-xl border border-white p-8 sm:p-12 rounded-[32px] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.05)] animate-in fade-in zoom-in-95 duration-700"
       >
-        {/* Step Content Wrapper */}
         <div className="relative z-10">
-          {/* Step Header */}
           <div className="mb-10 text-center sm:text-left">
             <h3 className="text-xl font-black text-slate-900 tracking-tight mb-1">
               {STEPS.find(s => s.id === currentStep)?.title}
@@ -419,10 +411,8 @@ export const OnboardingForm = () => {
             </p>
           </div>
 
-          {/* Render Step Content */}
           {renderStepContent()}
 
-          {/* Balanced Form Actions */}
           <div className="flex flex-col sm:flex-row items-center justify-between mt-12 pt-8 border-t border-slate-100 gap-4">
             <button
               type="button"

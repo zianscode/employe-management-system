@@ -20,7 +20,7 @@ import LeaveHeader from "./LeaveHeader";
 import LeaveStats, { LeaveStatData } from "./LeaveStats";
 import LeaveControls from "./LeaveControls";
 
-export const LEAVE_TYPE_LABELS: Record<string, string> = {
+const LEAVE_TYPE_LABELS: Record<string, string> = {
   ANNUAL: "Cuti Tahunan",
   SICK: "Sakit",
   EMERGENCY: "Izin Penting",
@@ -41,7 +41,6 @@ export function LeaveClient({ stats, balance }: LeaveClientProps) {
 
   const { data, searchQuery, setSearchQuery, statusFilter, setStatusFilter, typeFilter, setTypeFilter, refresh } = useLeave();
 
-  /** Muat ulang tabel (client) & statistik/saldo (server) */
   const reloadAll = async () => {
     await refresh();
     router.refresh();

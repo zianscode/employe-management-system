@@ -40,7 +40,6 @@ export async function getMyLeaveBalanceAction() {
   }
 }
 
-/** Daftar karyawan aktif untuk HR/Admin yang mengajukan cuti atas nama karyawan */
 export async function getEmployeesForLeaveAction() {
   try {
     await requireRole(ADMIN_ROLES);

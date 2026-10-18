@@ -21,7 +21,6 @@ export interface SystemUser {
   lastLogin: string;
 }
 
-/** Pengaturan perusahaan (tabel CompanySetting) */
 export interface CompanySetting {
   id: string;
   companyName: string;

@@ -26,15 +26,7 @@ function formatWorkHours(hours: number) {
   return m ? `${h} jam ${m} mnt` : `${h} jam`;
 }
 
-/**
- * Aturan absensi:
- * - Check-in sekali per hari. Terlambat jika melewati jam masuk + toleransi (CompanySetting).
- * - Check-out menghitung jam kerja; lewat jam pulang = lembur, sebelum jam pulang = pulang cepat.
- * - Karyawan tanpa catatan absensi pada hari kerja ditampilkan sebagai:
- *     cuti disetujui -> PERMISSION / SICK, hari sudah lewat -> ABSENT, hari ini -> NOT_YET.
- */
-export class AttendanceService {
-  /** Karyawan yang boleh dilihat user */
+class AttendanceService {
   private employeeScope(user: CurrentUser): Prisma.EmployeeWhereInput {
     if (isAdminRole(user.role)) return {};
     if (!user.employeeId) return { id: "__none__" };
@@ -139,7 +131,6 @@ export class AttendanceService {
     });
   }
 
-  /** Rekap absensi pada satu tanggal ("YYYY-MM-DD") untuk karyawan yang boleh dilihat user */
   async getDaily(user: CurrentUser, dateKey: string): Promise<Attendance[]> {
     const date = dateKeyToDate(dateKey);
     if (isNaN(date.getTime())) throw new Error("Tanggal tidak valid");
@@ -148,7 +139,6 @@ export class AttendanceService {
       where: {
         AND: [
           this.employeeScope(user),
-          // karyawan aktif, atau karyawan nonaktif yang punya catatan absensi di tanggal itu
           { OR: [{ status: { in: ACTIVE_STATUSES } }, { attendances: { some: { date } } }] },
         ],
       },
@@ -188,7 +178,6 @@ export class AttendanceService {
         continue;
       }
 
-      // Tanpa catatan absensi: lewati akhir pekan & tanggal sebelum karyawan bergabung
       if (isWeekend(date)) continue;
       if (emp.joinDate && toDateKey(emp.joinDate) > dateKey) continue;
 

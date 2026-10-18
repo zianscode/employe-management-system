@@ -39,7 +39,6 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen w-full relative overflow-hidden bg-white selection:bg-[#E02F75]/10">
-      {/* Precision Wave Background */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         <div className="absolute inset-0 bg-white"></div>
         <svg
@@ -72,7 +71,6 @@ export default function RegisterPage() {
       </div>
 
       <div className="relative z-20 flex flex-col lg:flex-row min-h-screen w-full max-w-[1900px] mx-auto">
-        {/* Left Side: Branding Content */}
         <div className="hidden lg:flex lg:w-[60%] flex-col justify-between p-24 xl:p-32">
           <div className="flex items-center gap-3">
             <span className="text-xl font-black text-white tracking-tighter uppercase italic">
@@ -98,7 +96,6 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        {/* Right Side: Register Panel */}
         <div className="w-full lg:w-[40%] flex flex-col items-center justify-center p-10 sm:p-16 lg:p-24 relative">
           <div className="lg:hidden flex items-center gap-2 mb-10">
             <span className="text-xl font-black text-gray-900 tracking-tighter uppercase italic">

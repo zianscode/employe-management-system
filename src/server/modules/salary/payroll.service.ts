@@ -11,14 +11,7 @@ function assertPeriod(month: number, year: number) {
   if (!Number.isInteger(year) || year < 2000 || year > 2100) throw new Error("Tahun tidak valid");
 }
 
-/**
- * Perhitungan gaji bulanan:
- *   gross = gaji pokok + tunjangan + (jam lembur x tarif lembur)
- *   net   = gross - potongan - (gaji pokok / hari kerja per bulan x hari cuti diluar tanggungan)
- * Tarif & hari kerja diambil dari CompanySetting. Slip yang sudah dibayar tidak dihitung ulang.
- */
-export class PayrollService {
-  /** Slip gaji yang boleh dilihat user: HR/Admin semua, selain itu milik sendiri */
+class PayrollService {
   private scopeFor(user: CurrentUser): Prisma.SalaryWhereInput {
     if (isAdminRole(user.role)) return {};
     return { employeeId: user.employeeId ?? "__none__" };
@@ -57,7 +50,6 @@ export class PayrollService {
     });
     const overtimePay = Math.round((overtime._sum.overtimeHours || 0) * setting.overtimeRatePerHour);
 
-    // Cuti diluar tanggungan yang beririsan dengan bulan ini (hanya hari kerja di dalam bulan)
     const unpaidLeaves = await prisma.leaveRequest.findMany({
       where: {
         employeeId,
@@ -77,7 +69,6 @@ export class PayrollService {
     return { overtimePay, unpaidLeaveCut };
   }
 
-  /** Hitung / perbarui slip gaji semua karyawan aktif untuk satu periode */
   async generateMonthly(month: number, year: number) {
     assertPeriod(month, year);
     const employees = await prisma.employee.findMany({

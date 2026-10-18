@@ -17,7 +17,6 @@ export function EmployeesClient({ initialEmployees }: EmployeesClientProps) {
   const [statusFilter, setStatusFilter] = useState("all");
   const [divisionFilter, setDivisionFilter] = useState("all");
   
-  // State Modal
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);

@@ -14,19 +14,15 @@ export default function LayoutProvider({
   const router = useRouter();
   const { data: session, status } = useSession();
   
-  // Client-side protection for onboarding and DB Reset
   React.useEffect(() => {
-    // 1. Handle DB Reset (Unauthenticated on protected routes)
     if (status === "unauthenticated") {
       const isProtectedRoute = pathname.startsWith("/dashboard") || pathname === "/onboarding";
       if (isProtectedRoute) {
-        // Force clean logout to clear any ghost cookies
         signOut({ callbackUrl: "/login", redirect: true });
         return;
       }
     }
 
-    // 2. Handle Incomplete Profile
     if (status === "authenticated" && session?.user) {
       const isProfileComplete = session.user.isProfileComplete;
       const isOnDashboard = pathname.startsWith("/dashboard");

@@ -3,7 +3,6 @@ import { ProfileClient } from "@/features/profile/components/ProfileClient";
 import { getProfileAction } from "@/server/modules/profile/profile.actions";
 
 export default async function ProfilePage() {
-  // Panggil action untuk memicu Server-Side Loading (dan memicu Skeleton)
   await getProfileAction();
 
   return (

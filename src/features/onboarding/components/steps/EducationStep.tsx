@@ -27,7 +27,6 @@ export const EducationStep = ({
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-right-4 duration-500">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Petunjuk Pengisian Pendidikan Terakhir / Saat Ini */}
         <div className="p-5 bg-pink-50/60 border border-pink-100/50 rounded-2xl text-slate-700 text-[11px] font-medium leading-relaxed md:col-span-2">
           <div className="flex gap-3">
             <Award size={16} className="text-[#E02F75] shrink-0 animate-pulse" />
@@ -144,7 +143,6 @@ export const EducationStep = ({
         </div>
       </div>
 
-      {/* Balanced Skills Selector */}
       <div className="space-y-4">
         <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Professional Skills</label>
         <div className="flex flex-wrap gap-2.5">

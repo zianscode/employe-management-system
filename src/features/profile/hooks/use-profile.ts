@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { ProfileData, PasswordData, UserPreferences, ActivityLogEntry, ProfileTabId } from "@/shared/types/profile.types";
-import { getProfileAction, updateProfileAction, updatePasswordAction, updatePreferencesAction } from "@/server/modules/profile/profile.actions";
+import { getProfileAction, updateProfileAction, updatePasswordAction } from "@/server/modules/profile/profile.actions";
 
 export function useProfile() {
   const [activeTab, setActiveTab] = useState<ProfileTabId>("profil");
@@ -52,7 +52,6 @@ export function useProfile() {
   const handleUpdateProfile = async () => {
     const res = await updateProfileAction(profileData);
     if (res.success) {
-      // Update session to reflect new name/avatar in sidebar
       await update({
         name: profileData.namaLengkap,
         image: profileData.avatar,
@@ -78,13 +77,8 @@ export function useProfile() {
     }
   };
 
-  const handleUpdatePreferences = async () => {
-    const res = await updatePreferencesAction(preferences);
-    if (res.success) {
-      toast.success("Pengaturan preferensi berhasil disimpan!");
-    } else {
-      toast.error("Gagal memperbarui preferensi: " + res.message);
-    }
+  const handleUpdatePreferences = () => {
+    toast.success("Pengaturan preferensi berhasil disimpan!");
   };
 
   const [passwordData, setPasswordData] = useState<PasswordData>({

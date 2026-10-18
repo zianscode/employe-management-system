@@ -8,6 +8,8 @@ import {
 } from "lucide-react";
 import { getEmployeeByIdAction } from "@/server/modules/employees/employee.actions";
 import { StatusBadge } from "@/shared/components/StatusBadge";
+import { formatCurrency } from "@/shared/utils/format";
+import { getProbationDaysLeft } from "@/shared/utils/employee";
 
 interface FullEmployeeDetails {
   id: string;
@@ -52,14 +54,6 @@ const getAvatarGradient = (name: string) => {
   return gradients[charCodeSum % gradients.length];
 };
 
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    minimumFractionDigits: 0,
-  }).format(amount);
-};
-
 interface PageProps {
   params: Promise<{ id: string }>;
 }
@@ -74,39 +68,26 @@ export default async function EmployeeDetailPage({ params }: PageProps) {
 
   const employee = res.data as unknown as FullEmployeeDetails;
 
-  // Calculate probation remaining if probation status
   let probationText = null;
   if (employee.status === "PROBATION" && employee.joinDate) {
-    const join = new Date(employee.joinDate);
-    const probationEnd = new Date(join);
-    probationEnd.setMonth(probationEnd.getMonth() + 3);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    probationEnd.setHours(0, 0, 0, 0);
-    const diffTime = probationEnd.getTime() - today.getTime();
-    const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+    const daysLeft = getProbationDaysLeft(employee.joinDate);
     probationText = daysLeft <= 0 ? "Selesai Masa Percobaan" : `Masa Percobaan (${daysLeft} hari lagi)`;
   }
 
-  // Format birthDate
   const formattedBirthDate = employee.birthDate 
     ? new Date(employee.birthDate).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })
     : "-";
 
-  // Format joinDate
   const formattedJoinDate = employee.joinDate
     ? new Date(employee.joinDate).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })
     : "-";
 
   const genderText = employee.gender === "MALE" ? "Laki-laki" : employee.gender === "FEMALE" ? "Perempuan" : "-";
 
-  // Split skills string
   const skillsArray = employee.skills ? employee.skills.split(",").map(s => s.trim()).filter(Boolean) : [];
 
   return (
     <div className="py-6 pl-8 pr-6 space-y-6">
-      {/* Back navigation */}
       <div>
         <Link 
           href="/dashboard/employees"
@@ -119,11 +100,9 @@ export default async function EmployeeDetailPage({ params }: PageProps) {
         </Link>
       </div>
 
-      {/* Main Profile Header Card */}
       <div className="bg-white rounded-[32px] shadow-xl border border-gray-100 overflow-hidden relative">
         <div className="absolute inset-0 bg-gradient-to-r from-[#FF5A57]/5 via-[#E02F75]/5 to-[#6700A3]/5 pointer-events-none"></div>
         <div className="px-8 py-10 sm:px-10 flex flex-col md:flex-row items-center md:items-start gap-8 relative z-10">
-          {/* Avatar Container */}
           <div className={`w-32 h-32 rounded-[32px] bg-gradient-to-br ${getAvatarGradient(employee.name)} flex items-center justify-center text-white text-4xl font-black shadow-lg border-4 border-white relative overflow-hidden flex-shrink-0`}>
             {employee.avatar ? (
               <Image 
@@ -141,7 +120,6 @@ export default async function EmployeeDetailPage({ params }: PageProps) {
             )}
           </div>
 
-          {/* Info Header */}
           <div className="flex-1 text-center md:text-left space-y-4">
             <div className="space-y-1.5">
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
@@ -178,12 +156,9 @@ export default async function EmployeeDetailPage({ params }: PageProps) {
         </div>
       </div>
 
-      {/* Grid Layout Cards */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* Left Side Column: 2 Cards (Job details & Emergency Contact) */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Card 1: Job Details */}
           <div className="bg-white p-8 rounded-[32px] shadow-lg border border-gray-100 space-y-6">
             <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
               <div className="p-2 bg-pink-50 text-[#E02F75] rounded-xl">
@@ -214,7 +189,6 @@ export default async function EmployeeDetailPage({ params }: PageProps) {
             </div>
           </div>
 
-          {/* Card 2: Personal Details */}
           <div className="bg-white p-8 rounded-[32px] shadow-lg border border-gray-100 space-y-6">
             <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
               <div className="p-2 bg-blue-50 text-blue-600 rounded-xl">
@@ -243,9 +217,7 @@ export default async function EmployeeDetailPage({ params }: PageProps) {
           </div>
         </div>
 
-        {/* Right Side Column: 2 Cards (Skills/Education & Financial/Emergency) */}
         <div className="space-y-6">
-          {/* Card 3: Education & Bio */}
           <div className="bg-white p-8 rounded-[32px] shadow-lg border border-gray-100 space-y-6">
             <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
               <div className="p-2 bg-purple-50 text-purple-600 rounded-xl">
@@ -282,7 +254,6 @@ export default async function EmployeeDetailPage({ params }: PageProps) {
             </div>
           </div>
 
-          {/* Card 4: Financial & Emergency Contact */}
           <div className="bg-white p-8 rounded-[32px] shadow-lg border border-gray-100 space-y-6">
             <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
               <div className="p-2 bg-amber-50 text-amber-600 rounded-xl">
@@ -340,7 +311,6 @@ export default async function EmployeeDetailPage({ params }: PageProps) {
   );
 }
 
-// Reusable Detail Field Component
 interface DetailItemProps {
   label: string;
   icon: React.ElementType;

@@ -5,7 +5,6 @@ import { requireRole } from "@/server/auth/guard";
 import { ApiResponse } from "@/server/utils/api-response";
 import { ADMIN_ROLES } from "@/shared/constants/roles";
 import { SystemUser } from "@/shared/types/settings.types";
-import bcrypt from "bcryptjs";
 
 const INACTIVE = ["RESIGNED", "TERMINATED"];
 
@@ -32,25 +31,6 @@ export async function getUsersAction() {
   }
 }
 
-export async function resetUserPasswordAction(userId: string, newPassword: string) {
-  try {
-    await requireRole(ADMIN_ROLES);
-    if (newPassword.length < 6) return ApiResponse.error("Password minimal 6 karakter");
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await prisma.user.update({
-      where: { id: userId },
-      data: { password: hashedPassword },
-    });
-    return ApiResponse.success("Password user berhasil direset");
-  } catch (error) {
-    return ApiResponse.fromError(error, "Gagal mereset password user");
-  }
-}
-
-/**
- * Menghapus akun login saja. Data karyawan (dan riwayatnya) tetap tersimpan,
- * hanya tidak lagi memiliki akun.
- */
 export async function deleteUserAction(userId: string) {
   try {
     const current = await requireRole(ADMIN_ROLES);

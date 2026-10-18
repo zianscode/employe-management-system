@@ -5,7 +5,6 @@ import { AttendanceClient } from "@/features/attendance/components/AttendanceCli
 import { getAttendanceStatsAction } from "@/server/modules/attendance/attendance.actions";
 
 export default async function AttendancePage() {
-  // Panggil action untuk memicu Server-Side Loading (dan memicu Skeleton)
   const statsRes = await getAttendanceStatsAction();
   const stats = (statsRes.success ? statsRes.data : []) as StatData[];
 

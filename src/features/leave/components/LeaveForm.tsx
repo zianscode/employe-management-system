@@ -31,7 +31,6 @@ export const LeaveForm: React.FC<LeaveFormProps> = ({ onSubmit, onCancel, isSubm
 
   useEffect(() => {
     async function fetchEmployees() {
-      // If not Admin/HR, we don't need to fetch all employees
       if (!isAdminOrHR && currentUserEmployeeId) {
         setFormData(prev => ({ ...prev, employeeId: currentUserEmployeeId }));
         return;
@@ -61,7 +60,6 @@ export const LeaveForm: React.FC<LeaveFormProps> = ({ onSubmit, onCancel, isSubm
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Employee Selector - Only for Admin/HR */}
       {isAdminOrHR ? (
         <div className="space-y-2">
           <label className="text-sm font-bold text-gray-700 ml-1">Karyawan</label>
@@ -82,7 +80,6 @@ export const LeaveForm: React.FC<LeaveFormProps> = ({ onSubmit, onCancel, isSubm
           </div>
         </div>
       ) : (
-        // For regular employees, we just store the ID hidden or don't show the field at all
         <div className="p-4 bg-[#E02F75]/5 border border-[#E02F75]/10 rounded-2xl">
            <div className="flex items-center gap-3">
               <div className="p-2 bg-white rounded-xl shadow-sm">

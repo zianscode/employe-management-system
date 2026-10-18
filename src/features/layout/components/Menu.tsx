@@ -10,7 +10,7 @@ import {
   RxGear,
 } from "react-icons/rx";
 import { MenuItem } from "./MenuItem";
-import { canAccessRoute } from "@/shared/constants/roles";
+import { canAccessRoute, isAdminRole, ROLES } from "@/shared/constants/roles";
 
 interface MenuProps {
   currentPath: string;
@@ -18,8 +18,8 @@ interface MenuProps {
   role?: string;
 }
 
-export default function Menu({ currentPath, isCollapsed, role = "EMPLOYEE" }: MenuProps) {
-  const isAdmin = role === "SUPER_ADMIN" || role === "HR";
+export default function Menu({ currentPath, isCollapsed, role = ROLES.EMPLOYEE }: MenuProps) {
+  const isAdmin = isAdminRole(role);
 
   const allItems = [
     {

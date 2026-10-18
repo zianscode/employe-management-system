@@ -33,7 +33,6 @@ export const PersonalInfoStep = ({
 }: PersonalInfoStepProps) => {
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      {/* Interactive Avatar Button Section */}
       <div className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-slate-50/50 rounded-2xl border border-slate-100">
         <div className="relative group">
           <label 
@@ -56,7 +55,6 @@ export const PersonalInfoStep = ({
               </div>
             )}
             
-            {/* Hover Overlay */}
             <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                <span className="text-white text-[9px] font-black uppercase tracking-wider">Ganti</span>
             </div>
@@ -82,7 +80,6 @@ export const PersonalInfoStep = ({
             Nomor HP / WhatsApp
           </label>
           <div className="flex gap-2">
-            {/* Country Code Dropdown */}
             <div className="relative shrink-0 w-28">
               <select
                 value={countryCode}
@@ -100,7 +97,6 @@ export const PersonalInfoStep = ({
               <ArrowRight className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none rotate-90" size={12} />
             </div>
 
-            {/* Number Input */}
             <div className="relative flex-1 group">
               <Phone 
                 className={`absolute left-5 top-1/2 -translate-y-1/2 transition-colors duration-300 ${errors.phone ? "text-[#E02F75]" : focusedField === "phone" ? "text-[#E02F75]" : "text-slate-300"}`} 

@@ -17,12 +17,9 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen w-full relative overflow-hidden bg-white selection:bg-[#E02F75]/10">
-      {/* Precision Wave Background */}
       <div className="absolute inset-0 z-0 pointer-events-none">
-        {/* White Base */}
         <div className="absolute inset-0 bg-white"></div>
 
-        {/* Vibrant SVG Wave (Left Side) */}
         <svg
           className="absolute inset-y-0 left-[-5%] h-full w-[75%] lg:w-[80%] z-10"
           preserveAspectRatio="none"
@@ -44,7 +41,6 @@ export default function LoginPage() {
               <feGaussianBlur in="SourceGraphic" stdDeviation="2" />
             </filter>
           </defs>
-          {/* Extended Path to prevent edge blur bleed */}
           <path 
             d="M-10 -10 L 75 -10 C 90 35, 60 65, 75 110 L -10 110 Z" 
             fill="url(#vibrant-grad)"
@@ -52,12 +48,10 @@ export default function LoginPage() {
           />
         </svg>
 
-        {/* Subtle Floating Glows */}
         <div className="absolute top-[15%] left-[10%] w-[40%] h-[40%] bg-white/10 rounded-full blur-[100px] animate-pulse"></div>
       </div>
 
       <div className="relative z-20 flex flex-col lg:flex-row min-h-screen w-full max-w-[1900px] mx-auto">
-        {/* Left Side: Branding Content (Hidden on Mobile) */}
         <div className="hidden lg:flex lg:w-[60%] flex-col justify-between p-24 xl:p-32">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center shadow-xl border border-white/30">
@@ -131,9 +125,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Right Side: Login Panel */}
         <div className="w-full lg:w-[40%] flex flex-col items-center justify-center p-10 sm:p-16 lg:p-24 relative">
-          {/* Mobile Header Logo (Visible only on mobile) */}
           <div className="lg:hidden flex items-center gap-2 mb-10">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF5A57] to-[#E02F75] flex items-center justify-center shadow-lg">
               <svg
@@ -184,7 +176,6 @@ export default function LoginPage() {
                 <div className="flex-grow border-t border-gray-100"></div>
               </div>
 
-              {/* Google Login */}
               <button className="w-full h-12 rounded-2xl bg-white border border-gray-100 hover:bg-gray-50 hover:border-gray-200 shadow-sm transition-all duration-300 flex items-center justify-center gap-3 group active:scale-[0.98]">
                 <svg viewBox="0 0 24 24" className="w-5 h-5">
                   <path

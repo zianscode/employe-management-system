@@ -23,7 +23,6 @@ export const ProfileInfo: React.FC<ProfileInfoProps> = ({ data, setData, onSave 
 
   return (
     <div className="space-y-6">
-      {/* Profile Header Card */}
       <div className="bg-gradient-to-r from-[#FF5A57] via-[#E02F75] to-[#6700A3] px-8 py-8 rounded-[32px] text-white shadow-xl shadow-[#E02F75]/20">
         <div className="flex flex-col md:flex-row items-center gap-8">
           <div className="relative group">
@@ -54,9 +53,7 @@ export const ProfileInfo: React.FC<ProfileInfoProps> = ({ data, setData, onSave 
         </div>
       </div>
 
-      {/* Section 0: Employment Data (Read Only) */}
       <div className="bg-white rounded-[32px] shadow-lg shadow-gray-200/50 border border-gray-100 p-8 space-y-6 relative overflow-hidden">
-        {/* Subtle Accent Line */}
         <div className="absolute top-0 left-0 w-1 bg-gray-300 h-full"></div>
         
         <h3 className="text-lg font-black text-gray-400 flex items-center gap-3 uppercase tracking-widest">
@@ -83,7 +80,6 @@ export const ProfileInfo: React.FC<ProfileInfoProps> = ({ data, setData, onSave 
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        {/* Section 1: Personal Information */}
         <div className="bg-white rounded-[32px] shadow-sm border border-gray-100 p-8 space-y-6">
           <h3 className="text-lg font-black text-gray-900 flex items-center gap-3 uppercase tracking-widest">
             <div className="p-2 bg-[#E02F75]/10 rounded-xl">
@@ -133,7 +129,6 @@ export const ProfileInfo: React.FC<ProfileInfoProps> = ({ data, setData, onSave 
           </div>
         </div>
 
-        {/* Section 2: Financial & Identity */}
         <div className="bg-white rounded-[32px] shadow-sm border border-gray-100 p-8 space-y-6">
           <h3 className="text-lg font-black text-gray-900 flex items-center gap-3 uppercase tracking-widest">
             <div className="p-2 bg-blue-500/10 rounded-xl">
@@ -170,7 +165,6 @@ export const ProfileInfo: React.FC<ProfileInfoProps> = ({ data, setData, onSave 
           </div>
         </div>
 
-        {/* Section 3: Emergency Contact */}
         <div className="bg-white rounded-[32px] shadow-sm border border-gray-100 p-8 space-y-6">
           <h3 className="text-lg font-black text-gray-900 flex items-center gap-3 uppercase tracking-widest">
             <div className="p-2 bg-orange-500/10 rounded-xl">
@@ -197,7 +191,6 @@ export const ProfileInfo: React.FC<ProfileInfoProps> = ({ data, setData, onSave 
           </div>
         </div>
 
-        {/* Section 4: Professional & Education */}
         <div className="bg-white rounded-[32px] shadow-sm border border-gray-100 p-8 space-y-6">
           <h3 className="text-lg font-black text-gray-900 flex items-center gap-3 uppercase tracking-widest">
             <div className="p-2 bg-purple-500/10 rounded-xl">
@@ -227,7 +220,6 @@ export const ProfileInfo: React.FC<ProfileInfoProps> = ({ data, setData, onSave 
           </div>
         </div>
 
-        {/* Section 5: Bio */}
         <div className="bg-white rounded-[32px] shadow-sm border border-gray-100 p-8 space-y-6 md:col-span-1 xl:col-span-2">
           <h3 className="text-lg font-black text-gray-900 flex items-center gap-3 uppercase tracking-widest">
             <div className="p-2 bg-green-500/10 rounded-xl">
@@ -244,7 +236,6 @@ export const ProfileInfo: React.FC<ProfileInfoProps> = ({ data, setData, onSave 
         </div>
       </div>
 
-      {/* Floating Save Button */}
       <div className="flex justify-end pt-4">
         <button
           onClick={onSave}

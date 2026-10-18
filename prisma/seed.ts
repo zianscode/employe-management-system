@@ -16,22 +16,18 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-
-  // 1. Roles (hak akses diatur di src/shared/constants/roles.ts)
   const [superAdminRole] = await Promise.all(
     ["SUPER_ADMIN", "HR", "MANAGER", "EMPLOYEE"].map((name) =>
       prisma.role.upsert({ where: { name }, update: {}, create: { name } })
     )
   );
 
-  // 2. Pengaturan perusahaan default
   await prisma.companySetting.upsert({
     where: { id: "default" },
     update: {},
     create: { id: "default", companyName: "PT. Teknologi Maju Bersama", companyCode: "TMB" },
   });
 
-  // 3. Default Dept & Pos for Admin
   const adminDept = await prisma.department.upsert({
     where: { name: "Direksi" },
     update: {},
@@ -44,7 +40,6 @@ async function main() {
     create: { name: "Chief Executive Officer", salaryBase: 25000000 },
   });
 
-  // Tambahan Departemen
   await prisma.department.upsert({
     where: { name: "Teknologi Informasi" },
     update: {},
@@ -57,7 +52,6 @@ async function main() {
     create: { name: "Sumber Daya Manusia", description: "People Operations and Recruitment" },
   });
 
-  // Tambahan Posisi
   await prisma.position.upsert({
     where: { name: "Lead Developer" },
     update: {},
@@ -70,7 +64,6 @@ async function main() {
     create: { name: "HR Manager", salaryBase: 15000000 },
   });
 
-  // 4. Akun default Super Admin (aman dijalankan berulang: data & riwayat tidak dihapus)
   const hashedPassword = await bcrypt.hash("admin123", 10);
   const adminEmail = "budisantoso@gmail.com";
 

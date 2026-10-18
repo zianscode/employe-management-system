@@ -7,7 +7,6 @@ import { ADMIN_ROLES } from "@/shared/constants/roles";
 import { SalaryRecord } from "@/shared/types/salary.types";
 import { payrollService } from "./payroll.service";
 
-/** Slip gaji pada periode tertentu (HR/Admin: semua, lainnya: milik sendiri) */
 export async function getSalariesAction(month: number, year: number) {
   try {
     const user = await requireUser();

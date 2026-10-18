@@ -7,7 +7,6 @@ import { getDashboardStatsAction } from "@/server/modules/dashboard/dashboard.ac
 import { getSalaryTrendAction, getDeptDistributionAction } from "@/server/modules/reports/report.actions";
 
 export default async function DashboardPage() {
-  // Menarik data di sisi server
   const [statsRes, salaryRes, deptRes] = await Promise.all([
     getDashboardStatsAction(),
     getSalaryTrendAction(),

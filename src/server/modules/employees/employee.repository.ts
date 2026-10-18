@@ -2,11 +2,12 @@ import { prisma } from "@/server/db/prisma";
 import { EmployeeStatus, EmploymentType, Prisma } from "@prisma/client";
 import { EmployeeFormData } from "@/shared/types/employee.types";
 import { companySettingService } from "@/server/modules/settings/company-setting.service";
-import bcrypt from "bcryptjs";
+import { hashPassword } from "@/server/utils/password";
+import { normalizeEmail } from "@/shared/utils/format";
 
 type Tx = Prisma.TransactionClient;
 
-export class EmployeeRepository {
+class EmployeeRepository {
   async findAll(filters?: { status?: EmployeeStatus; departmentId?: string }) {
     return prisma.employee.findMany({
       where: filters,
@@ -34,10 +35,6 @@ export class EmployeeRepository {
     return !!employee || !!user;
   }
 
-  /**
-   * NIP dari form berbentuk <prefix><urutan 3 digit>. Jika sudah dipakai,
-   * cari nomor urut berikutnya yang masih kosong untuk prefix yang sama.
-   */
   async resolveUniqueNip(nip: string, excludeEmployeeId?: string) {
     const taken = async (value: string) =>
       !!(await prisma.employee.findFirst({
@@ -57,7 +54,6 @@ export class EmployeeRepository {
     throw new Error(`Nomor urut NIP untuk ${prefix} sudah habis`);
   }
 
-  /** "OTHER" + customPosition -> buat jabatan baru bila belum ada */
   private async resolvePositionId(tx: Tx, positionId?: string, customPosition?: string) {
     if (positionId === "OTHER") {
       if (!customPosition?.trim()) return undefined;
@@ -72,13 +68,13 @@ export class EmployeeRepository {
   }
 
   async create(data: EmployeeFormData) {
-    const normalizedEmail = data.email.toLowerCase().trim();
+    const normalizedEmail = normalizeEmail(data.email);
     const setting = await companySettingService.get();
 
     const role = await prisma.role.findUnique({ where: { id: data.roleId } });
     if (!role) throw new Error("Role tidak ditemukan");
     const defaultPassword = `${role.name.toLowerCase().replace(/_/g, "")}123`;
-    const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+    const hashedPassword = await hashPassword(defaultPassword);
 
     const employee = await prisma.$transaction(async (tx) => {
       const positionId = await this.resolvePositionId(tx, data.positionId, data.customPosition);
@@ -113,7 +109,7 @@ export class EmployeeRepository {
   }
 
   async update(id: string, data: Partial<EmployeeFormData>) {
-    const normalizedEmail = data.email?.toLowerCase().trim();
+    const normalizedEmail = data.email ? normalizeEmail(data.email) : undefined;
 
     return prisma.$transaction(async (tx) => {
       const positionId = await this.resolvePositionId(tx, data.positionId, data.customPosition);
@@ -139,7 +135,6 @@ export class EmployeeRepository {
         },
       });
 
-      // Akun login ikut diperbarui agar email & role tetap sinkron
       if (employee.userId && (normalizedEmail || data.roleId)) {
         await tx.user.update({
           where: { id: employee.userId },
@@ -160,7 +155,6 @@ export class EmployeeRepository {
     return attendances + leaveRequests + salaries;
   }
 
-  /** Hapus permanen karyawan + akun loginnya. Hanya untuk karyawan tanpa riwayat. */
   async delete(id: string) {
     const employee = await prisma.employee.findUnique({ where: { id }, select: { userId: true } });
 
@@ -173,3 +167,5 @@ export class EmployeeRepository {
     });
   }
 }
+
+export const employeeRepository = new EmployeeRepository();

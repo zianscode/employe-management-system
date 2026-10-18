@@ -8,7 +8,6 @@ export interface ProfileData {
   departemen: string;
   jabatan: string;
   tanggalBergabung: string;
-  // New Onboarding Fields
   tempatLahir?: string;
   jenisKelamin?: string;
   nik?: string;

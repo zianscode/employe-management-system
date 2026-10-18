@@ -1,5 +1,4 @@
 export const POSITION_DEPARTMENT_MAPPING: Record<string, string> = {
-  // Teknologi Informasi
   "Software Engineer": "Teknologi Informasi",
   "Frontend Developer": "Teknologi Informasi",
   "Backend Developer": "Teknologi Informasi",
@@ -14,33 +13,28 @@ export const POSITION_DEPARTMENT_MAPPING: Record<string, string> = {
   "Product Manager": "Teknologi Informasi",
   "Lead Developer": "Teknologi Informasi",
 
-  // Sumber Daya Manusia
   "HR Recruiter": "Sumber Daya Manusia",
   "HR Staff": "Sumber Daya Manusia",
   "HR Generalist": "Sumber Daya Manusia",
   "HR Manager": "Sumber Daya Manusia",
   "Training Specialist": "Sumber Daya Manusia",
 
-  // Keuangan & Akuntansi
   "Accountant": "Keuangan & Akuntansi",
   "Finance Staff": "Keuangan & Akuntansi",
   "Tax Officer": "Keuangan & Akuntansi",
   "Auditor": "Keuangan & Akuntansi",
 
-  // Pemasaran & Penjualan
   "Digital Marketer": "Pemasaran & Penjualan",
   "Sales Executive": "Pemasaran & Penjualan",
   "Content Creator": "Pemasaran & Penjualan",
   "Social Media Specialist": "Pemasaran & Penjualan",
   "SEO Specialist": "Pemasaran & Penjualan",
 
-  // Operasional & Layanan
   "Customer Service": "Operasional & Layanan",
   "Office Administrator": "Operasional & Layanan",
   "Purchasing Staff": "Operasional & Layanan",
   "Operational Supervisor": "Operasional & Layanan",
 
-  // Direksi
   "Chief Executive Officer": "Direksi",
   "Chief Technology Officer": "Direksi",
   "Chief Financial Officer": "Direksi",
@@ -49,11 +43,9 @@ export const POSITION_DEPARTMENT_MAPPING: Record<string, string> = {
 export function getDepartmentForPosition(posName: string): string {
   const normalized = posName.toLowerCase();
   
-  // Exact mapping if standard
   const standardDept = POSITION_DEPARTMENT_MAPPING[posName];
   if (standardDept) return standardDept;
   
-  // Dynamic keyword matching
   if (/developer|engineer|designer|coder|programmer|tech|it|sys|admin|data|qa|test/i.test(normalized)) {
     return "Teknologi Informasi";
   }

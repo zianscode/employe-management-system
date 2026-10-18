@@ -7,10 +7,8 @@ import { ApiResponse } from "@/server/utils/api-response";
 import { ADMIN_ROLES } from "@/shared/constants/roles";
 import { Employee, EmployeeFormData, OrgOption } from "@/shared/types/employee.types";
 import { dateToDateKey } from "@/shared/utils/date";
-import { EmployeeService, EmployeeFilters } from "./employee.service";
-
-const service = new EmployeeService();
-const PROBATION_MONTHS = 3;
+import { getProbationDaysLeft } from "@/shared/utils/employee";
+import { employeeService, EmployeeFilters } from "./employee.service";
 
 export async function getRolesAction() {
   try {
@@ -25,19 +23,10 @@ export async function getRolesAction() {
 export async function getEmployeesAction(filters?: EmployeeFilters) {
   try {
     await requireRole(ADMIN_ROLES);
-    const rawData = await service.getAllEmployees(filters);
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const rawData = await employeeService.getAllEmployees(filters);
 
     const data: Employee[] = rawData.map((emp) => {
-      let probationDaysLeft: number | null = null;
-      if (emp.status === "PROBATION" && emp.joinDate) {
-        const probationEnd = new Date(emp.joinDate);
-        probationEnd.setMonth(probationEnd.getMonth() + PROBATION_MONTHS);
-        probationEnd.setHours(0, 0, 0, 0);
-        probationDaysLeft = Math.ceil((probationEnd.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-      }
+      const probationDaysLeft = emp.status === "PROBATION" && emp.joinDate ? getProbationDaysLeft(emp.joinDate) : null;
 
       return {
         id: emp.id,
@@ -59,11 +48,10 @@ export async function getEmployeesAction(filters?: EmployeeFilters) {
   }
 }
 
-/** Detail karyawan untuk halaman detail & form edit (tanpa data sensitif akun) */
 export async function getEmployeeByIdAction(id: string) {
   try {
     await requireRole(ADMIN_ROLES);
-    const emp = await service.getEmployeeDetail(id);
+    const emp = await employeeService.getEmployeeDetail(id);
     const { user, department, position, manager, ...fields } = emp;
 
     return ApiResponse.success("Employee fetched", {
@@ -84,7 +72,7 @@ export async function getEmployeeByIdAction(id: string) {
 export async function createEmployeeAction(data: EmployeeFormData) {
   try {
     await requireRole(ADMIN_ROLES);
-    const { employee, defaultPassword } = await service.registerEmployee(data);
+    const { employee, defaultPassword } = await employeeService.registerEmployee(data);
     revalidatePath("/dashboard/employees");
     return ApiResponse.success(`Karyawan berhasil dibuat. Password default: ${defaultPassword}`, { id: employee.id });
   } catch (error) {
@@ -95,7 +83,7 @@ export async function createEmployeeAction(data: EmployeeFormData) {
 export async function updateEmployeeAction(id: string, data: EmployeeFormData) {
   try {
     await requireRole(ADMIN_ROLES);
-    await service.updateEmployee(id, data);
+    await employeeService.updateEmployee(id, data);
     revalidatePath("/dashboard/employees");
     return ApiResponse.success("Data karyawan berhasil diperbarui");
   } catch (error) {
@@ -106,7 +94,7 @@ export async function updateEmployeeAction(id: string, data: EmployeeFormData) {
 export async function promoteEmployeeAction(id: string) {
   try {
     await requireRole(ADMIN_ROLES);
-    await service.updateEmployee(id, { status: "ACTIVE" });
+    await employeeService.updateEmployee(id, { status: "ACTIVE" });
     revalidatePath("/dashboard/employees");
     return ApiResponse.success("Karyawan berhasil dipromosikan menjadi aktif");
   } catch (error) {
@@ -117,7 +105,7 @@ export async function promoteEmployeeAction(id: string) {
 export async function deleteEmployeeAction(id: string) {
   try {
     const current = await requireRole(ADMIN_ROLES);
-    await service.removeEmployee(id, current.userId);
+    await employeeService.removeEmployee(id, current.userId);
     revalidatePath("/dashboard/employees");
     return ApiResponse.success("Karyawan berhasil dihapus");
   } catch (error) {

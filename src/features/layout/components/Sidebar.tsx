@@ -8,6 +8,7 @@ import { useSession } from "next-auth/react";
 import { BiChevronLeft, BiChevronRight } from "react-icons/bi";
 import { FaBars, FaTimes } from "react-icons/fa";
 import Menu from "./Menu";
+import { ROLES } from "@/shared/constants/roles";
 
 export const Sidebar = () => {
   const { data: session } = useSession();
@@ -114,7 +115,7 @@ export const Sidebar = () => {
                 <Menu 
                   currentPath={asPath} 
                   isCollapsed={isCollapsed && !isMobile} 
-                  role={session?.user?.role || "EMPLOYEE"} 
+                  role={session?.user?.role || ROLES.EMPLOYEE} 
                 />
               </div>
             </div>

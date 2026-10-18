@@ -7,7 +7,6 @@ import { toDateKey } from "@/shared/utils/date";
 export function useSalary() {
   const [salaryData, setSalaryData] = useState<SalaryRecord[]>([]);
   const [loading, setLoading] = useState(true);
-  /** "YYYY-MM" */
   const [selectedMonth, setSelectedMonth] = useState(() => toDateKey().slice(0, 7));
   const [statusFilter, setStatusFilter] = useState("Semua Status");
   const [searchQuery, setSearchQuery] = useState("");

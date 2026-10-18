@@ -25,7 +25,6 @@ export const JobDetailsStep = ({
     <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         
-        {/* Position/Job Applied dropdown */}
         <div className={`space-y-2 ${formData.positionName === "other" ? "md:col-span-1" : "md:col-span-2"}`}>
           <label className={`text-[9px] font-black uppercase tracking-[0.2em] ml-2 transition-colors duration-300 ${errors.positionName ? "text-[#E02F75]" : "text-slate-400"}`}>
             Posisi / Jabatan yang Dilamar
@@ -63,7 +62,6 @@ export const JobDetailsStep = ({
           )}
         </div>
 
-        {/* Custom Position Name Input */}
         {formData.positionName === "other" && (
           <div className="animate-in fade-in slide-in-from-left-4 duration-300">
             <FormInput 
@@ -81,7 +79,6 @@ export const JobDetailsStep = ({
           </div>
         )}
 
-        {/* Employment Type dropdown */}
         <div className="space-y-2 md:col-span-2">
           <label className={`text-[9px] font-black uppercase tracking-[0.2em] ml-2 transition-colors duration-300 ${errors.employmentType ? "text-[#E02F75]" : "text-slate-400"}`}>
             Tipe Pekerjaan / Kontrak

@@ -2,11 +2,10 @@
 
 import { prisma } from "@/server/db/prisma";
 import { requireRole } from "@/server/auth/guard";
-import { ADMIN_ROLES } from "@/shared/constants/roles";
+import { ADMIN_ROLES, APPROVER_ROLES } from "@/shared/constants/roles";
 import { OrgOption } from "@/shared/types/employee.types";
 
-/** Data pilihan untuk form karyawan: divisi, jabatan, dan calon atasan langsung */
-export async function getOrgData() {
+export async function getOrgDataAction() {
   const empty = { departments: [] as OrgOption[], positions: [] as OrgOption[], managers: [] as OrgOption[] };
   try {
     await requireRole(ADMIN_ROLES);
@@ -16,7 +15,7 @@ export async function getOrgData() {
       prisma.employee.findMany({
         where: {
           status: { in: ["ACTIVE", "PROBATION"] },
-          user: { role: { name: { in: ["SUPER_ADMIN", "HR", "MANAGER"] } } },
+          user: { role: { name: { in: APPROVER_ROLES } } },
         },
         orderBy: { name: "asc" },
         select: { id: true, name: true },

@@ -5,7 +5,6 @@ import LayoutProvider from "@/features/layout/components/LayoutProvider";
 import { NextAuthProvider } from "@/shared/providers/NextAuthProvider";
 import { Toaster } from "sonner";
 
-// Configure Poppins font
 const poppins = Poppins({
   weight: ["300", "400", "500", "600", "700"], 
   subsets: ["latin"],

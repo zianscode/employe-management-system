@@ -16,9 +16,8 @@ const ATTENDANCE_LABELS: Record<string, string> = {
   NOT_YET: "Belum Absen",
 };
 
-export class DashboardService {
+class DashboardService {
   async getStats(user: CurrentUser) {
-    // Karyawan biasa: ringkasan pribadi
     if (user.role === ROLES.EMPLOYEE) {
       if (!user.employeeId) throw new Error("Profil karyawan tidak ditemukan");
 
@@ -39,7 +38,6 @@ export class DashboardService {
       };
     }
 
-    // HR / Admin / Manager: ringkasan organisasi
     const today = dateKeyToDate(toDateKey());
     const [totalEmployees, presentToday, leaveRequests] = await Promise.all([
       prisma.employee.count({ where: { status: { in: [EmployeeStatus.ACTIVE, EmployeeStatus.PROBATION] } } }),
@@ -58,3 +56,5 @@ export class DashboardService {
     };
   }
 }
+
+export const dashboardService = new DashboardService();

@@ -10,14 +10,11 @@ export default function OnboardingPage() {
 
   return (
     <div className="min-h-screen w-full bg-[#f8fafc] selection:bg-[#E02F75]/10 overflow-x-hidden">
-      {/* Immersive Vibrant Light Background System */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
-        {/* Saturated Ambient Gradients */}
         <div className="absolute top-[-15%] left-[-10%] w-[70%] h-[80%] bg-[#E02F75]/15 rounded-full blur-[120px] animate-pulse duration-[10s]"></div>
         <div className="absolute bottom-[-15%] right-[-10%] w-[70%] h-[80%] bg-[#6700A3]/15 rounded-full blur-[120px] animate-pulse duration-[8s]"></div>
         <div className="absolute top-[20%] right-[5%] w-[40%] h-[50%] bg-blue-400/10 rounded-full blur-[100px]"></div>
         
-        {/* Subtle Decorative Elements */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:40px_40px]"></div>
         <div className="absolute inset-0 bg-gradient-to-b from-white/40 via-transparent to-white/40"></div>
       </div>

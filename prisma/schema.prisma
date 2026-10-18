@@ -6,10 +6,6 @@ datasource db {
   provider = "postgresql"
 }
 
-// =====================================================================
-// AKUN & HAK AKSES
-// =====================================================================
-
 model User {
   id          String               @id @default(cuid())
   email       String               @unique
@@ -22,7 +18,6 @@ model User {
   updatedAt   DateTime             @updatedAt
 }
 
-/// SUPER_ADMIN | HR | MANAGER | EMPLOYEE
 model Role {
   id        String   @id @default(cuid())
   name      String   @unique
@@ -38,10 +33,6 @@ model PasswordResetToken {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
 }
-
-// =====================================================================
-// ORGANISASI & KARYAWAN
-// =====================================================================
 
 model Department {
   id          String     @id @default(cuid())
@@ -133,10 +124,6 @@ model Employee {
   hrApprovedLeaves      LeaveRequest[] @relation("LeaveHrApprover")
   rejectedLeaves        LeaveRequest[] @relation("LeaveRejector")
 }
-
-// =====================================================================
-// OPERASIONAL: ABSENSI, CUTI, GAJI
-// =====================================================================
 
 enum AttendanceStatus {
   PRESENT
@@ -242,22 +229,18 @@ model Salary {
   @@unique([employeeId, periodMonth, periodYear])
 }
 
-// =====================================================================
-// PENGATURAN PERUSAHAAN (satu baris, id = "default")
-// =====================================================================
-
 model CompanySetting {
-  id          String  @id @default("default")
-  companyName String  @default("Perusahaan Saya")
-  companyCode String?
-  npwp        String?
-  phone       String?
-  workStartTime        String @default("08:00")
-  workEndTime          String @default("17:00")
-  lateToleranceMinutes Int    @default(15)
-  overtimeRatePerHour  Int    @default(50000)
-  workingDaysPerMonth  Int    @default(22)
-  annualLeaveQuota     Int    @default(12)
+  id                   String  @id @default("default")
+  companyName          String  @default("Perusahaan Saya")
+  companyCode          String?
+  npwp                 String?
+  phone                String?
+  workStartTime        String  @default("08:00")
+  workEndTime          String  @default("17:00")
+  lateToleranceMinutes Int     @default(15)
+  overtimeRatePerHour  Int     @default(50000)
+  workingDaysPerMonth  Int     @default(22)
+  annualLeaveQuota     Int     @default(12)
 
   updatedAt DateTime @updatedAt
 }

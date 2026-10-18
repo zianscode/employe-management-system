@@ -7,19 +7,23 @@ export const ROLES = {
 
 export type RoleName = (typeof ROLES)[keyof typeof ROLES];
 
-/** Role yang mengelola seluruh data perusahaan */
 export const ADMIN_ROLES: RoleName[] = [ROLES.SUPER_ADMIN, ROLES.HR];
+
+export const APPROVER_ROLES: RoleName[] = [ROLES.SUPER_ADMIN, ROLES.HR, ROLES.MANAGER];
+
+export const ROLE_DESCRIPTIONS: Record<RoleName, string> = {
+  SUPER_ADMIN: "Kendali penuh seluruh fitur sistem dan pengaturan.",
+  HR: "Mengelola data karyawan, penggajian, dan persetujuan akhir.",
+  MANAGER: "Melihat tim dan menyetujui permohonan absensi/cuti.",
+  EMPLOYEE: "Akses dasar untuk dashboard pribadi dan pengajuan mandiri.",
+};
 
 export const isAdminRole = (role?: string | null) =>
   role === ROLES.SUPER_ADMIN || role === ROLES.HR;
 
-/**
- * Hak akses halaman dashboard. Dipakai oleh middleware (proteksi URL)
- * dan sidebar (menu yang ditampilkan). Path yang tidak tercantum boleh diakses semua role.
- */
-export const ROUTE_ROLES: Record<string, RoleName[]> = {
-  "/dashboard/employees": [ROLES.SUPER_ADMIN, ROLES.HR],
-  "/dashboard/reports": [ROLES.SUPER_ADMIN, ROLES.HR, ROLES.MANAGER],
+const ROUTE_ROLES: Record<string, RoleName[]> = {
+  "/dashboard/employees": ADMIN_ROLES,
+  "/dashboard/reports": APPROVER_ROLES,
 };
 
 export function canAccessRoute(pathname: string, role?: string | null) {

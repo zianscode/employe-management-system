@@ -26,13 +26,11 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
-      {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-300" 
         onClick={onClose}
       />
       
-      {/* Content */}
       <div className="relative w-full max-w-lg bg-white rounded-[32px] shadow-2xl border border-gray-100 overflow-hidden animate-in zoom-in-95 fade-in duration-300">
         <div className="px-8 py-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/30">
           <h3 className="text-xl font-bold text-gray-900 tracking-tight">{title}</h3>

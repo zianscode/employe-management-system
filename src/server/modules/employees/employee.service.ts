@@ -1,10 +1,10 @@
-import { EmployeeRepository } from "./employee.repository";
+import { employeeRepository as repository } from "./employee.repository";
 import { EmployeeFormData } from "@/shared/types/employee.types";
 import { EmployeeStatus } from "@prisma/client";
+import { normalizeEmail } from "@/shared/utils/format";
 import { z } from "zod";
 
-// --- Validasi input form karyawan ---
-export const EmployeeSchema = z.object({
+const EmployeeSchema = z.object({
   name: z.string().trim().min(3, "Nama minimal 3 karakter"),
   email: z.string().email("Format email tidak valid"),
   nip: z.string().min(5, "NIP minimal 5 karakter"),
@@ -26,9 +26,7 @@ export interface EmployeeFilters {
   status?: EmployeeStatus;
 }
 
-const repository = new EmployeeRepository();
-
-export class EmployeeService {
+class EmployeeService {
   async getAllEmployees(filters?: EmployeeFilters) {
     return repository.findAll(filters);
   }
@@ -42,7 +40,7 @@ export class EmployeeService {
   async registerEmployee(data: EmployeeFormData) {
     EmployeeSchema.parse(data);
 
-    const email = data.email.toLowerCase().trim();
+    const email = normalizeEmail(data.email);
     if (await repository.emailExists(email)) throw new Error("Email sudah terdaftar");
 
     const nip = await repository.resolveUniqueNip(data.nip);
@@ -54,7 +52,7 @@ export class EmployeeService {
     if (!employee) throw new Error("Karyawan tidak ditemukan");
 
     if (data.email) {
-      const email = data.email.toLowerCase().trim();
+      const email = normalizeEmail(data.email);
       if (await repository.emailExists(email, id)) throw new Error("Email sudah dipakai karyawan/akun lain");
     }
     if (data.nip && data.nip !== employee.nip) {
@@ -65,10 +63,6 @@ export class EmployeeService {
     return repository.update(id, data);
   }
 
-  /**
-   * Karyawan yang sudah punya riwayat absensi/cuti/gaji tidak boleh dihapus permanen,
-   * karena riwayat tersebut wajib disimpan. Ubah statusnya menjadi RESIGNED / TERMINATED.
-   */
   async removeEmployee(id: string, currentUserId: string) {
     const employee = await repository.findById(id);
     if (!employee) throw new Error("Karyawan tidak ditemukan");
@@ -83,3 +77,5 @@ export class EmployeeService {
     return repository.delete(id);
   }
 }
+
+export const employeeService = new EmployeeService();

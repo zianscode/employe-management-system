@@ -12,7 +12,6 @@ import {
 } from "@/server/modules/attendance/attendance.actions";
 
 interface ClockInCardProps {
-  /** Dipanggil setelah check-in / check-out berhasil */
   onChange?: () => void;
 }
 
@@ -22,7 +21,6 @@ export function ClockInCard({ onChange }: ClockInCardProps) {
 
   const load = useCallback(async () => {
     const res = await getMyTodayAttendanceAction();
-    // User tanpa profil karyawan tidak menampilkan kartu ini
     setToday(res.success && res.data ? res.data : null);
   }, []);
 

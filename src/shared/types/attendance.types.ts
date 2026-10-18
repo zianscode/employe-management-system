@@ -1,9 +1,7 @@
 import type { AttendanceStatus } from "@prisma/client";
 
-/** Status harian. NOT_YET = hari ini belum absen & jam kerja belum selesai (tidak disimpan di DB). */
 export type DailyAttendanceStatus = AttendanceStatus | "NOT_YET";
 
-/** Baris pada tabel absensi harian */
 export interface Attendance {
   employeeId: string;
   nip: string;
@@ -16,7 +14,6 @@ export interface Attendance {
   keterangan: string;
 }
 
-/** Absensi milik user yang login untuk hari ini (kartu check-in/check-out) */
 export interface MyTodayAttendance {
   date: string;
   checkIn: string | null;

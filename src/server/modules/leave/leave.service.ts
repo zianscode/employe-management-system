@@ -5,7 +5,6 @@ import { ROLES, isAdminRole } from "@/shared/constants/roles";
 import { LeaveBalance, LeaveRequest, LeaveRequestInput } from "@/shared/types/leave.types";
 import { countWorkingDays, dateKeyToDate, formatDate, toDateKey } from "@/shared/utils/date";
 
-/** Status yang masih "berjalan" (belum final) */
 const OPEN_STATUSES: LeaveStatus[] = [LeaveStatus.PENDING, LeaveStatus.MANAGER_APPROVED];
 
 const leaveInclude = {
@@ -17,19 +16,7 @@ const leaveInclude = {
 
 type LeaveWithRelations = Prisma.LeaveRequestGetPayload<{ include: typeof leaveInclude }>;
 
-/**
- * Alur cuti:
- *   PENDING --(atasan langsung)--> MANAGER_APPROVED --(HR/Admin)--> HR_APPROVED (final)
- *   HR/Admin boleh langsung menyetujui final dari PENDING.
- *   PENDING / MANAGER_APPROVED --> REJECTED (atasan/HR) | CANCELLED (pemohon)
- * Tidak ada yang boleh menyetujui/menolak cuti miliknya sendiri, kecuali SUPER_ADMIN.
- */
-export class LeaveService {
-  // ------------------------------------------------------------------
-  // Hak akses
-  // ------------------------------------------------------------------
-
-  /** Filter data cuti yang boleh dilihat user */
+class LeaveService {
   scopeFor(user: CurrentUser): Prisma.LeaveRequestWhereInput {
     if (isAdminRole(user.role)) return {};
     if (!user.employeeId) return { id: "__none__" };
@@ -47,7 +34,6 @@ export class LeaveService {
     if (!OPEN_STATUSES.includes(req.status) || !user.employeeId) return false;
     if (this.isOwn(req, user) && user.role !== ROLES.SUPER_ADMIN) return false;
     if (isAdminRole(user.role)) return true;
-    // Manager: hanya bawahan langsung & hanya tahap pertama
     return user.role === ROLES.MANAGER && req.status === LeaveStatus.PENDING && req.employee.managerId === user.employeeId;
   }
 
@@ -88,11 +74,6 @@ export class LeaveService {
     return req;
   }
 
-  // ------------------------------------------------------------------
-  // Kuota
-  // ------------------------------------------------------------------
-
-  /** Hari cuti tahunan yang terpakai pada tahun tertentu */
   private async sumAnnualDays(employeeId: string, year: number, statuses: LeaveStatus[], excludeId?: string) {
     const result = await prisma.leaveRequest.aggregate({
       where: {
@@ -113,10 +94,6 @@ export class LeaveService {
     const used = await this.sumAnnualDays(employeeId, year, [LeaveStatus.HR_APPROVED]);
     return { year, quota, used, remaining: Math.max(0, quota - used) };
   }
-
-  // ------------------------------------------------------------------
-  // Query
-  // ------------------------------------------------------------------
 
   async list(user: CurrentUser) {
     const requests = await prisma.leaveRequest.findMany({
@@ -146,12 +123,7 @@ export class LeaveService {
     ];
   }
 
-  // ------------------------------------------------------------------
-  // Perintah
-  // ------------------------------------------------------------------
-
   async request(user: CurrentUser, input: LeaveRequestInput) {
-    // HR/Admin boleh mengajukan atas nama karyawan lain; selain itu selalu untuk diri sendiri
     const employeeId = isAdminRole(user.role) && input.employeeId ? input.employeeId : user.employeeId;
     if (!employeeId) throw new Error("Profil karyawan tidak ditemukan");
     if (!input.reason?.trim()) throw new Error("Alasan cuti wajib diisi");
@@ -178,7 +150,6 @@ export class LeaveService {
     if (input.type === LeaveType.ANNUAL) {
       const year = start.getUTCFullYear();
       const { quota } = await this.getBalance(employeeId, year);
-      // Pengajuan yang masih berjalan ikut dihitung agar kuota tidak terpakai ganda
       const reserved = await this.sumAnnualDays(employeeId, year, [...OPEN_STATUSES, LeaveStatus.HR_APPROVED]);
       if (reserved + duration > quota) {
         throw new Error(`Sisa kuota cuti tahunan ${year} tidak cukup (tersisa ${Math.max(0, quota - reserved)} hari)`);
@@ -202,7 +173,6 @@ export class LeaveService {
     const req = await this.findForAction(id, user);
     if (!this.canDecide(req, user)) throw new Error("Anda tidak berwenang menyetujui pengajuan ini");
 
-    // Atasan langsung -> tahap pertama
     if (user.role === ROLES.MANAGER) {
       return prisma.leaveRequest.update({
         where: { id },
@@ -210,7 +180,6 @@ export class LeaveService {
       });
     }
 
-    // HR / Admin -> persetujuan final, cek ulang kuota
     if (req.type === LeaveType.ANNUAL) {
       const year = req.startDate.getUTCFullYear();
       const { quota } = await this.getBalance(req.employeeId, year);

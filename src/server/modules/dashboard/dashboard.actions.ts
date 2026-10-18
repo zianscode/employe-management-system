@@ -2,14 +2,12 @@
 
 import { requireUser } from "@/server/auth/guard";
 import { ApiResponse } from "@/server/utils/api-response";
-import { DashboardService } from "./dashboard.service";
-
-const service = new DashboardService();
+import { dashboardService } from "./dashboard.service";
 
 export async function getDashboardStatsAction() {
   try {
     const user = await requireUser();
-    return ApiResponse.success("Dashboard stats fetched", await service.getStats(user));
+    return ApiResponse.success("Dashboard stats fetched", await dashboardService.getStats(user));
   } catch (error) {
     return ApiResponse.fromError(error, "Gagal mengambil data dashboard");
   }

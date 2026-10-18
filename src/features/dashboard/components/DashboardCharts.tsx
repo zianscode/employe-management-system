@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { formatCurrency } from "@/shared/utils/format";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend
@@ -26,7 +27,6 @@ export default function DashboardCharts({ salaryData, deptData }: DashboardChart
 
   return (
     <div className={`grid grid-cols-1 ${deptData.length > 0 ? "lg:grid-cols-2" : ""} gap-4`}>
-      {/* Salary Trend Chart */}
       <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -67,7 +67,7 @@ export default function DashboardCharts({ salaryData, deptData }: DashboardChart
               <Tooltip 
                 cursor={{fill: '#f8fafc'}}
                 contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', padding: '15px' }}
-                formatter={(value: number) => [`Rp ${new Intl.NumberFormat('id-ID').format(value)}`, 'Total Gaji']}
+                formatter={(value: number) => [formatCurrency(value), 'Total Gaji']}
               />
               <Bar dataKey="total" fill="url(#barGradient)" radius={[10, 10, 0, 0]} barSize={45} />
             </BarChart>
@@ -75,7 +75,6 @@ export default function DashboardCharts({ salaryData, deptData }: DashboardChart
         </div>
       </div>
 
-      {/* Department Distribution Chart - Only show if data exists */}
       {deptData.length > 0 && (
         <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
           <div className="flex items-center justify-between mb-8">

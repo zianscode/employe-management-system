@@ -12,7 +12,6 @@ const refresh = () => {
   revalidatePath("/dashboard");
 };
 
-/** Check-in untuk user yang sedang login */
 export async function clockInAction() {
   try {
     const user = await requireEmployee();
@@ -28,7 +27,6 @@ export async function clockInAction() {
   }
 }
 
-/** Check-out untuk user yang sedang login */
 export async function clockOutAction() {
   try {
     const user = await requireEmployee();
@@ -49,7 +47,6 @@ export async function getMyTodayAttendanceAction() {
   }
 }
 
-/** Rekap absensi per tanggal ("YYYY-MM-DD") */
 export async function getDailyAttendanceAction(dateKey: string) {
   try {
     const user = await requireUser();

@@ -9,15 +9,8 @@ import { SalaryStats } from "@/features/salary/components/SalaryStats";
 import { DataTable } from "@/shared/components/DataTable";
 import { SalaryRecord } from "@/shared/types/salary.types";
 import { isAdminRole } from "@/shared/constants/roles";
+import { formatCurrency } from "@/shared/utils/format";
 import { generatePayrollAction, markSalaryPaidAction } from "@/server/modules/salary/salary.actions";
-
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    minimumFractionDigits: 0,
-  }).format(amount);
-};
 
 export default function SalaryPage() {
   const { data: session } = useSession();
@@ -100,7 +93,6 @@ export default function SalaryPage() {
 
   return (
     <div className="py-4 pl-8 pr-6">
-      {/* Header */}
       <div className="bg-gradient-to-r from-[#FF5A57] via-[#E02F75] to-[#6700A3] px-8 py-6 rounded-2xl shadow-lg">
         <div className="flex flex-col md:flex-row justify-between items-start gap-4">
           <div>

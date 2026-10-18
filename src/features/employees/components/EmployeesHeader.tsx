@@ -1,7 +1,7 @@
 import { Download } from "lucide-react";
 
 interface EmployeesHeaderProps {
-  onAddClick?: () => void; // Optional now
+  onAddClick?: () => void;
 }
 
 const EmployeesHeader: React.FC<EmployeesHeaderProps> = () => {

@@ -10,23 +10,6 @@ import path from "path";
 
 import { getDepartmentForPosition } from "@/shared/utils/position-department";
 
-export async function getOnboardingMetadataAction() {
-  try {
-    const departments = await prisma.department.findMany({
-      select: { id: true, name: true },
-      orderBy: { name: "asc" }
-    });
-    const positions = await prisma.position.findMany({
-      select: { id: true, name: true },
-      orderBy: { name: "asc" }
-    });
-    return { success: true, departments, positions };
-  } catch (error) {
-    console.error("Failed to load onboarding metadata:", error);
-    return { success: false, departments: [], positions: [] };
-  }
-}
-
 export async function completeOnboardingAction(formData: FormData) {
   try {
     const session = await auth();
@@ -50,7 +33,6 @@ export async function completeOnboardingAction(formData: FormData) {
     const skills = formData.get("skills") as string;
     const avatar = formData.get("avatar") as string;
     
-    // New job details fields
     const positionName = formData.get("positionName") as string;
     const customPosition = formData.get("customPosition") as string;
     const employmentType = formData.get("employmentType") as string;
@@ -62,7 +44,6 @@ export async function completeOnboardingAction(formData: FormData) {
 
     const resolvedDepartmentName = getDepartmentForPosition(resolvedPositionName);
 
-    // Find or create Position in DB
     let dbPosition = await prisma.position.findFirst({
       where: { name: { equals: resolvedPositionName, mode: "insensitive" } }
     });
@@ -72,7 +53,6 @@ export async function completeOnboardingAction(formData: FormData) {
       });
     }
 
-    // Find or create Department in DB
     let dbDepartment = await prisma.department.findFirst({
       where: { name: { equals: resolvedDepartmentName, mode: "insensitive" } }
     });
@@ -82,7 +62,6 @@ export async function completeOnboardingAction(formData: FormData) {
       });
     }
 
-    // Jabatan & divisi yang sudah ditetapkan HR tidak ditimpa oleh pilihan karyawan
     const existing = await prisma.employee.findUnique({
       where: { userId: session.user.id },
       select: { positionId: true, departmentId: true, salaryBase: true },

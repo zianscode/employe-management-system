@@ -3,8 +3,7 @@ import { EmployeeStatus } from "@prisma/client";
 
 const ACTIVE_STATUSES: EmployeeStatus[] = [EmployeeStatus.ACTIVE, EmployeeStatus.PROBATION];
 
-export class ReportService {
-  /** Total gaji bersih per bulan, 6 periode terakhir (semua karyawan atau satu karyawan) */
+class ReportService {
   async getSalaryTrend(employeeId?: string) {
     const groups = await prisma.salary.groupBy({
       by: ["periodYear", "periodMonth"],
@@ -20,7 +19,6 @@ export class ReportService {
     }));
   }
 
-  /** Jumlah karyawan aktif per divisi */
   async getDepartmentDistribution() {
     const departments = await prisma.department.findMany({
       include: { _count: { select: { employees: { where: { status: { in: ACTIVE_STATUSES } } } } } },
@@ -31,3 +29,5 @@ export class ReportService {
       .map((d) => ({ name: d.name, count: d._count.employees }));
   }
 }
+
+export const reportService = new ReportService();

@@ -4,7 +4,7 @@ import { z } from "zod";
 const SETTING_ID = "default";
 const TIME_FORMAT = /^([01]\d|2[0-3]):[0-5]\d$/;
 
-export const CompanySettingSchema = z
+const CompanySettingSchema = z
   .object({
     companyName: z.string().trim().min(1, "Nama perusahaan wajib diisi"),
     companyCode: z.string().trim().nullable().optional(),
@@ -24,8 +24,7 @@ export const CompanySettingSchema = z
 
 export type CompanySettingInput = z.infer<typeof CompanySettingSchema>;
 
-export class CompanySettingService {
-  /** Selalu mengembalikan pengaturan; baris default dibuat otomatis jika belum ada. */
+class CompanySettingService {
   async get() {
     return prisma.companySetting.upsert({
       where: { id: SETTING_ID },

@@ -31,7 +31,6 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings, onTo
               className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#E02F75] outline-none"
             />
           </div>
-          {/* More fields ... */}
         </div>
       </div>
 
@@ -57,7 +56,6 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings, onTo
               onChange={() => onToggle("autoBackup")}
             />
           </div>
-          {/* More toggles ... */}
         </div>
       </div>
     </div>

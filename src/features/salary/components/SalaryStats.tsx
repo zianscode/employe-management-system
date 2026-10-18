@@ -1,5 +1,6 @@
 import React from "react";
 import { DollarSign, TrendingUp, TrendingDown } from "lucide-react";
+import { formatCurrency } from "@/shared/utils/format";
 
 interface SalaryStatsProps {
   stats: {
@@ -9,14 +10,6 @@ interface SalaryStatsProps {
     totalDeduction: number;
   };
 }
-
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    minimumFractionDigits: 0,
-  }).format(amount);
-};
 
 export const SalaryStats: React.FC<SalaryStatsProps> = ({ stats }) => {
   const cards = [

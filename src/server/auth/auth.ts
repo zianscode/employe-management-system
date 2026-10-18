@@ -3,7 +3,8 @@ import { JWT } from "next-auth/jwt";
 import { authConfig } from "./auth.config";
 import Credentials from "next-auth/providers/credentials";
 import { prisma } from "@/server/db/prisma";
-import bcrypt from "bcryptjs";
+import { verifyPassword } from "@/server/utils/password";
+import { normalizeEmail } from "@/shared/utils/format";
 import { z } from "zod";
 import { EmployeeStatus } from "@prisma/client";
 
@@ -15,7 +16,6 @@ class AccountInactiveError extends CredentialsSignin {
   code = "account_inactive";
 }
 
-/** Karyawan dengan status ini tidak boleh login lagi */
 const INACTIVE_STATUSES: EmployeeStatus[] = [EmployeeStatus.RESIGNED, EmployeeStatus.TERMINATED];
 
 const nextAuth = NextAuth({
@@ -31,7 +31,7 @@ const nextAuth = NextAuth({
         if (!parsedCredentials.success) return null;
 
         const { email, password } = parsedCredentials.data;
-        const normalizedEmail = email.toLowerCase().trim();
+        const normalizedEmail = normalizeEmail(email);
 
         const user = await prisma.user.findUnique({
           where: { email: normalizedEmail },
@@ -40,7 +40,7 @@ const nextAuth = NextAuth({
 
         if (!user) throw new UserNotFoundError();
 
-        const passwordsMatch = await bcrypt.compare(password.trim(), user.password);
+        const passwordsMatch = await verifyPassword(password.trim(), user.password);
         if (!passwordsMatch) return null;
 
         if (user.employee && INACTIVE_STATUSES.includes(user.employee.status)) {
@@ -70,8 +70,6 @@ const nextAuth = NextAuth({
         token.picture = user.image;
       }
 
-      // Dari client hanya nama & foto yang boleh diperbarui.
-      // Role, employeeId, dan status profil selalu dibaca ulang dari database di bawah.
       if (trigger === "update" && session) {
         if (typeof session.name === "string") token.name = session.name;
         const picture = session.picture ?? session.image;
@@ -85,7 +83,6 @@ const nextAuth = NextAuth({
             include: { role: true, employee: true },
           });
 
-          // Akun dihapus atau karyawan sudah nonaktif -> sesi tidak berlaku
           if (!dbUser) return null;
           if (dbUser.employee && INACTIVE_STATUSES.includes(dbUser.employee.status)) return null;
 
@@ -94,7 +91,6 @@ const nextAuth = NextAuth({
           token.employeeId = dbUser.employee?.id;
 
           const avatar = dbUser.employee?.avatar;
-          // Avatar base64 terlalu besar untuk disimpan di cookie
           token.picture = avatar && avatar.startsWith("data:image") && avatar.length > 2000 ? null : avatar;
         } catch (error) {
           console.error("[AUTH] DB Check Error:", error);

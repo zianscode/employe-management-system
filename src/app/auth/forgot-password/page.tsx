@@ -34,7 +34,6 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="min-h-screen w-full relative overflow-hidden bg-white flex items-center justify-center p-6 selection:bg-[#E02F75]/10">
-      {/* Background elements similar to login */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         <svg className="absolute top-0 right-0 h-full w-[100%] opacity-[0.03]" viewBox="0 0 100 100" preserveAspectRatio="none">
           <path d="M0 0 C 50 50, 50 50, 100 100 L 100 0 Z" fill="url(#grad)" />
@@ -122,9 +121,6 @@ export default function ForgotPasswordPage() {
           )}
         </div>
 
-        {/* <p className="text-center mt-12 text-gray-400 text-[10px] font-black uppercase tracking-[0.3em]">
-          EMS<span className="text-[#E02F75]">.</span>PRO Version 1.0.0
-        </p> */}
       </div>
     </div>
   );

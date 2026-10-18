@@ -5,7 +5,8 @@ import { User, Mail, Briefcase, Building2, Calendar, Shield, ArrowLeft, Save, Wa
 import { useRouter } from "next/navigation";
 import { EmployeeStatus } from "@prisma/client";
 
-import { getOrgData } from "@/server/modules/employees/organization.actions";
+import { getOrgDataAction } from "@/server/modules/employees/organization.actions";
+import { ROLE_DESCRIPTIONS, ROLES, RoleName } from "@/shared/constants/roles";
 import { getRolesAction } from "@/server/modules/employees/employee.actions";
 import { EmployeeFormData, OrgOption } from "@/shared/types/employee.types";
 
@@ -52,14 +53,12 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
     managerId: initialData?.managerId || "",
   });
 
-  // Auto-generate NIP Logic
   useEffect(() => {
     if (!initialData?.nip && formData.birthDate && formData.joinDate && formData.gender) {
-      const bDate = formData.birthDate.replace(/-/g, ""); // YYYYMMDD
-      const jDate = formData.joinDate.replace(/-/g, "").substring(0, 6); // YYYYMM
+      const bDate = formData.birthDate.replace(/-/g, "");
+      const jDate = formData.joinDate.replace(/-/g, "").substring(0, 6);
       const genderCode = formData.gender === "MALE" ? "1" : "2";
       
-      // For sequence, in a real app we'd fetch from DB, here we'll use a placeholder or just 001 for new
       const sequence = "001"; 
       
       const generatedNip = `${bDate}${jDate}${genderCode}${sequence}`;
@@ -67,7 +66,6 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
     }
   }, [formData.birthDate, formData.joinDate, formData.gender, initialData?.nip]);
 
-  // Auto-link Position to Department (Division)
   useEffect(() => {
     if (formData.positionId && formData.positionId !== "OTHER") {
       const selectedPos = orgData.positions.find(p => p.id === formData.positionId);
@@ -90,15 +88,14 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 
   useEffect(() => {
     const fetchOrgData = async () => {
-      const data = await getOrgData();
+      const data = await getOrgDataAction();
       const rolesRes = await getRolesAction();
       const rolesData = rolesRes.success && rolesRes.data ? rolesRes.data : [];
       
       setOrgData({ ...data, roles: rolesData });
       
-      // If creating new and data exists, set default IDs
       if (!initialData) {
-        const empRole = rolesData.find((r) => r.name === "EMPLOYEE");
+        const empRole = rolesData.find((r) => r.name === ROLES.EMPLOYEE);
         if (empRole) setFormData(prev => ({ ...prev, roleId: empRole.id }));
       }
     };
@@ -117,7 +114,6 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 
   return (
     <div className="w-full">
-      {/* Top Navigation */}
       <button 
         onClick={() => router.back()}
         className="flex items-center gap-2 text-gray-500 hover:text-[#E02F75] transition-colors mb-6 group"
@@ -129,7 +125,6 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
       </button>
 
       <div className="bg-white rounded-[32px] shadow-xl border border-gray-100 overflow-hidden">
-        {/* Header Section */}
         <div className="px-10 py-8 bg-gradient-to-r from-[#FF5A57] via-[#E02F75] to-[#6700A3] text-white">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-white/20 backdrop-blur-md rounded-2xl border border-white/30">
@@ -142,10 +137,8 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
           </div>
         </div>
 
-        {/* Form Section */}
         <form onSubmit={handleSubmit} className="p-10">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-            {/* Section 1: Personal Info */}
             <div className="space-y-6">
               <h3 className="text-sm font-black uppercase tracking-[0.2em] text-gray-400 mb-4">Informasi Pribadi</h3>
               
@@ -224,7 +217,6 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
               </div>
             </div>
 
-            {/* Section 2: Job Info */}
             <div className="space-y-6">
               <h3 className="text-sm font-black uppercase tracking-[0.2em] text-gray-400 mb-4">Detail Pekerjaan</h3>
               
@@ -305,15 +297,11 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
                   </select>
                 </div>
                 
-                {/* Role Description Note */}
                 {formData.roleId && (
                   <div className="mt-3 p-3 bg-gray-50 border border-gray-100 rounded-xl">
                     <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Cakupan Akses:</p>
                     <p className="text-[11px] font-medium text-gray-600">
-                      {orgData.roles.find(r => r.id === formData.roleId)?.name === "SUPER_ADMIN" && "Kendali penuh seluruh fitur sistem dan pengaturan."}
-                      {orgData.roles.find(r => r.id === formData.roleId)?.name === "HR" && "Mengelola data karyawan, penggajian, dan persetujuan akhir."}
-                      {orgData.roles.find(r => r.id === formData.roleId)?.name === "MANAGER" && "Melihat tim dan menyetujui permohonan absensi/cuti."}
-                      {orgData.roles.find(r => r.id === formData.roleId)?.name === "EMPLOYEE" && "Akses dasar untuk dashboard pribadi dan pengajuan mandiri."}
+                      {ROLE_DESCRIPTIONS[orgData.roles.find(r => r.id === formData.roleId)?.name as RoleName]}
                     </p>
                   </div>
                 )}

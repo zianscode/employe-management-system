@@ -19,7 +19,6 @@ export function SettingsClient() {
   const isAdmin = isAdminRole(session?.user?.role);
   const { activeTab, setActiveTab, settings, users, handleToggle, refreshUsers } = useSettings(isAdmin);
   
-  // State Modal
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   const allTabs: { id: SettingsTabId; label: string; icon: React.ElementType; adminOnly: boolean }[] = [
@@ -92,7 +91,6 @@ export function SettingsClient() {
         )}
       </div>
 
-      {/* Confirmation Modals */}
       <ConfirmModal
         isOpen={isLogoutModalOpen}
         title="Konfirmasi Keluar"

@@ -1,8 +1,7 @@
-export type ApiResponse<T = any> = {
+export type ApiResponse<T = unknown> = {
   success: boolean;
   message: string;
   data?: T;
-  errors?: any;
 };
 
 export const ApiResponse = {
@@ -12,9 +11,14 @@ export const ApiResponse = {
     data,
   }),
 
-  error: (message: string, errors?: any): ApiResponse => ({
+  error: <T = never>(message: string): ApiResponse<T> => ({
     success: false,
     message,
-    errors,
+  }),
+
+  /** Ubah error apa pun menjadi respons gagal dengan pesan yang bisa ditampilkan */
+  fromError: <T = never>(error: unknown, fallback: string): ApiResponse<T> => ({
+    success: false,
+    message: error instanceof Error && error.message ? error.message : fallback,
   }),
 };

@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import EmployeeForm from "@/features/employees/components/EmployeeForm";
-import { createEmployee } from "@/server/modules/employees/employee.actions";
+import { createEmployeeAction } from "@/server/modules/employees/employee.actions";
 import { EmployeeFormData } from "@/shared/types/employee.types";
 import { toast } from "sonner";
 
@@ -14,13 +14,13 @@ export default function NewEmployeePage() {
   const handleSubmit = async (data: EmployeeFormData) => {
     setIsSubmitting(true);
     try {
-      const result = await createEmployee(data);
+      const result = await createEmployeeAction(data);
       if (result.success) {
-        toast.success("Karyawan berhasil didaftarkan!");
+        toast.success("Karyawan berhasil didaftarkan!", { description: result.message, duration: 8000 });
         router.push("/dashboard/employees");
         router.refresh();
       } else {
-        toast.error("Gagal mendaftarkan karyawan: " + result.error);
+        toast.error("Gagal mendaftarkan karyawan", { description: result.message });
         setIsSubmitting(false);
       }
     } catch (error) {
@@ -32,7 +32,7 @@ export default function NewEmployeePage() {
 
   return (
     <div className="py-4 pl-8 pr-6">
-      <EmployeeForm 
+      <EmployeeForm
         title="Daftarkan Karyawan Baru"
         onSubmit={handleSubmit}
         isSubmitting={isSubmitting}

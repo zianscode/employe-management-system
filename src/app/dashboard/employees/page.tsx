@@ -6,7 +6,7 @@ import { getEmployeesAction } from "@/server/modules/employees/employee.actions"
 
 export default async function EmployeesPage() {
   const response = await getEmployeesAction();
-  const initialEmployees = response.success ? response.data : [];
+  const initialEmployees = response.success && response.data ? response.data : [];
 
   return (
     <div className="py-4 pl-8 pr-6 space-y-4">

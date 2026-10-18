@@ -25,6 +25,7 @@ export const AttendanceTable: React.FC<AttendanceTableProps> = ({
       header: "Status",
       accessor: (item: Attendance) => <StatusBadge status={item.status} />,
     },
+    { header: "Keterangan", accessor: (item: Attendance) => item.keterangan || "-" },
   ];
 
   return (

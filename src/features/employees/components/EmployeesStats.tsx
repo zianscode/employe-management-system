@@ -7,12 +7,12 @@ interface EmployeesStatsProps {
 
 const EmployeesStats: React.FC<EmployeesStatsProps> = ({ employees }) => {
   const activeCount = employees.filter(e => e.status === "ACTIVE").length;
-  const leaveCount = employees.filter(e => e.status === "LEAVE").length;
+  const probationCount = employees.filter(e => e.status === "PROBATION").length;
 
   const stats = [
     { label: "Total Karyawan", value: employees.length.toString(), icon: Users, color: "text-blue-600", bgColor: "bg-blue-50" },
     { label: "Aktif", value: activeCount.toString(), icon: UserCheck, color: "text-green-600", bgColor: "bg-green-50" },
-    { label: "On Leave", value: leaveCount.toString(), icon: UserMinus, color: "text-orange-600", bgColor: "bg-orange-50" },
+    { label: "Masa Percobaan", value: probationCount.toString(), icon: UserMinus, color: "text-orange-600", bgColor: "bg-orange-50" },
     { label: "Divisi", value: new Set(employees.map(e => e.division)).size.toString(), icon: Star, color: "text-purple-600", bgColor: "bg-purple-50" },
   ];
 

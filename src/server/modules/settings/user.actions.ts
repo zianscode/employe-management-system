@@ -1,39 +1,41 @@
 "use server";
 
 import { prisma } from "@/server/db/prisma";
+import { requireRole } from "@/server/auth/guard";
 import { ApiResponse } from "@/server/utils/api-response";
+import { ADMIN_ROLES } from "@/shared/constants/roles";
+import { SystemUser } from "@/shared/types/settings.types";
 import bcrypt from "bcryptjs";
+
+const INACTIVE = ["RESIGNED", "TERMINATED"];
 
 export async function getUsersAction() {
   try {
+    await requireRole(ADMIN_ROLES);
     const users = await prisma.user.findMany({
-      include: {
-        role: true,
-        employee: true,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
+      include: { role: true, employee: true },
+      orderBy: { createdAt: "desc" },
     });
 
-    const formattedUsers = users.map((user) => ({
+    const formattedUsers: SystemUser[] = users.map((user) => ({
       id: user.id,
       name: user.employee?.name || "System Admin",
       email: user.email,
       role: user.role.name,
-      status: "Active",
-      lastLogin: user.updatedAt.toLocaleString(),
+      status: user.employee && INACTIVE.includes(user.employee.status) ? "Inactive" : "Active",
+      lastLogin: user.updatedAt.toLocaleString("id-ID"),
     }));
 
     return ApiResponse.success("Users fetched successfully", formattedUsers);
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Gagal mengambil data pengguna";
-    return ApiResponse.error(errorMessage);
+    return ApiResponse.fromError<SystemUser[]>(error, "Gagal mengambil data pengguna");
   }
 }
 
 export async function resetUserPasswordAction(userId: string, newPassword: string) {
   try {
+    await requireRole(ADMIN_ROLES);
+    if (newPassword.length < 6) return ApiResponse.error("Password minimal 6 karakter");
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     await prisma.user.update({
       where: { id: userId },
@@ -41,16 +43,25 @@ export async function resetUserPasswordAction(userId: string, newPassword: strin
     });
     return ApiResponse.success("Password user berhasil direset");
   } catch (error) {
-    return ApiResponse.error(error instanceof Error ? error.message : "Gagal mereset password user");
+    return ApiResponse.fromError(error, "Gagal mereset password user");
   }
 }
 
+/**
+ * Menghapus akun login saja. Data karyawan (dan riwayatnya) tetap tersimpan,
+ * hanya tidak lagi memiliki akun.
+ */
 export async function deleteUserAction(userId: string) {
   try {
-    // Check if user is trying to delete themselves? (Optional safety)
-    await prisma.user.delete({ where: { id: userId } });
+    const current = await requireRole(ADMIN_ROLES);
+    if (current.userId === userId) return ApiResponse.error("Anda tidak dapat menghapus akun Anda sendiri");
+
+    await prisma.$transaction([
+      prisma.employee.updateMany({ where: { userId }, data: { userId: null } }),
+      prisma.user.delete({ where: { id: userId } }),
+    ]);
     return ApiResponse.success("User berhasil dihapus");
   } catch (error) {
-    return ApiResponse.error(error instanceof Error ? error.message : "Gagal menghapus user");
+    return ApiResponse.fromError(error, "Gagal menghapus user");
   }
 }

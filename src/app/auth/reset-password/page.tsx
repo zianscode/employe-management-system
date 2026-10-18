@@ -28,7 +28,7 @@ function ResetPasswordForm() {
 
     async function validate() {
       const response = await validateResetTokenAction(token!);
-      if (response.success) {
+      if (response.success && response.data) {
         setUserEmail(response.data.email);
       } else {
         setError(response.message);

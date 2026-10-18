@@ -82,8 +82,15 @@ export async function completeOnboardingAction(formData: FormData) {
       });
     }
 
-    const positionId = dbPosition.id;
-    const departmentId = dbDepartment.id;
+    // Jabatan & divisi yang sudah ditetapkan HR tidak ditimpa oleh pilihan karyawan
+    const existing = await prisma.employee.findUnique({
+      where: { userId: session.user.id },
+      select: { positionId: true, departmentId: true, salaryBase: true },
+    });
+    const positionId = existing?.positionId || dbPosition.id;
+    const departmentId = existing?.departmentId || dbDepartment.id;
+    const position = await prisma.position.findUnique({ where: { id: positionId }, select: { salaryBase: true } });
+    const salaryBase = existing?.salaryBase || position?.salaryBase || 0;
 
     let avatarUrl = avatar;
 
@@ -123,8 +130,9 @@ export async function completeOnboardingAction(formData: FormData) {
         bio,
         education,
         skills,
-        positionId: positionId || null,
-        departmentId: departmentId || null,
+        positionId,
+        departmentId,
+        salaryBase,
         employmentType: (employmentType as EmploymentType) || "FULL_TIME",
         isProfileComplete: true,
         onboardedAt: new Date(),
@@ -150,8 +158,9 @@ export async function completeOnboardingAction(formData: FormData) {
         bio,
         education,
         skills,
-        positionId: positionId || null,
-        departmentId: departmentId || null,
+        positionId,
+        departmentId,
+        salaryBase,
         employmentType: (employmentType as EmploymentType) || "FULL_TIME",
         isProfileComplete: true,
         onboardedAt: new Date(),

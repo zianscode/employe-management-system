@@ -1,30 +1,16 @@
 "use server";
 
-import { auth } from "@/server/auth/auth";
-import { DashboardService } from "./dashboard.service";
+import { requireUser } from "@/server/auth/guard";
 import { ApiResponse } from "@/server/utils/api-response";
+import { DashboardService } from "./dashboard.service";
 
 const service = new DashboardService();
 
 export async function getDashboardStatsAction() {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return ApiResponse.error("Unauthorized");
-    }
-
-    const roleName = session.user.role || "EMPLOYEE";
-    const userId = session.user.id;
-
-    if (!userId) {
-      return ApiResponse.error("User ID not found");
-    }
-
-    const result = await service.getStats(roleName, userId);
-    
-    return ApiResponse.success("Dashboard stats fetched", result);
+    const user = await requireUser();
+    return ApiResponse.success("Dashboard stats fetched", await service.getStats(user));
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Gagal mengambil data dashboard";
-    return ApiResponse.error(errorMessage);
+    return ApiResponse.fromError(error, "Gagal mengambil data dashboard");
   }
 }

@@ -1,4 +1,5 @@
 import type { NextAuthConfig } from "next-auth";
+import { canAccessRoute } from "@/shared/constants/roles";
 
 export const authConfig = {
   pages: {
@@ -12,9 +13,11 @@ export const authConfig = {
       const isOnDashboard = nextUrl.pathname.startsWith("/dashboard");
       const isOnOnboarding = nextUrl.pathname.startsWith("/onboarding");
 
-      console.log(`[MIDDLEWARE] Path: ${nextUrl.pathname} | LoggedIn: ${isLoggedIn} | ProfileComplete: ${isProfileComplete}`);
-
       if (isLoggedIn) {
+        if (isOnDashboard && !canAccessRoute(nextUrl.pathname, auth?.user?.role)) {
+          return Response.redirect(new URL("/dashboard", nextUrl));
+        }
+
         if (!isProfileComplete && !isOnOnboarding && isOnDashboard) {
           return Response.redirect(new URL("/onboarding", nextUrl));
         }

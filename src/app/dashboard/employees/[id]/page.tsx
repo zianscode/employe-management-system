@@ -3,10 +3,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { 
-  ArrowLeft, User, Mail, Briefcase, Building2, Calendar, 
+  ArrowLeft, User, Briefcase, Building2, Calendar, 
   Phone, MapPin, CreditCard, ShieldAlert, BookOpen, Award, FileText, Compass
 } from "lucide-react";
-import { getEmployeeById } from "@/server/modules/employees/employee.actions";
+import { getEmployeeByIdAction } from "@/server/modules/employees/employee.actions";
 import { StatusBadge } from "@/shared/components/StatusBadge";
 
 interface FullEmployeeDetails {
@@ -66,13 +66,13 @@ interface PageProps {
 
 export default async function EmployeeDetailPage({ params }: PageProps) {
   const resolvedParams = await params;
-  const rawEmployee = await getEmployeeById(resolvedParams.id);
-  
-  if (!rawEmployee) {
+  const res = await getEmployeeByIdAction(resolvedParams.id);
+
+  if (!res.success || !res.data) {
     notFound();
   }
 
-  const employee = rawEmployee as unknown as FullEmployeeDetails;
+  const employee = res.data as unknown as FullEmployeeDetails;
 
   // Calculate probation remaining if probation status
   let probationText = null;
@@ -91,12 +91,12 @@ export default async function EmployeeDetailPage({ params }: PageProps) {
 
   // Format birthDate
   const formattedBirthDate = employee.birthDate 
-    ? new Date(employee.birthDate).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })
+    ? new Date(employee.birthDate).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })
     : "-";
 
   // Format joinDate
   const formattedJoinDate = employee.joinDate
-    ? new Date(employee.joinDate).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })
+    ? new Date(employee.joinDate).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })
     : "-";
 
   const genderText = employee.gender === "MALE" ? "Laki-laki" : employee.gender === "FEMALE" ? "Perempuan" : "-";

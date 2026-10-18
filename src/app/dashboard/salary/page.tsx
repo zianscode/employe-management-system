@@ -1,11 +1,15 @@
 "use client";
 
-import React from "react";
-import { Search, Download, Filter, Calendar } from "lucide-react";
+import React, { useState } from "react";
+import { Search, Filter, Calendar, Calculator, CheckCircle2 } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { toast } from "sonner";
 import { useSalary } from "@/features/salary/hooks/use-salary";
 import { SalaryStats } from "@/features/salary/components/SalaryStats";
 import { DataTable } from "@/shared/components/DataTable";
 import { SalaryRecord } from "@/shared/types/salary.types";
+import { isAdminRole } from "@/shared/constants/roles";
+import { generatePayrollAction, markSalaryPaidAction } from "@/server/modules/salary/salary.actions";
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat("id-ID", {
@@ -16,6 +20,10 @@ const formatCurrency = (amount: number) => {
 };
 
 export default function SalaryPage() {
+  const { data: session } = useSession();
+  const isAdmin = isAdminRole(session?.user?.role);
+  const [isProcessing, setIsProcessing] = useState(false);
+
   const {
     data,
     stats,
@@ -27,19 +35,40 @@ export default function SalaryPage() {
     setSelectedMonth,
     totalCount,
     filteredCount,
+    refresh,
   } = useSalary();
 
-  const columns = [
-    { header: "NIP", accessor: "nip" as const, className: "font-medium" },
-    { header: "Nama", accessor: "name" as const, className: "font-medium" },
-    { header: "Jabatan", accessor: "position" as const },
-    { header: "Gaji Pokok", accessor: (item: SalaryRecord) => formatCurrency(item.basicSalary), className: "text-right" },
-    { header: "Tunjangan", accessor: (item: SalaryRecord) => formatCurrency(item.allowance), className: "text-right" },
-    { header: "Potongan", accessor: (item: SalaryRecord) => formatCurrency(item.deduction), className: "text-right" },
-    { header: "Total Gaji", accessor: (item: SalaryRecord) => formatCurrency(item.totalSalary), className: "text-right font-bold" },
+  const [year, month] = selectedMonth.split("-").map(Number);
+  const periodLabel = new Date(Date.UTC(year, month - 1, 1)).toLocaleDateString("id-ID", {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+
+  const run = async (action: () => Promise<{ success: boolean; message: string }>) => {
+    setIsProcessing(true);
+    const res = await action();
+    if (res.success) {
+      toast.success(res.message);
+      await refresh();
+    } else {
+      toast.error(res.message);
+    }
+    setIsProcessing(false);
+  };
+
+  const columns: { header: string; accessor: keyof SalaryRecord | ((item: SalaryRecord) => React.ReactNode); className?: string }[] = [
+    { header: "NIP", accessor: "nip", className: "font-medium" },
+    { header: "Nama", accessor: "name", className: "font-medium" },
+    { header: "Jabatan", accessor: "position" },
+    { header: "Gaji Pokok", accessor: (item) => formatCurrency(item.basicSalary), className: "text-right" },
+    { header: "Tunjangan", accessor: (item) => formatCurrency(item.allowance), className: "text-right" },
+    { header: "Lembur", accessor: (item) => formatCurrency(item.overtimePay), className: "text-right" },
+    { header: "Potongan", accessor: (item) => formatCurrency(item.deduction), className: "text-right" },
+    { header: "Total Gaji", accessor: (item) => formatCurrency(item.totalSalary), className: "text-right font-bold" },
     {
       header: "Status",
-      accessor: (item: SalaryRecord) => (
+      accessor: (item) => (
         <span
           className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
             item.status === "Dibayar" ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"
@@ -52,19 +81,44 @@ export default function SalaryPage() {
     },
   ];
 
+  if (isAdmin) {
+    columns.push({
+      header: "Aksi",
+      accessor: (item) =>
+        item.status === "Pending" ? (
+          <button
+            onClick={() => run(() => markSalaryPaidAction(item.id))}
+            disabled={isProcessing}
+            className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-green-700 bg-green-50 rounded-lg hover:bg-green-100 disabled:opacity-50"
+          >
+            <CheckCircle2 size={14} />
+            Tandai Dibayar
+          </button>
+        ) : null,
+    });
+  }
+
   return (
     <div className="py-4 pl-8 pr-6">
       {/* Header */}
       <div className="bg-gradient-to-r from-[#FF5A57] via-[#E02F75] to-[#6700A3] px-8 py-6 rounded-2xl shadow-lg">
         <div className="flex flex-col md:flex-row justify-between items-start gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-white mb-1">Manajemen Gaji</h1>
-            <p className="text-white/80 text-sm">Kelola dan pantau penggajian karyawan</p>
+            <h1 className="text-2xl font-bold text-white mb-1">{isAdmin ? "Manajemen Gaji" : "Slip Gaji Saya"}</h1>
+            <p className="text-white/80 text-sm">
+              {isAdmin ? "Hitung, kelola, dan pantau penggajian karyawan" : "Riwayat gaji Anda per periode"}
+            </p>
           </div>
-          <button className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center gap-2 border border-white/20">
-            <Download size={16} />
-            Export Payroll
-          </button>
+          {isAdmin && (
+            <button
+              onClick={() => run(() => generatePayrollAction(month, year))}
+              disabled={isProcessing}
+              className="bg-white text-[#E02F75] hover:bg-gray-100 px-5 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 shadow-lg disabled:opacity-50"
+            >
+              <Calculator size={16} />
+              {isProcessing ? "Memproses..." : `Hitung Gaji ${periodLabel}`}
+            </button>
+          )}
         </div>
       </div>
 
@@ -76,7 +130,7 @@ export default function SalaryPage() {
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
               <div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-1">Data Penggajian</h2>
-                <p className="text-gray-600">Data gaji karyawan untuk periode {selectedMonth}</p>
+                <p className="text-gray-600">Periode {periodLabel}</p>
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3">
@@ -93,15 +147,12 @@ export default function SalaryPage() {
 
                 <div className="relative">
                   <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                  <select
+                  <input
+                    type="month"
                     value={selectedMonth}
-                    onChange={(e) => setSelectedMonth(e.target.value)}
-                    className="pl-10 pr-8 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#E02F75] outline-none bg-white appearance-none cursor-pointer"
-                  >
-                    <option>January 2024</option>
-                    <option>February 2024</option>
-                    <option>March 2024</option>
-                  </select>
+                    onChange={(e) => e.target.value && setSelectedMonth(e.target.value)}
+                    className="pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#E02F75] outline-none bg-white cursor-pointer"
+                  />
                 </div>
 
                 <div className="relative">
@@ -125,16 +176,13 @@ export default function SalaryPage() {
           <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-2xl">
             <div className="flex items-center justify-between text-sm text-gray-600">
               <span>Menampilkan {filteredCount} dari {totalCount} data</span>
-              <div className="flex items-center gap-2">
-                <span>Total karyawan:</span>
-                <span className="bg-gradient-to-r from-[#E02F75] to-[#6700A3] bg-clip-text text-transparent font-bold">
-                  {totalCount} orang
-                </span>
-              </div>
+              {isAdmin && totalCount === 0 && (
+                <span>Belum ada data. Klik &quot;Hitung Gaji&quot; untuk membuat slip periode ini.</span>
+              )}
             </div>
           </div>
         </div>
       </div>
     </div>
   );
-}
+}

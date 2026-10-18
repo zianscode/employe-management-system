@@ -1,6 +1,7 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { toast } from "sonner";
 import { LeaveRequest } from "@/shared/types/leave.types";
-import { getLeaveRequests } from "@/server/modules/leave/leave.actions";
+import { getLeaveRequestsAction } from "@/server/modules/leave/leave.actions";
 
 export function useLeave() {
   const [leaveData, setLeaveData] = useState<LeaveRequest[]>([]);
@@ -9,25 +10,22 @@ export function useLeave() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
 
-  useEffect(() => {
-    async function fetchData() {
-      setLoading(true);
-      const data = await getLeaveRequests();
-      setLeaveData(data as LeaveRequest[]);
-      setLoading(false);
-    }
-    fetchData();
+  const refresh = useCallback(async () => {
+    const res = await getLeaveRequestsAction();
+    if (res.success && res.data) setLeaveData(res.data);
+    else toast.error(res.message);
   }, []);
 
+  useEffect(() => {
+    refresh().finally(() => setLoading(false));
+  }, [refresh]);
+
   const filteredData = useMemo(() => {
+    const q = searchQuery.toLowerCase();
     return leaveData.filter((item) => {
-      const matchesSearch =
-        item.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.nip.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesStatus =
-        statusFilter === "all" || item.status.toLowerCase() === statusFilter.toLowerCase();
-      const matchesType =
-        typeFilter === "all" || item.tipeCuti.toLowerCase().includes(typeFilter.toLowerCase());
+      const matchesSearch = item.nama.toLowerCase().includes(q) || item.nip.toLowerCase().includes(q);
+      const matchesStatus = statusFilter === "all" || item.status === statusFilter;
+      const matchesType = typeFilter === "all" || item.tipeCuti === typeFilter;
       return matchesSearch && matchesStatus && matchesType;
     });
   }, [leaveData, searchQuery, statusFilter, typeFilter]);
@@ -41,9 +39,6 @@ export function useLeave() {
     setStatusFilter,
     typeFilter,
     setTypeFilter,
-    refresh: async () => {
-      const data = await getLeaveRequests();
-      setLeaveData(data as LeaveRequest[]);
-    }
+    refresh,
   };
 }

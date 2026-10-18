@@ -40,9 +40,11 @@ const LeaveControls: React.FC<LeaveControlsProps> = ({
             className="bg-transparent border-none outline-none text-sm font-medium text-gray-700"
           >
             <option value="all">Semua Status</option>
-            <option value="pending">Pending</option>
-            <option value="approved">Disetujui</option>
-            <option value="rejected">Ditolak</option>
+            <option value="PENDING">Menunggu</option>
+            <option value="MANAGER_APPROVED">Disetujui Atasan</option>
+            <option value="HR_APPROVED">Disetujui HR</option>
+            <option value="REJECTED">Ditolak</option>
+            <option value="CANCELLED">Dibatalkan</option>
           </select>
         </div>
 
@@ -53,9 +55,10 @@ const LeaveControls: React.FC<LeaveControlsProps> = ({
             className="bg-transparent border-none outline-none text-sm font-medium text-gray-700"
           >
             <option value="all">Semua Jenis</option>
-            <option value="tahunan">Cuti Tahunan</option>
-            <option value="sakit">Sakit</option>
-            <option value="penting">Izin Penting</option>
+            <option value="ANNUAL">Cuti Tahunan</option>
+            <option value="SICK">Sakit</option>
+            <option value="EMERGENCY">Izin Penting</option>
+            <option value="UNPAID">Cuti Diluar Tanggungan</option>
           </select>
         </div>
       </div>

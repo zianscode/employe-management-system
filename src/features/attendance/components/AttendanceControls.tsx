@@ -50,11 +50,13 @@ const AttendanceControls: React.FC<AttendanceControlsProps> = ({
             className="bg-transparent border-none outline-none text-sm font-medium text-gray-700"
           >
             <option value="all">Semua Status</option>
-            <option value="hadir">Hadir</option>
-            <option value="terlambat">Terlambat</option>
-            <option value="izin">Izin</option>
-            <option value="sakit">Sakit</option>
-            <option value="alpha">Alpha</option>
+            <option value="PRESENT">Hadir</option>
+            <option value="LATE">Terlambat</option>
+            <option value="EARLY_LEAVE">Pulang Cepat</option>
+            <option value="PERMISSION">Izin / Cuti</option>
+            <option value="SICK">Sakit</option>
+            <option value="ABSENT">Tidak Hadir</option>
+            <option value="NOT_YET">Belum Absen</option>
           </select>
         </div>
       </div>

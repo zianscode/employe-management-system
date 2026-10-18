@@ -18,11 +18,47 @@ const getStatusConfig = (status: StatusType) => {
         label: status === "ACTIVE" ? "Aktif" : "Hadir",
       };
     case "Izin":
-    case "LEAVE":
+    case "PERMISSION":
       return {
         color: "bg-blue-100 text-blue-700 border-blue-200",
         icon: <Clock className="w-4 h-4" />,
-        label: status === "LEAVE" ? "Cuti" : "Izin",
+        label: "Izin / Cuti",
+      };
+    case "PRESENT":
+      return {
+        color: "bg-green-100 text-green-700 border-green-200",
+        icon: <UserCheck className="w-4 h-4" />,
+        label: "Hadir",
+      };
+    case "LATE":
+      return {
+        color: "bg-yellow-100 text-yellow-700 border-yellow-200",
+        icon: <AlertCircle className="w-4 h-4" />,
+        label: "Terlambat",
+      };
+    case "ABSENT":
+      return {
+        color: "bg-red-100 text-red-700 border-red-200",
+        icon: <UserX className="w-4 h-4" />,
+        label: "Tidak Hadir",
+      };
+    case "SICK":
+      return {
+        color: "bg-orange-100 text-orange-700 border-orange-200",
+        icon: <AlertCircle className="w-4 h-4" />,
+        label: "Sakit",
+      };
+    case "EARLY_LEAVE":
+      return {
+        color: "bg-orange-100 text-orange-700 border-orange-200",
+        icon: <Clock className="w-4 h-4" />,
+        label: "Pulang Cepat",
+      };
+    case "NOT_YET":
+      return {
+        color: "bg-gray-100 text-gray-600 border-gray-200",
+        icon: <Clock className="w-4 h-4" />,
+        label: "Belum Absen",
       };
     case "Terlambat":
     case "PROBATION":

@@ -1,20 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { SystemSettings, SettingsTabId } from "@/shared/types/settings.types";
+import { SystemSettings, SettingsTabId, SystemUser } from "@/shared/types/settings.types";
 import { getUsersAction } from "@/server/modules/settings/user.actions";
 
-interface SystemUser {
-  id: string | number;
-  name: string;
-  email: string;
-  role: string;
-  status: string;
-  lastLogin: string;
-}
-
-export function useSettings() {
-  const [activeTab, setActiveTab] = useState<SettingsTabId>("general");
+export function useSettings(isAdmin: boolean) {
+  const [activeTab, setActiveTab] = useState<SettingsTabId>(isAdmin ? "general" : "session");
   const [users, setUsers] = useState<SystemUser[]>([]);
   const [settings, setSettings] = useState<SystemSettings>({
     autoBackup: true,
@@ -30,14 +21,14 @@ export function useSettings() {
 
   const fetchUsers = async () => {
     const res = await getUsersAction();
-    if (res.success) {
+    if (res.success && res.data) {
       setUsers(res.data);
     }
   };
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    if (isAdmin) fetchUsers();
+  }, [isAdmin]);
 
   const handleToggle = (setting: keyof SystemSettings) => {
     setSettings((prev) => ({

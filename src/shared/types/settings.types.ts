@@ -11,3 +11,27 @@ export interface SystemSettings {
 }
 
 export type SettingsTabId = "general" | "company" | "users" | "security" | "notifications" | "session";
+
+export interface SystemUser {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  status: string;
+  lastLogin: string;
+}
+
+/** Pengaturan perusahaan (tabel CompanySetting) */
+export interface CompanySetting {
+  id: string;
+  companyName: string;
+  companyCode: string | null;
+  npwp: string | null;
+  phone: string | null;
+  workStartTime: string;
+  workEndTime: string;
+  lateToleranceMinutes: number;
+  overtimeRatePerHour: number;
+  workingDaysPerMonth: number;
+  annualLeaveQuota: number;
+}

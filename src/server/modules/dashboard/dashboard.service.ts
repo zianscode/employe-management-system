@@ -1,68 +1,60 @@
 import { prisma } from "@/server/db/prisma";
-import { LeaveStatus, LeaveType } from "@prisma/client";
+import { EmployeeStatus, LeaveStatus } from "@prisma/client";
+import { CurrentUser } from "@/server/auth/guard";
+import { ROLES } from "@/shared/constants/roles";
+import { attendanceService } from "@/server/modules/attendance/attendance.service";
+import { leaveService } from "@/server/modules/leave/leave.service";
+import { dateKeyToDate, toDateKey } from "@/shared/utils/date";
+
+const ATTENDANCE_LABELS: Record<string, string> = {
+  PRESENT: "Hadir",
+  LATE: "Terlambat",
+  EARLY_LEAVE: "Pulang Cepat",
+  ABSENT: "Tidak Hadir",
+  PERMISSION: "Izin / Cuti",
+  SICK: "Sakit",
+  NOT_YET: "Belum Absen",
+};
 
 export class DashboardService {
-  async getStats(role: string, userId: string) {
-    // Jika Role adalah EMPLOYEE, ambil data personal
-    if (role === "EMPLOYEE") {
-      const employee = await prisma.employee.findUnique({
-        where: { userId },
-      });
+  async getStats(user: CurrentUser) {
+    // Karyawan biasa: ringkasan pribadi
+    if (user.role === ROLES.EMPLOYEE) {
+      if (!user.employeeId) throw new Error("Profil karyawan tidak ditemukan");
 
-      if (!employee) throw new Error("Profil karyawan tidak ditemukan");
-
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      const attendance = await prisma.attendance.findFirst({
-        where: {
-          employeeId: employee.id,
-          date: today,
-        },
-      });
-
-      const leaveQuota = 12; // Contoh jatah cuti
-      const leaveTaken = await prisma.leaveRequest.aggregate({
-        where: {
-          employeeId: employee.id,
-          status: LeaveStatus.HR_APPROVED, // Gunakan enum yang benar
-          type: LeaveType.ANNUAL,
-        },
-        _sum: { duration: true },
-      });
+      const [today, balance, paidSalaries] = await Promise.all([
+        attendanceService.getMyToday(user.employeeId),
+        leaveService.getBalance(user.employeeId),
+        prisma.salary.count({ where: { employeeId: user.employeeId, isPaid: true } }),
+      ]);
 
       return {
-        type: "PERSONAL",
+        type: "PERSONAL" as const,
         stats: {
-          attendanceStatus: attendance?.status || "BELUM ABSEN",
-          checkInTime: attendance?.checkIn || null,
-          remainingLeave: leaveQuota - (leaveTaken._sum.duration || 0),
-          totalSalaryReceived: await prisma.salary.count({ where: { employeeId: employee.id, isPaid: true } }),
-        }
+          attendanceStatus: ATTENDANCE_LABELS[today.status] ?? today.status,
+          checkInTime: today.checkIn,
+          remainingLeave: balance.remaining,
+          totalSalaryReceived: paidSalaries,
+        },
       };
     }
 
-    // Jika Role adalah ADMIN/MANAGER, ambil data organisasi
-    const totalEmployees = await prisma.employee.count();
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const presentToday = await prisma.attendance.count({
-      where: { date: { gte: today } },
-    });
-
-    const leaveRequests = await prisma.leaveRequest.count({
-      where: { status: "PENDING" },
-    });
+    // HR / Admin / Manager: ringkasan organisasi
+    const today = dateKeyToDate(toDateKey());
+    const [totalEmployees, presentToday, leaveRequests] = await Promise.all([
+      prisma.employee.count({ where: { status: { in: [EmployeeStatus.ACTIVE, EmployeeStatus.PROBATION] } } }),
+      prisma.attendance.count({ where: { date: today } }),
+      prisma.leaveRequest.count({ where: { status: { in: [LeaveStatus.PENDING, LeaveStatus.MANAGER_APPROVED] } } }),
+    ]);
 
     return {
-      type: "ORGANIZATIONAL",
+      type: "ORGANIZATIONAL" as const,
       stats: {
         totalEmployees,
         presentToday,
         leaveRequests,
         efficiency: totalEmployees > 0 ? Math.round((presentToday / totalEmployees) * 100) : 0,
-      }
+      },
     };
   }
 }

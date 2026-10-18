@@ -2,7 +2,8 @@
 
 import React, { useState } from "react";
 import { Settings, Building2, Users, Shield, Bell, LogOut } from "lucide-react";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
+import { isAdminRole } from "@/shared/constants/roles";
 import { useSettings } from "@/features/settings/hooks/use-settings";
 import { GeneralSettings } from "./GeneralSettings";
 import { CompanySettings } from "./CompanySettings";
@@ -14,19 +15,23 @@ import SettingsHeader from "./SettingsHeader";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 
 export function SettingsClient() {
-  const { activeTab, setActiveTab, settings, users, handleToggle, refreshUsers } = useSettings();
+  const { data: session } = useSession();
+  const isAdmin = isAdminRole(session?.user?.role);
+  const { activeTab, setActiveTab, settings, users, handleToggle, refreshUsers } = useSettings(isAdmin);
   
   // State Modal
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
-  const tabs: { id: SettingsTabId; label: string; icon: React.ElementType }[] = [
-    { id: "general", label: "Umum", icon: Settings },
-    { id: "company", label: "Perusahaan", icon: Building2 },
-    { id: "users", label: "Pengguna", icon: Users },
-    { id: "security", label: "Keamanan", icon: Shield },
-    { id: "notifications", label: "Notifikasi", icon: Bell },
-    { id: "session", label: "Sesi", icon: LogOut },
+  const allTabs: { id: SettingsTabId; label: string; icon: React.ElementType; adminOnly: boolean }[] = [
+    { id: "general", label: "Umum", icon: Settings, adminOnly: true },
+    { id: "company", label: "Perusahaan", icon: Building2, adminOnly: true },
+    { id: "users", label: "Pengguna", icon: Users, adminOnly: true },
+    { id: "security", label: "Keamanan", icon: Shield, adminOnly: true },
+    { id: "notifications", label: "Notifikasi", icon: Bell, adminOnly: true },
+    { id: "session", label: "Sesi", icon: LogOut, adminOnly: false },
   ];
+  const tabs = allTabs.filter((tab) => isAdmin || !tab.adminOnly);
+  const currentTab = tabs.some((tab) => tab.id === activeTab) ? activeTab : "session";
 
   return (
     <div className="space-y-4">
@@ -34,7 +39,7 @@ export function SettingsClient() {
       <div className="flex overflow-x-auto gap-2 bg-white/50 p-1.5 rounded-2xl border border-gray-100 shadow-sm backdrop-blur-md w-fit">
         {tabs.map((tab) => {
           const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
+          const isActive = currentTab === tab.id;
           return (
             <button
               key={tab.id}
@@ -53,20 +58,20 @@ export function SettingsClient() {
       </div>
 
       <div className="transition-all duration-500">
-        {activeTab === "general" && (
+        {currentTab === "general" && (
           <GeneralSettings settings={settings} onToggle={handleToggle} />
         )}
-        {activeTab === "company" && <CompanySettings />}
-        {activeTab === "users" && (
+        {currentTab === "company" && <CompanySettings />}
+        {currentTab === "users" && (
           <UserManagement users={users} onRefresh={refreshUsers} />
         )}
-        {activeTab === "security" && (
+        {currentTab === "security" && (
           <SystemSecurity settings={settings} onToggle={handleToggle} />
         )}
-        {activeTab === "notifications" && (
+        {currentTab === "notifications" && (
           <NotificationSettings settings={settings} onToggle={handleToggle} />
         )}
-        {activeTab === "session" && (
+        {currentTab === "session" && (
           <div className="bg-red-50 p-8 rounded-[32px] border border-red-100 flex flex-col md:flex-row items-center justify-between gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex items-center gap-6">
               <div className="p-4 bg-red-100 rounded-2xl text-red-600">

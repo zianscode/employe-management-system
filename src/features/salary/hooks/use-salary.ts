@@ -1,43 +1,48 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { toast } from "sonner";
 import { SalaryRecord } from "@/shared/types/salary.types";
-import { getSalaries } from "@/server/modules/salary/salary.actions";
+import { getSalariesAction } from "@/server/modules/salary/salary.actions";
+import { toDateKey } from "@/shared/utils/date";
 
 export function useSalary() {
   const [salaryData, setSalaryData] = useState<SalaryRecord[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedMonth, setSelectedMonth] = useState("January 2024");
+  /** "YYYY-MM" */
+  const [selectedMonth, setSelectedMonth] = useState(() => toDateKey().slice(0, 7));
   const [statusFilter, setStatusFilter] = useState("Semua Status");
   const [searchQuery, setSearchQuery] = useState("");
 
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    const [year, month] = selectedMonth.split("-").map(Number);
+    const res = await getSalariesAction(month, year);
+    if (res.success && res.data) setSalaryData(res.data);
+    else toast.error(res.message);
+    setLoading(false);
+  }, [selectedMonth]);
+
   useEffect(() => {
-    async function fetchData() {
-      setLoading(true);
-      const data = await getSalaries();
-      setSalaryData(data as SalaryRecord[]);
-      setLoading(false);
-    }
-    fetchData();
-  }, []);
+    refresh();
+  }, [refresh]);
 
   const filteredData = useMemo(() => {
+    const q = searchQuery.toLowerCase();
     return salaryData.filter((emp) => {
-      const matchesSearch =
-        emp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        emp.nip.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesStatus =
-        statusFilter === "Semua Status" || emp.status === statusFilter;
+      const matchesSearch = emp.name.toLowerCase().includes(q) || emp.nip.toLowerCase().includes(q);
+      const matchesStatus = statusFilter === "Semua Status" || emp.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
   }, [salaryData, searchQuery, statusFilter]);
 
-  const stats = useMemo(() => {
-    return {
+  const stats = useMemo(
+    () => ({
       totalSalary: salaryData.reduce((sum, emp) => sum + emp.totalSalary, 0),
       basicSalary: salaryData.reduce((sum, emp) => sum + emp.basicSalary, 0),
-      totalAllowance: salaryData.reduce((sum, emp) => sum + emp.allowance, 0),
+      totalAllowance: salaryData.reduce((sum, emp) => sum + emp.allowance + emp.overtimePay, 0),
       totalDeduction: salaryData.reduce((sum, emp) => sum + emp.deduction, 0),
-    };
-  }, [salaryData]);
+    }),
+    [salaryData]
+  );
 
   return {
     data: filteredData,
@@ -51,9 +56,6 @@ export function useSalary() {
     setSelectedMonth,
     totalCount: salaryData.length,
     filteredCount: filteredData.length,
-    refresh: async () => {
-      const data = await getSalaries();
-      setSalaryData(data as SalaryRecord[]);
-    }
+    refresh,
   };
 }

@@ -28,7 +28,7 @@ export default function LayoutProvider({
 
     // 2. Handle Incomplete Profile
     if (status === "authenticated" && session?.user) {
-      const isProfileComplete = (session.user as any).isProfileComplete;
+      const isProfileComplete = session.user.isProfileComplete;
       const isOnDashboard = pathname.startsWith("/dashboard");
       const isOnOnboarding = pathname === "/onboarding";
 

@@ -41,7 +41,7 @@ export function useProfile() {
   useEffect(() => {
     async function loadProfile() {
       const res = await getProfileAction();
-      if (res.success) {
+      if (res.success && res.data) {
         setProfileData(res.data);
       }
       setLoading(false);

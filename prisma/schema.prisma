@@ -6,70 +6,42 @@ datasource db {
   provider = "postgresql"
 }
 
+// =====================================================================
+// AKUN & HAK AKSES
+// =====================================================================
+
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  password      String
-  roleId        String
-  role          Role      @relation(fields: [roleId], references: [id])
-  employee      Employee?
-  approvedLeaves LeaveRequest[] @relation("ApprovedBy")
-  resetTokens   PasswordResetToken[]
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  accounts      Account[]
-  sessions      Session[]
+  id          String               @id @default(cuid())
+  email       String               @unique
+  password    String
+  roleId      String
+  role        Role                 @relation(fields: [roleId], references: [id])
+  employee    Employee?
+  resetTokens PasswordResetToken[]
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
 }
 
-model Account {
-  id                 String  @id @default(cuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?  @db.Text
-  access_token       String?  @db.Text
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?  @db.Text
-  session_state      String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
-}
-
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
-
-  @@unique([identifier, token])
-}
-
+/// SUPER_ADMIN | HR | MANAGER | EMPLOYEE
 model Role {
-  id          String       @id @default(cuid())
-  name        String       @unique 
-  permissions Permission[]
-  users       User[]
-  createdAt   DateTime     @default(now())
-}
-
-model Permission {
   id        String   @id @default(cuid())
-  name      String   @unique 
-  roles     Role[]
+  name      String   @unique
+  users     User[]
   createdAt DateTime @default(now())
 }
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  expires   DateTime
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+// =====================================================================
+// ORGANISASI & KARYAWAN
+// =====================================================================
 
 model Department {
   id          String     @id @default(cuid())
@@ -80,11 +52,12 @@ model Department {
 }
 
 model Position {
-  id          String     @id @default(cuid())
-  name        String     @unique
-  salaryBase  Float      @default(0)
-  employees   Employee[]
-  createdAt   DateTime   @default(now())
+  id         String     @id @default(cuid())
+  name       String     @unique
+  /// Gaji pokok standar jabatan (rupiah). Disalin ke Employee.salaryBase saat karyawan dibuat.
+  salaryBase Int        @default(0)
+  employees  Employee[]
+  createdAt  DateTime   @default(now())
 }
 
 enum EmployeeStatus {
@@ -92,7 +65,6 @@ enum EmployeeStatus {
   PROBATION
   RESIGNED
   TERMINATED
-  LEAVE
 }
 
 enum EmploymentType {
@@ -105,59 +77,67 @@ enum EmploymentType {
 }
 
 model Employee {
-  id              String         @id @default(uuid())
-  userId          String?        @unique
-  user            User?          @relation(fields: [userId], references: [id])
-  
-  name            String
-  email           String         @unique
-  nip             String?        @unique
-  joinDate        DateTime?      @default(now())
-  status          EmployeeStatus @default(PROBATION)
-  employmentType  EmploymentType @default(FULL_TIME)
-  salaryBase      Float?         @default(0)
-  leaveQuota      Int            @default(12)
-  
-  departmentId    String?
-  department      Department?    @relation(fields: [departmentId], references: [id])
-  positionId      String?
-  position        Position?      @relation(fields: [positionId], references: [id])
-  
-  managerId       String?
-  manager         Employee?      @relation("ManagerToSubordinate", fields: [managerId], references: [id])
-  subordinates    Employee[]     @relation("ManagerToSubordinate")
+  id     String  @id @default(uuid())
+  userId String? @unique
+  user   User?   @relation(fields: [userId], references: [id])
 
-  avatar          String?        
-  phone           String?
-  address         String?
-  gender          String?        
-  birthDate       DateTime?
-  placeOfBirth    String?
-  identityNumber  String?        
-  bio             String?        @db.Text
-  
-  bankName        String?
-  bankAccount     String?
-  bankHolderName  String?
-  npwpNumber      String?        
-  
-  emergencyName   String?
-  emergencyPhone  String?
+  name           String
+  email          String         @unique
+  nip            String?        @unique
+  joinDate       DateTime?      @default(now())
+  status         EmployeeStatus @default(PROBATION)
+  employmentType EmploymentType @default(FULL_TIME)
+  salaryBase     Int            @default(0)
+  leaveQuota     Int            @default(12)
+
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id])
+  positionId   String?
+  position     Position?   @relation(fields: [positionId], references: [id])
+
+  managerId    String?
+  manager      Employee?  @relation("ManagerToSubordinate", fields: [managerId], references: [id])
+  subordinates Employee[] @relation("ManagerToSubordinate")
+
+  avatar         String?
+  phone          String?
+  address        String?
+  gender         String?
+  birthDate      DateTime?
+  placeOfBirth   String?
+  identityNumber String?
+  bio            String?   @db.Text
+
+  bankName       String?
+  bankAccount    String?
+  bankHolderName String?
+  npwpNumber     String?
+
+  emergencyName     String?
+  emergencyPhone    String?
   emergencyRelation String?
 
-  education       String?        
-  skills          String?        
-  
-  isProfileComplete Boolean      @default(false)
-  onboardedAt     DateTime?
-  
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  education String?
+  skills    String?
 
-  attendances     Attendance[]
-  salaries        Salary[]
-  leaveRequests   LeaveRequest[]
+  isProfileComplete Boolean   @default(false)
+  onboardedAt       DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  attendances   Attendance[]
+  salaries      Salary[]
+  leaveRequests LeaveRequest[]
+
+  managerApprovedLeaves LeaveRequest[] @relation("LeaveManagerApprover")
+  hrApprovedLeaves      LeaveRequest[] @relation("LeaveHrApprover")
+  rejectedLeaves        LeaveRequest[] @relation("LeaveRejector")
 }
+
+// =====================================================================
+// OPERASIONAL: ABSENSI, CUTI, GAJI
+// =====================================================================
 
 enum AttendanceStatus {
   PRESENT
@@ -169,25 +149,25 @@ enum AttendanceStatus {
 }
 
 model Attendance {
-  id            String           @id @default(cuid())
-  employeeId    String
-  employee      Employee         @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  
-  date          DateTime         @db.Date
-  checkIn       DateTime?
-  checkOut      DateTime?
-  
-  lateInMinutes Int              @default(0)
-  workHours     Float            @default(0)
-  isOvertime    Boolean          @default(false)
-  overtimeHours Float            @default(0)
-  
-  status        AttendanceStatus @default(PRESENT)
-  location      String?
-  notes         String?
-  
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
+  id         String   @id @default(cuid())
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id])
+
+  date     DateTime  @db.Date
+  checkIn  DateTime?
+  checkOut DateTime?
+
+  lateInMinutes Int     @default(0)
+  workHours     Float   @default(0)
+  isOvertime    Boolean @default(false)
+  overtimeHours Float   @default(0)
+
+  status   AttendanceStatus @default(PRESENT)
+  location String?
+  notes    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([employeeId, date])
 }
@@ -199,6 +179,8 @@ enum LeaveType {
   UNPAID
 }
 
+/// Alur: PENDING -> (MANAGER_APPROVED) -> HR_APPROVED (final)
+///       PENDING / MANAGER_APPROVED -> REJECTED | CANCELLED
 enum LeaveStatus {
   PENDING
   MANAGER_APPROVED
@@ -208,56 +190,81 @@ enum LeaveStatus {
 }
 
 model LeaveRequest {
-  id              String      @id @default(cuid())
-  employeeId      String
-  employee        Employee    @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  
-  type            LeaveType   @default(ANNUAL)
-  startDate       DateTime
-  endDate         DateTime
-  duration        Int
-  reason          String
+  id         String   @id @default(cuid())
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id])
+
+  type      LeaveType @default(ANNUAL)
+  startDate DateTime
+  endDate   DateTime
+  duration  Int
+  reason    String
+
+  status LeaveStatus @default(PENDING)
+
+  managerApproverId String?
+  managerApprover   Employee? @relation("LeaveManagerApprover", fields: [managerApproverId], references: [id])
+  managerApprovedAt DateTime?
+
+  hrApproverId String?
+  hrApprover   Employee? @relation("LeaveHrApprover", fields: [hrApproverId], references: [id])
+  hrApprovedAt DateTime?
+
+  rejectedById    String?
+  rejectedBy      Employee? @relation("LeaveRejector", fields: [rejectedById], references: [id])
+  rejectedAt      DateTime?
   rejectionReason String?
-  
-  status          LeaveStatus @default(PENDING)
-  
-  approvedById    String?     
-  approver        User?       @relation("ApprovedBy", fields: [approvedById], references: [id])
-  
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
+/// Slip gaji per karyawan per bulan. Semua nominal dalam rupiah.
 model Salary {
-  id              String    @id @default(cuid())
-  employeeId      String
-  employee        Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  
-  periodMonth     Int
-  periodYear      Int
-  
-  basicSalary     Float
-  allowances      Float     @default(0)
-  deductions      Float     @default(0)
-  overtimePay     Float     @default(0)
-  unpaidLeaveCut  Float     @default(0)
-  
-  totalGross      Float
-  totalNet        Float
-  
-  isPaid          Boolean   @default(false)
-  paidAt          DateTime?
-  
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id         String   @id @default(cuid())
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id])
+
+  periodMonth Int
+  periodYear  Int
+
+  basicSalary    Int
+  allowances     Int @default(0)
+  deductions     Int @default(0)
+  overtimePay    Int @default(0)
+  unpaidLeaveCut Int @default(0)
+
+  totalGross Int
+  totalNet   Int
+
+  isPaid Boolean   @default(false)
+  paidAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([employeeId, periodMonth, periodYear])
 }
-model PasswordResetToken {
-  id        String   @id @default(cuid())
-  token     String   @unique
-  expires   DateTime
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
+
+// =====================================================================
+// PENGATURAN PERUSAHAAN (satu baris, id = "default")
+// =====================================================================
+
+model CompanySetting {
+  id          String  @id @default("default")
+  companyName String  @default("Perusahaan Saya")
+  companyCode String?
+  npwp        String?
+  phone       String?
+
+  /// Format "HH:mm"
+  workStartTime        String @default("08:00")
+  workEndTime          String @default("17:00")
+  lateToleranceMinutes Int    @default(15)
+  overtimeRatePerHour  Int    @default(50000)
+  workingDaysPerMonth  Int    @default(22)
+  /// Jatah cuti tahunan default untuk karyawan baru
+  annualLeaveQuota     Int    @default(12)
+
+  updatedAt DateTime @updatedAt
 }

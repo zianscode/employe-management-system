@@ -1,86 +1,42 @@
 "use server";
 
-import { prisma } from "@/server/db/prisma";
 import { revalidatePath } from "next/cache";
-import { PayrollService } from "./payroll.service";
+import { requireRole, requireUser } from "@/server/auth/guard";
 import { ApiResponse } from "@/server/utils/api-response";
+import { ADMIN_ROLES } from "@/shared/constants/roles";
+import { SalaryRecord } from "@/shared/types/salary.types";
+import { payrollService } from "./payroll.service";
 
-export async function getSalaries() {
+/** Slip gaji pada periode tertentu (HR/Admin: semua, lainnya: milik sendiri) */
+export async function getSalariesAction(month: number, year: number) {
   try {
-    const salaries = await prisma.salary.findMany({
-      include: {
-        employee: {
-          include: {
-            position: true,
-          },
-        },
-      },
-      orderBy: { createdAt: "desc" },
-    });
-    
-    return salaries.map(s => ({
-      nip: s.employee.nip,
-      name: s.employee.name,
-      position: s.employee.position?.name || "N/A",
-      basicSalary: s.basicSalary,
-      allowance: s.allowances,
-      deduction: s.deductions,
-      totalSalary: s.totalNet,
-      status: s.isPaid ? "Dibayar" : "Pending",
-    }));
+    const user = await requireUser();
+    return ApiResponse.success("Data gaji", await payrollService.list(user, month, year));
   } catch (error) {
-    console.error("Failed to fetch salaries:", error);
-    return [];
+    return ApiResponse.fromError<SalaryRecord[]>(error, "Gagal mengambil data gaji");
   }
 }
 
-export async function generateSalary(nip: string, month: number, year: number) {
+export async function generatePayrollAction(month: number, year: number) {
   try {
-    const employee = await prisma.employee.findFirst({
-      where: { nip },
-    });
-
-    if (!employee) throw new Error("Employee not found");
-
-    // Mock logic for calculation (could be more complex based on attendance)
-    const basicSalary = employee.salaryBase || 0;
-    const allowances = 500000;
-    const deductions = 0;
-    const totalGross = basicSalary + allowances;
-    const totalNet = totalGross - deductions;
-
-    const salary = await prisma.salary.create({
-      data: {
-        employeeId: employee.id,
-        basicSalary,
-        allowances,
-        deductions,
-        totalGross,
-        totalNet,
-        periodMonth: month,
-        periodYear: year,
-        isPaid: true,
-        paidAt: new Date(),
-      },
-    });
-
+    await requireRole(ADMIN_ROLES);
+    const { processed, skippedPaid } = await payrollService.generateMonthly(month, year);
     revalidatePath("/dashboard/salary");
-    return { success: true, data: salary };
+    return ApiResponse.success(
+      `Gaji ${processed} karyawan berhasil dihitung` + (skippedPaid ? ` (${skippedPaid} slip sudah dibayar, dilewati)` : "")
+    );
   } catch (error) {
-    console.error("Failed to generate salary:", error);
-    return { success: false, error: "Calculation failed" };
+    return ApiResponse.fromError(error, "Gagal menghitung gaji");
   }
 }
 
-const service = new PayrollService();
-
-export async function calculatePayrollAction(employeeId: string, month: number, year: number) {
+export async function markSalaryPaidAction(salaryId: string) {
   try {
-    const result = await service.calculateMonthlySalary(employeeId, month, year);
+    await requireRole(ADMIN_ROLES);
+    await payrollService.markAsPaid(salaryId);
     revalidatePath("/dashboard/salary");
-    return ApiResponse.success("Gaji bulanan berhasil dihitung", result);
+    return ApiResponse.success("Slip gaji ditandai sudah dibayar");
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Gagal menghitung gaji bulanan";
-    return ApiResponse.error(errorMessage);
+    return ApiResponse.fromError(error, "Gagal memperbarui status gaji");
   }
 }

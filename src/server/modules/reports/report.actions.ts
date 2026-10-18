@@ -1,44 +1,28 @@
 "use server";
 
-import { auth } from "@/server/auth/auth";
-import { ReportService } from "./report.service";
+import { requireRole, requireUser } from "@/server/auth/guard";
 import { ApiResponse } from "@/server/utils/api-response";
-import { prisma } from "@/server/db/prisma";
+import { ADMIN_ROLES, isAdminRole, ROLES } from "@/shared/constants/roles";
+import { ReportService } from "./report.service";
 
 const service = new ReportService();
 
+/** HR/Admin: total gaji perusahaan. Selain itu: gaji milik sendiri. */
 export async function getSalaryTrendAction() {
   try {
-    const session = await auth();
-    const role = session?.user?.role;
-    let employeeId: string | undefined;
-
-    if (role === "EMPLOYEE") {
-      const emp = await prisma.employee.findUnique({
-        where: { userId: session?.user?.id }
-      });
-      employeeId = emp?.id;
-    }
-
-    const data = await service.getSalaryTrend(employeeId);
-    return ApiResponse.success("Salary trend fetched", data);
+    const user = await requireUser();
+    const employeeId = isAdminRole(user.role) ? undefined : user.employeeId ?? "__none__";
+    return ApiResponse.success("Salary trend fetched", await service.getSalaryTrend(employeeId));
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Gagal mengambil tren gaji";
-    return ApiResponse.error(errorMessage);
+    return ApiResponse.fromError(error, "Gagal mengambil tren gaji");
   }
 }
 
 export async function getDeptDistributionAction() {
   try {
-    const session = await auth();
-    if (session?.user?.role === "EMPLOYEE") {
-      return ApiResponse.error("Akses ditolak");
-    }
-
-    const data = await service.getDepartmentDistribution();
-    return ApiResponse.success("Department distribution fetched", data);
+    await requireRole([...ADMIN_ROLES, ROLES.MANAGER]);
+    return ApiResponse.success("Department distribution fetched", await service.getDepartmentDistribution());
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Gagal mengambil distribusi departemen";
-    return ApiResponse.error(errorMessage);
+    return ApiResponse.fromError(error, "Gagal mengambil distribusi departemen");
   }
 }

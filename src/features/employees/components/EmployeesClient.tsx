@@ -49,10 +49,14 @@ export function EmployeesClient({ initialEmployees }: EmployeesClientProps) {
       const result = await deleteEmployeeAction(deletingId);
       if (result.success) {
         setEmployees(prev => prev.filter(emp => emp.id !== deletingId));
-        setIsConfirmOpen(false);
+        toast.success(result.message);
+      } else {
+        toast.error("Tidak dapat menghapus karyawan", { description: result.message, duration: 8000 });
       }
+      setIsConfirmOpen(false);
     } catch (error) {
       console.error(error);
+      toast.error("Terjadi kesalahan sistem.");
     } finally {
       setIsDeleting(false);
       setDeletingId(null);
@@ -91,7 +95,7 @@ export function EmployeesClient({ initialEmployees }: EmployeesClientProps) {
       <ConfirmModal
         isOpen={isConfirmOpen}
         title="Hapus Karyawan"
-        message="Apakah Anda yakin ingin menghapus data karyawan ini secara permanen? Akun login karyawan ini juga akan dihapus dan tindakan ini tidak dapat dibatalkan."
+        message="Hapus permanen hanya bisa untuk karyawan yang belum memiliki riwayat absensi, cuti, atau gaji. Akun login karyawan ini juga akan dihapus. Untuk karyawan yang keluar, ubah statusnya menjadi Resign/Diberhentikan."
         isLoading={isDeleting}
         confirmText="HAPUS"
         onConfirm={handleConfirmDelete}

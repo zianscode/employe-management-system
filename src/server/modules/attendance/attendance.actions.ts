@@ -1,122 +1,69 @@
 "use server";
 
-import { AttendanceService } from "./attendance.service";
-import { ApiResponse } from "@/server/utils/api-response";
-import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
-import { prisma } from "@/server/db/prisma";
+import { requireEmployee, requireUser } from "@/server/auth/guard";
+import { ApiResponse } from "@/server/utils/api-response";
+import { Attendance, MyTodayAttendance } from "@/shared/types/attendance.types";
+import { formatTime } from "@/shared/utils/date";
+import { attendanceService } from "./attendance.service";
 
-const service = new AttendanceService();
+const refresh = () => {
+  revalidatePath("/dashboard/attendance");
+  revalidatePath("/dashboard");
+};
 
-export async function clockInAction(employeeId: string) {
+/** Check-in untuk user yang sedang login */
+export async function clockInAction() {
   try {
-    const result = await service.clockIn(employeeId);
-    revalidatePath("/dashboard/attendance");
-    return ApiResponse.success("Berhasil Check-In", result);
+    const user = await requireEmployee();
+    const result = await attendanceService.clockIn(user.employeeId);
+    refresh();
+    return ApiResponse.success(
+      result.status === "LATE"
+        ? `Check-in ${formatTime(result.checkIn!)} (terlambat ${result.lateInMinutes} menit)`
+        : `Check-in berhasil pukul ${formatTime(result.checkIn!)}`
+    );
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Terjadi kesalahan saat check-in";
-    return ApiResponse.error(errorMessage);
+    return ApiResponse.fromError(error, "Terjadi kesalahan saat check-in");
   }
 }
 
-export async function clockOutAction(employeeId: string) {
+/** Check-out untuk user yang sedang login */
+export async function clockOutAction() {
   try {
-    const result = await service.clockOut(employeeId);
-    revalidatePath("/dashboard/attendance");
-    return ApiResponse.success("Berhasil Check-Out", result);
+    const user = await requireEmployee();
+    const result = await attendanceService.clockOut(user.employeeId);
+    refresh();
+    return ApiResponse.success(`Check-out berhasil pukul ${formatTime(result.checkOut!)}`);
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Terjadi kesalahan saat check-out";
-    return ApiResponse.error(errorMessage);
+    return ApiResponse.fromError(error, "Terjadi kesalahan saat check-out");
   }
 }
 
-export async function getAttendanceHistoryAction(filters?: Prisma.AttendanceWhereInput) {
+export async function getMyTodayAttendanceAction() {
   try {
-    const data = await service.getAttendanceHistory(filters);
-    return ApiResponse.success("Riwayat absensi berhasil diambil", data);
+    const user = await requireEmployee();
+    return ApiResponse.success("Absensi hari ini", await attendanceService.getMyToday(user.employeeId));
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Gagal mengambil riwayat absensi";
-    return ApiResponse.error(errorMessage);
+    return ApiResponse.fromError<MyTodayAttendance>(error, "Gagal mengambil absensi hari ini");
+  }
+}
+
+/** Rekap absensi per tanggal ("YYYY-MM-DD") */
+export async function getDailyAttendanceAction(dateKey: string) {
+  try {
+    const user = await requireUser();
+    return ApiResponse.success("Rekap absensi", await attendanceService.getDaily(user, dateKey));
+  } catch (error) {
+    return ApiResponse.fromError<Attendance[]>(error, "Gagal mengambil data absensi");
   }
 }
 
 export async function getAttendanceStatsAction() {
   try {
-    const data = await service.getStats();
-    return ApiResponse.success("Stats berhasil diambil", data);
+    const user = await requireUser();
+    return ApiResponse.success("Statistik absensi", await attendanceService.getTodayStats(user));
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Gagal mengambil stats";
-    return ApiResponse.error(errorMessage);
-  }
-}
-
-type AttendanceWithEmployee = Prisma.AttendanceGetPayload<{
-  include: { employee: true };
-}>;
-
-export async function getAttendance() {
-  try {
-    const attendance = await prisma.attendance.findMany({
-      include: {
-        employee: true,
-      },
-      orderBy: { date: "desc" },
-    });
-    
-    return attendance.map((att: AttendanceWithEmployee) => ({
-      nip: att.employee.nip || "N/A",
-      nama: att.employee.name,
-      tanggal: att.date.toLocaleDateString('id-ID'),
-      jamMasuk: att.checkIn || "-",
-      jamKeluar: att.checkOut || "-",
-      jamKerja: att.workHours || "-",
-      status: att.status as string,
-    }));
-  } catch (error) {
-    console.error("Failed to fetch attendance:", error);
-    return [];
-  }
-}
-
-export async function logAttendance(nip: string, type: "checkIn" | "checkOut") {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  try {
-    const existing = await prisma.attendance.findFirst({
-      where: {
-        employeeId: nip, // Menggunakan NIP sebagai ID Karyawan
-        date: today,
-      },
-    });
-
-    const now = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-
-    if (type === "checkIn") {
-      if (existing) return { success: false, error: "Already checked in today" };
-      await prisma.attendance.create({
-        data: {
-          employeeId: nip,
-          date: today,
-          checkIn: now,
-          status: "PRESENT",
-        },
-      });
-    } else {
-      if (!existing) return { success: false, error: "Must check in first" };
-      if (existing.checkOut) return { success: false, error: "Already checked out today" };
-      await prisma.attendance.update({
-        where: { id: existing.id },
-        data: {
-          checkOut: now,
-        },
-      });
-    }
-
-    revalidatePath("/dashboard/attendance");
-    return { success: true };
-  } catch (error) {
-    console.error("Failed to log attendance:", error);
-    return { success: false, error: "Database error" };
+    return ApiResponse.fromError(error, "Gagal mengambil statistik absensi");
   }
 }

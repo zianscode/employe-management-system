@@ -1,11 +1,15 @@
 "use client";
 
 import React from "react";
+import { useRouter } from "next/navigation";
 import AttendanceControls from "./AttendanceControls";
 import { AttendanceTable } from "./AttendanceTable";
+import { ClockInCard } from "./ClockInCard";
 import { useAttendance } from "@/features/attendance/hooks/use-attendance";
+import { toDateKey } from "@/shared/utils/date";
 
 export function AttendanceClient() {
+  const router = useRouter();
   const {
     data,
     isLoading,
@@ -15,10 +19,18 @@ export function AttendanceClient() {
     setSelectedDate,
     statusFilter,
     setStatusFilter,
-  } = useAttendance(new Date().toISOString().split('T')[0]);
+    refresh,
+  } = useAttendance(toDateKey());
 
   return (
     <>
+      <ClockInCard
+        onChange={() => {
+          refresh();
+          router.refresh();
+        }}
+      />
+
       <AttendanceControls
         searchQuery={searchQuery}
         selectedDate={selectedDate}
@@ -29,11 +41,7 @@ export function AttendanceClient() {
       />
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 mt-4">
-        <AttendanceTable
-          data={data}
-          isLoading={isLoading}
-          selectedDate={selectedDate}
-        />
+        <AttendanceTable data={data} isLoading={isLoading} selectedDate={selectedDate} />
       </div>
     </>
   );

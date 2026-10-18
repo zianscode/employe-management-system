@@ -10,6 +10,7 @@ import {
   RxGear,
 } from "react-icons/rx";
 import { MenuItem } from "./MenuItem";
+import { canAccessRoute } from "@/shared/constants/roles";
 
 interface MenuProps {
   currentPath: string;
@@ -26,46 +27,40 @@ export default function Menu({ currentPath, isCollapsed, role = "EMPLOYEE" }: Me
       label: "Dashboard",
       icon: <RxDashboard />,
       isActive: currentPath === "/dashboard" || currentPath === "/",
-      roles: ["SUPER_ADMIN", "HR", "MANAGER", "EMPLOYEE"],
     },
     {
       href: "/dashboard/employees",
       label: "Employees",
       icon: <RxGroup />,
       isActive: currentPath.startsWith("/dashboard/employees"),
-      roles: ["SUPER_ADMIN", "HR"],
     },
     {
       href: "/dashboard/attendance",
       label: "Attendance",
       icon: <RxClipboard />,
       isActive: currentPath === "/dashboard/attendance",
-      roles: ["SUPER_ADMIN", "HR", "MANAGER", "EMPLOYEE"],
     },
     {
       href: "/dashboard/leave",
       label: "Leave",
       icon: <RxPerson />,
       isActive: currentPath.startsWith("/dashboard/leave"),
-      roles: ["SUPER_ADMIN", "HR", "MANAGER", "EMPLOYEE"],
     },
     {
       href: "/dashboard/salary",
       label: isAdmin ? "Payroll" : "Salary",
       icon: <RxRocket />,
       isActive: currentPath.startsWith("/dashboard/salary"),
-      roles: ["SUPER_ADMIN", "HR", "EMPLOYEE"],
     },
     {
       href: "/dashboard/reports",
       label: "Reports",
       icon: <RxFileText />,
       isActive: currentPath.startsWith("/dashboard/reports"),
-      roles: ["SUPER_ADMIN", "HR", "MANAGER"],
     },
   ];
 
-  const filteredNavigation = allItems.filter(item => item.roles.includes(role));
+  const filteredNavigation = allItems.filter(item => canAccessRoute(item.href, role));
 
   const otherItems = [
     {

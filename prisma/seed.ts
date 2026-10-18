@@ -17,78 +17,18 @@ const prisma = new PrismaClient({ adapter });
 
 async function main() {
 
-  // 1. Permissions Dasar
-  const permissions = [
-    "view:dashboard",
-    "manage:users",
-    "manage:roles",
-    "manage:employees",
-    "manage:salary",
-    "manage:attendance",
-    "approve:leave",
-    "system:settings",
-  ];
+  // 1. Roles (hak akses diatur di src/shared/constants/roles.ts)
+  const [superAdminRole] = await Promise.all(
+    ["SUPER_ADMIN", "HR", "MANAGER", "EMPLOYEE"].map((name) =>
+      prisma.role.upsert({ where: { name }, update: {}, create: { name } })
+    )
+  );
 
-  for (const name of permissions) {
-    await prisma.permission.upsert({
-      where: { name },
-      update: {},
-      create: { name },
-    });
-  }
-
-  // 2. Roles Utama
-  
-  const superAdminRole = await prisma.role.upsert({
-    where: { name: "SUPER_ADMIN" },
+  // 2. Pengaturan perusahaan default
+  await prisma.companySetting.upsert({
+    where: { id: "default" },
     update: {},
-    create: {
-      name: "SUPER_ADMIN",
-      permissions: { connect: permissions.map((name) => ({ name })) },
-    },
-  });
-
-  await prisma.role.upsert({
-    where: { name: "HR" },
-    update: {},
-    create: {
-      name: "HR",
-      permissions: {
-        connect: [
-          { name: "view:dashboard" },
-          { name: "manage:employees" },
-          { name: "manage:attendance" },
-          { name: "manage:salary" },
-          { name: "approve:leave" },
-        ],
-      },
-    },
-  });
-
-  await prisma.role.upsert({
-    where: { name: "MANAGER" },
-    update: {},
-    create: {
-      name: "MANAGER",
-      permissions: {
-        connect: [
-          { name: "view:dashboard" },
-          { name: "manage:attendance" },
-          { name: "approve:leave" },
-        ],
-      },
-    },
-  });
-
-  await prisma.role.upsert({
-    where: { name: "EMPLOYEE" },
-    update: {},
-    create: {
-      name: "EMPLOYEE",
-      permissions: {
-        connect: [{ name: "view:dashboard" }],
-      },
-    },
+    create: { id: "default", companyName: "PT. Teknologi Maju Bersama", companyCode: "TMB" },
   });
 
   // 3. Default Dept & Pos for Admin
@@ -130,20 +70,14 @@ async function main() {
     create: { name: "HR Manager", salaryBase: 15000000 },
   });
 
-  // 4. SATU-SATUNYA Akun Default (Super Admin) - CLEAN START
+  // 4. Akun default Super Admin (aman dijalankan berulang: data & riwayat tidak dihapus)
   const hashedPassword = await bcrypt.hash("admin123", 10);
   const adminEmail = "budisantoso@gmail.com";
 
-  console.log(`Cleaning up existing data for ${adminEmail}...`);
-  await prisma.employee.deleteMany({ where: { email: adminEmail } });
-  await prisma.user.deleteMany({ where: { email: adminEmail } });
-  
-  const adminUser = await prisma.user.create({
-    data: {
-      email: adminEmail,
-      password: hashedPassword,
-      roleId: superAdminRole.id,
-    },
+  const adminUser = await prisma.user.upsert({
+    where: { email: adminEmail },
+    update: { password: hashedPassword, roleId: superAdminRole.id },
+    create: { email: adminEmail, password: hashedPassword, roleId: superAdminRole.id },
   });
 
   const adminProfileData = {
@@ -168,21 +102,25 @@ async function main() {
     skills: "React.js, Next.js, TypeScript, UI/UX Design, Project Management",
     joinDate: new Date("2024-01-01"),
     status: "ACTIVE",
+    salaryBase: adminPos.salaryBase,
     isProfileComplete: true,
     onboardedAt: new Date(),
   } as const;
 
-  await prisma.employee.create({
-    data: { 
-      ...adminProfileData,
-      email: adminEmail,
-      userId: adminUser.id,
-      departmentId: adminDept.id,
-      positionId: adminPos.id,
-    }
+  const adminEmployee = {
+    ...adminProfileData,
+    userId: adminUser.id,
+    departmentId: adminDept.id,
+    positionId: adminPos.id,
+  };
+
+  await prisma.employee.upsert({
+    where: { email: adminEmail },
+    update: adminEmployee,
+    create: { ...adminEmployee, email: adminEmail },
   });
 
-  console.log(`✅ Clean start successful: ${adminEmail} is recreated and fully populated.`);
+  console.log(`✅ Seed selesai. Login: ${adminEmail} / admin123`);
 }
 
 main()

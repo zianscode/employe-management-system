@@ -3,26 +3,41 @@
 import React, { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import EmployeeForm from "@/features/employees/components/EmployeeForm";
-import { getEmployeeById, updateEmployee } from "@/server/modules/employees/employee.actions";
-import { Employee, EmployeeFormData } from "@/shared/types/employee.types";
+import { getEmployeeByIdAction, updateEmployeeAction } from "@/server/modules/employees/employee.actions";
+import { EmployeeFormData } from "@/shared/types/employee.types";
 import { toast } from "sonner";
 
 export default function EditEmployeePage() {
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
-  
-  const [employee, setEmployee] = useState<Employee | null>(null);
+
+  const [employee, setEmployee] = useState<(Partial<EmployeeFormData> & { name: string }) | null>(null);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
-      const data = await getEmployeeById(id);
-      if (data) {
-        setEmployee(data);
+      const res = await getEmployeeByIdAction(id);
+      if (res.success && res.data) {
+        const d = res.data;
+        setEmployee({
+          name: d.name,
+          email: d.email,
+          nip: d.nip,
+          gender: d.gender || "MALE",
+          birthDate: d.birthDate,
+          positionId: d.positionId || "",
+          departmentId: d.departmentId || "",
+          roleId: d.roleId,
+          status: d.status,
+          employmentType: d.employmentType,
+          joinDate: d.joinDate,
+          salaryBase: d.salaryBase,
+          managerId: d.managerId,
+        });
       } else {
-        toast.error("Karyawan tidak ditemukan");
+        toast.error(res.message || "Karyawan tidak ditemukan");
         router.push("/dashboard/employees");
       }
       setLoading(false);
@@ -33,13 +48,13 @@ export default function EditEmployeePage() {
   const handleSubmit = async (data: EmployeeFormData) => {
     setIsSubmitting(true);
     try {
-      const result = await updateEmployee(id, data);
+      const result = await updateEmployeeAction(id, data);
       if (result.success) {
         toast.success("Data karyawan diperbarui!");
         router.push("/dashboard/employees");
         router.refresh();
       } else {
-        toast.error("Gagal memperbarui data: " + result.error);
+        toast.error("Gagal memperbarui data", { description: result.message });
         setIsSubmitting(false);
       }
     } catch (error) {
@@ -59,9 +74,9 @@ export default function EditEmployeePage() {
 
   return (
     <div className="py-4 pl-8 pr-6">
-      <EmployeeForm 
+      <EmployeeForm
         title={`Edit Data: ${employee.name}`}
-        initialData={employee as unknown as EmployeeFormData}
+        initialData={employee}
         onSubmit={handleSubmit}
         isSubmitting={isSubmitting}
       />

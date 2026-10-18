@@ -149,7 +149,6 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
             >
               <option value="all">Semua Status</option>
               <option value="ACTIVE">Aktif</option>
-              <option value="LEAVE">Cuti</option>
               <option value="PROBATION">Probasi</option>
               <option value="RESIGNED">Resigned</option>
             </select>

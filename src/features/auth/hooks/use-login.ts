@@ -42,7 +42,11 @@ export function useLogin() {
         redirect: false,
       });
 
-      if (result?.error) {
+      if (result?.code === "account_inactive") {
+        toast.error("Akun tidak aktif", {
+          description: "Karyawan dengan status resign/diberhentikan tidak dapat login.",
+        });
+      } else if (result?.error) {
         toast.error("Password salah!", {
           description: "Silakan periksa kembali password Anda.",
         });

@@ -3,17 +3,13 @@
 import React, { useState, useEffect } from "react";
 import { Calendar, FileText, User, Loader2, Send } from "lucide-react";
 import { LeaveType } from "@prisma/client";
-import { getEmployeesForLeave } from "@/server/modules/leave/leave.actions";
+import { getEmployeesForLeaveAction } from "@/server/modules/leave/leave.actions";
 import { useSession } from "next-auth/react";
+import { LeaveRequestInput } from "@/shared/types/leave.types";
+import { isAdminRole } from "@/shared/constants/roles";
 
 interface LeaveFormProps {
-  onSubmit: (data: {
-    employeeId: string;
-    type: LeaveType;
-    startDate: string;
-    endDate: string;
-    reason: string;
-  }) => Promise<void>;
+  onSubmit: (data: LeaveRequestInput) => Promise<void>;
   onCancel: () => void;
   isSubmitting?: boolean;
 }
@@ -21,15 +17,8 @@ interface LeaveFormProps {
 export const LeaveForm: React.FC<LeaveFormProps> = ({ onSubmit, onCancel, isSubmitting }) => {
   const { data: session } = useSession();
   
-  interface UserSession {
-    role?: string | { name: string };
-    employeeId?: string;
-  }
-
-  const user = session?.user as UserSession | undefined;
-  const userRole = typeof user?.role === "string" ? user.role : user?.role?.name || "EMPLOYEE";
-  const isAdminOrHR = userRole === "SUPER_ADMIN" || userRole === "HR";
-  const currentUserEmployeeId = user?.employeeId;
+  const isAdminOrHR = isAdminRole(session?.user?.role);
+  const currentUserEmployeeId = session?.user?.employeeId;
 
   const [employees, setEmployees] = useState<{ id: string; name: string; nip: string }[]>([]);
   const [formData, setFormData] = useState({
@@ -49,11 +38,8 @@ export const LeaveForm: React.FC<LeaveFormProps> = ({ onSubmit, onCancel, isSubm
       }
 
       if (isAdminOrHR) {
-        const data = await getEmployeesForLeave();
-        const mappedData = data.map(emp => ({
-          ...emp,
-          nip: emp.nip || "-"
-        }));
+        const res = await getEmployeesForLeaveAction();
+        const mappedData = res.success && res.data ? res.data : [];
         setEmployees(mappedData);
         if (mappedData.length > 0) {
           setFormData(prev => ({ ...prev, employeeId: mappedData[0].id }));

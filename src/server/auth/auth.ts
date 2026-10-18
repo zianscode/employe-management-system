@@ -3,18 +3,24 @@ import { JWT } from "next-auth/jwt";
 import { authConfig } from "./auth.config";
 import Credentials from "next-auth/providers/credentials";
 import { prisma } from "@/server/db/prisma";
-import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
+import { EmployeeStatus } from "@prisma/client";
 
 class UserNotFoundError extends CredentialsSignin {
   code = "user_not_found";
 }
 
+class AccountInactiveError extends CredentialsSignin {
+  code = "account_inactive";
+}
+
+/** Karyawan dengan status ini tidak boleh login lagi */
+const INACTIVE_STATUSES: EmployeeStatus[] = [EmployeeStatus.RESIGNED, EmployeeStatus.TERMINATED];
+
 const nextAuth = NextAuth({
   ...authConfig,
-  adapter: PrismaAdapter(prisma),
-  session: { strategy: "jwt" }, 
+  session: { strategy: "jwt" },
   providers: [
     Credentials({
       async authorize(credentials) {
@@ -22,40 +28,34 @@ const nextAuth = NextAuth({
           .object({ email: z.string().email(), password: z.string().min(6) })
           .safeParse(credentials);
 
-        if (parsedCredentials.success) {
-          const { email, password } = parsedCredentials.data;
-          const normalizedEmail = email.toLowerCase().trim();
+        if (!parsedCredentials.success) return null;
 
-          const user = await prisma.user.findUnique({ 
-            where: { email: normalizedEmail },
-            include: { 
-              role: true,
-              employee: true
-            }
-          });
+        const { email, password } = parsedCredentials.data;
+        const normalizedEmail = email.toLowerCase().trim();
 
-          if (!user) {
-            throw new UserNotFoundError();
-          }
+        const user = await prisma.user.findUnique({
+          where: { email: normalizedEmail },
+          include: { role: true, employee: true },
+        });
 
-          const passwordsMatch = await bcrypt.compare(password.trim(), user.password);
+        if (!user) throw new UserNotFoundError();
 
-          if (passwordsMatch) {
-            const isComplete = user.employee?.isProfileComplete ?? false;
-            console.log(`[AUTH] User ${normalizedEmail} login. Profile Complete: ${isComplete}`);
-            
-            return {
-              id: user.id,
-              email: user.email,
-              name: user.employee?.name || "User",
-              image: user.employee?.avatar || null, 
-              role: user.role.name,
-              isProfileComplete: isComplete,
-              employeeId: user.employee?.id
-            };
-          }
+        const passwordsMatch = await bcrypt.compare(password.trim(), user.password);
+        if (!passwordsMatch) return null;
+
+        if (user.employee && INACTIVE_STATUSES.includes(user.employee.status)) {
+          throw new AccountInactiveError();
         }
-        return null;
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.employee?.name || "User",
+          image: user.employee?.avatar || null,
+          role: user.role.name,
+          isProfileComplete: user.employee?.isProfileComplete ?? false,
+          employeeId: user.employee?.id,
+        };
       },
     }),
   ],
@@ -67,47 +67,35 @@ const nextAuth = NextAuth({
         token.role = user.role;
         token.isProfileComplete = user.isProfileComplete;
         token.employeeId = user.employeeId;
-        token.picture = user.image; 
+        token.picture = user.image;
       }
 
+      // Dari client hanya nama & foto yang boleh diperbarui.
+      // Role, employeeId, dan status profil selalu dibaca ulang dari database di bawah.
       if (trigger === "update" && session) {
-        const updatedToken = { ...token, ...session };
-        if (session.image) {
-          updatedToken.picture = session.image as string;
-        }
-        if (session.picture) {
-          updatedToken.picture = session.picture as string;
-        }
-        if (session.name) {
-          updatedToken.name = session.name as string;
-        }
-        return updatedToken;
+        if (typeof session.name === "string") token.name = session.name;
+        const picture = session.picture ?? session.image;
+        if (typeof picture === "string") token.picture = picture;
       }
 
       if (token.id) {
         try {
           const dbUser = await prisma.user.findUnique({
             where: { id: token.id as string },
-            include: { employee: true }
+            include: { role: true, employee: true },
           });
-          
-          if (!dbUser) {
-            console.log(`[AUTH] User ID ${token.id} TIDAK ADA di DB. Invaliding session.`);
-            return null; 
-          }
 
+          // Akun dihapus atau karyawan sudah nonaktif -> sesi tidak berlaku
+          if (!dbUser) return null;
+          if (dbUser.employee && INACTIVE_STATUSES.includes(dbUser.employee.status)) return null;
+
+          token.role = dbUser.role.name;
           token.isProfileComplete = dbUser.employee?.isProfileComplete ?? false;
           token.employeeId = dbUser.employee?.id;
-          
+
           const avatar = dbUser.employee?.avatar;
-          if (avatar && avatar.startsWith("data:image") && avatar.length > 2000) {
-            token.picture = null; 
-            console.log(`[AUTH] Avatar for ${dbUser.email} is too large (Base64). Skipping from token.`);
-          } else {
-            token.picture = avatar;
-          }
-          
-          console.log(`[AUTH] DB Check: ${dbUser.email} | Image: ${token.picture ? "URL" : "SKIPPED/NULL"}`);
+          // Avatar base64 terlalu besar untuk disimpan di cookie
+          token.picture = avatar && avatar.startsWith("data:image") && avatar.length > 2000 ? null : avatar;
         } catch (error) {
           console.error("[AUTH] DB Check Error:", error);
           return null;

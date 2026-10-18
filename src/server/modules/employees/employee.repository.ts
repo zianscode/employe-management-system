@@ -1,155 +1,174 @@
 import { prisma } from "@/server/db/prisma";
-import { EmployeeStatus, EmploymentType } from "@prisma/client";
+import { EmployeeStatus, EmploymentType, Prisma } from "@prisma/client";
+import { EmployeeFormData } from "@/shared/types/employee.types";
+import { companySettingService } from "@/server/modules/settings/company-setting.service";
 import bcrypt from "bcryptjs";
+
+type Tx = Prisma.TransactionClient;
 
 export class EmployeeRepository {
   async findAll(filters?: { status?: EmployeeStatus; departmentId?: string }) {
-    return await prisma.employee.findMany({
+    return prisma.employee.findMany({
       where: filters,
-      include: {
-        department: true,
-        position: true,
-        manager: true,
-      },
+      include: { department: true, position: true, manager: true },
       orderBy: { createdAt: "desc" },
     });
   }
 
   async findById(id: string) {
-    return await prisma.employee.findUnique({
+    return prisma.employee.findUnique({
       where: { id },
-      include: {
-        department: true,
-        position: true,
-        manager: true,
-        subordinates: true,
-      },
+      include: { department: true, position: true, manager: true, user: true },
     });
   }
 
-  async create(data: {
-    name: string;
-    email: string;
-    nip: string;
-    gender: string;
-    birthDate: string;
-    employmentType: string;
-    departmentId: string;
-    positionId: string;
-    roleId: string;
-    status: EmployeeStatus;
-    joinDate: string;
-    managerId?: string | null;
-    customPosition?: string;
-  }) {
+  async emailExists(email: string, excludeEmployeeId?: string) {
+    const excluded = excludeEmployeeId
+      ? await prisma.employee.findUnique({ where: { id: excludeEmployeeId }, select: { userId: true } })
+      : null;
+
+    const [employee, user] = await Promise.all([
+      prisma.employee.findFirst({ where: { email, NOT: excludeEmployeeId ? { id: excludeEmployeeId } : undefined } }),
+      prisma.user.findFirst({ where: { email, NOT: excluded?.userId ? { id: excluded.userId } : undefined } }),
+    ]);
+    return !!employee || !!user;
+  }
+
+  /**
+   * NIP dari form berbentuk <prefix><urutan 3 digit>. Jika sudah dipakai,
+   * cari nomor urut berikutnya yang masih kosong untuk prefix yang sama.
+   */
+  async resolveUniqueNip(nip: string, excludeEmployeeId?: string) {
+    const taken = async (value: string) =>
+      !!(await prisma.employee.findFirst({
+        where: { nip: value, NOT: excludeEmployeeId ? { id: excludeEmployeeId } : undefined },
+      }));
+
+    if (!nip || !(await taken(nip))) return nip;
+
+    const match = nip.match(/^(.*?)(\d{3})$/);
+    if (!match) throw new Error(`NIP ${nip} sudah terdaftar`);
+
+    const prefix = match[1];
+    for (let seq = Number(match[2]) + 1; seq <= 999; seq++) {
+      const candidate = `${prefix}${String(seq).padStart(3, "0")}`;
+      if (!(await taken(candidate))) return candidate;
+    }
+    throw new Error(`Nomor urut NIP untuk ${prefix} sudah habis`);
+  }
+
+  /** "OTHER" + customPosition -> buat jabatan baru bila belum ada */
+  private async resolvePositionId(tx: Tx, positionId?: string, customPosition?: string) {
+    if (positionId === "OTHER") {
+      if (!customPosition?.trim()) return undefined;
+      const position = await tx.position.upsert({
+        where: { name: customPosition.trim() },
+        update: {},
+        create: { name: customPosition.trim(), salaryBase: 0 },
+      });
+      return position.id;
+    }
+    return positionId || undefined;
+  }
+
+  async create(data: EmployeeFormData) {
     const normalizedEmail = data.email.toLowerCase().trim();
-    
+    const setting = await companySettingService.get();
+
     const role = await prisma.role.findUnique({ where: { id: data.roleId } });
-    const roleName = role?.name.toLowerCase().replace(/_/g, "") || "user";
-    const defaultPassword = `${roleName}123`;
-    
+    if (!role) throw new Error("Role tidak ditemukan");
+    const defaultPassword = `${role.name.toLowerCase().replace(/_/g, "")}123`;
     const hashedPassword = await bcrypt.hash(defaultPassword, 10);
 
-    let finalPositionId = data.positionId;
+    const employee = await prisma.$transaction(async (tx) => {
+      const positionId = await this.resolvePositionId(tx, data.positionId, data.customPosition);
+      const position = positionId ? await tx.position.findUnique({ where: { id: positionId } }) : null;
 
-    if (data.positionId === "OTHER" && data.customPosition) {
-      const newPos = await prisma.position.upsert({
-        where: { name: data.customPosition },
-        update: {},
-        create: { name: data.customPosition, salaryBase: 0 }
-      });
-      finalPositionId = newPos.id;
-    }
-
-    return await prisma.$transaction(async (tx) => {
       const user = await tx.user.create({
+        data: { email: normalizedEmail, password: hashedPassword, roleId: role.id },
+      });
+
+      return tx.employee.create({
         data: {
+          name: data.name,
           email: normalizedEmail,
-          password: hashedPassword,
-          roleId: data.roleId,
+          nip: data.nip || null,
+          gender: data.gender,
+          birthDate: data.birthDate ? new Date(data.birthDate) : null,
+          employmentType: data.employmentType as EmploymentType,
+          status: data.status,
+          joinDate: data.joinDate ? new Date(data.joinDate) : new Date(),
+          salaryBase: data.salaryBase && data.salaryBase > 0 ? Math.round(data.salaryBase) : position?.salaryBase ?? 0,
+          leaveQuota: setting.annualLeaveQuota,
+          isProfileComplete: false,
+          user: { connect: { id: user.id } },
+          ...(data.departmentId ? { department: { connect: { id: data.departmentId } } } : {}),
+          ...(positionId ? { position: { connect: { id: positionId } } } : {}),
+          ...(data.managerId ? { manager: { connect: { id: data.managerId } } } : {}),
         },
       });
+    });
 
-      return await tx.employee.create({
+    return { employee, defaultPassword };
+  }
+
+  async update(id: string, data: Partial<EmployeeFormData>) {
+    const normalizedEmail = data.email?.toLowerCase().trim();
+
+    return prisma.$transaction(async (tx) => {
+      const positionId = await this.resolvePositionId(tx, data.positionId, data.customPosition);
+
+      const employee = await tx.employee.update({
+        where: { id },
         data: {
           name: data.name,
           email: normalizedEmail,
           nip: data.nip,
           gender: data.gender,
-          birthDate: new Date(data.birthDate),
-          employmentType: data.employmentType as EmploymentType,
           status: data.status,
-          joinDate: new Date(data.joinDate),
-          isProfileComplete: false,
-          user: { connect: { id: user.id } },
+          avatar: data.avatar,
+          joinDate: data.joinDate ? new Date(data.joinDate) : undefined,
+          birthDate: data.birthDate ? new Date(data.birthDate) : undefined,
+          employmentType: data.employmentType,
+          salaryBase: data.salaryBase !== undefined ? Math.max(0, Math.round(data.salaryBase)) : undefined,
+          ...(positionId ? { position: { connect: { id: positionId } } } : {}),
           ...(data.departmentId ? { department: { connect: { id: data.departmentId } } } : {}),
-          ...(finalPositionId ? { position: { connect: { id: finalPositionId } } } : {}),
-          ...(data.managerId ? { manager: { connect: { id: data.managerId } } } : {}),
+          ...(data.managerId !== undefined
+            ? { manager: data.managerId ? { connect: { id: data.managerId } } : { disconnect: true } }
+            : {}),
         },
       });
-    });
-  }
 
-  async update(id: string, data: Partial<{
-    name: string;
-    email: string;
-    nip: string;
-    gender: string;
-    birthDate: string;
-    employmentType: string;
-    departmentId: string;
-    positionId: string;
-    status: EmployeeStatus;
-    joinDate: string;
-    managerId?: string | null;
-    avatar?: string;
-    customPosition?: string;
-  }>) {
-    let finalPositionId = data.positionId;
-
-    if (data.positionId === "OTHER" && data.customPosition) {
-      const newPos = await prisma.position.upsert({
-        where: { name: data.customPosition },
-        update: {},
-        create: { name: data.customPosition, salaryBase: 0 }
-      });
-      finalPositionId = newPos.id;
-    }
-
-    return await prisma.employee.update({
-      where: { id },
-      data: {
-        name: data.name,
-        email: data.email,
-        nip: data.nip,
-        gender: data.gender,
-        status: data.status,
-        avatar: data.avatar,
-        joinDate: data.joinDate ? new Date(data.joinDate) : undefined,
-        birthDate: data.birthDate ? new Date(data.birthDate) : undefined,
-        employmentType: data.employmentType as EmploymentType,
-        ...(finalPositionId ? { position: { connect: { id: finalPositionId } } } : {}),
-        ...(data.departmentId ? { department: { connect: { id: data.departmentId } } } : {}),
-        ...(data.managerId ? { manager: { connect: { id: data.managerId } } } : {}),
-      },
-    });
-  }
-
-  async delete(id: string) {
-    const employee = await prisma.employee.findUnique({
-      where: { id },
-      select: { userId: true }
-    });
-
-    return await prisma.$transaction(async (tx) => {
-      await tx.employee.delete({
-        where: { id },
-      });
-
-      if (employee?.userId) {
-        await tx.user.delete({
+      // Akun login ikut diperbarui agar email & role tetap sinkron
+      if (employee.userId && (normalizedEmail || data.roleId)) {
+        await tx.user.update({
           where: { id: employee.userId },
+          data: { email: normalizedEmail, roleId: data.roleId || undefined },
         });
+      }
+
+      return employee;
+    });
+  }
+
+  async countHistory(id: string) {
+    const [attendances, leaveRequests, salaries] = await Promise.all([
+      prisma.attendance.count({ where: { employeeId: id } }),
+      prisma.leaveRequest.count({ where: { employeeId: id } }),
+      prisma.salary.count({ where: { employeeId: id } }),
+    ]);
+    return attendances + leaveRequests + salaries;
+  }
+
+  /** Hapus permanen karyawan + akun loginnya. Hanya untuk karyawan tanpa riwayat. */
+  async delete(id: string) {
+    const employee = await prisma.employee.findUnique({ where: { id }, select: { userId: true } });
+
+    return prisma.$transaction(async (tx) => {
+      await tx.employee.updateMany({ where: { managerId: id }, data: { managerId: null } });
+      await tx.employee.delete({ where: { id } });
+      if (employee?.userId) {
+        await tx.user.delete({ where: { id: employee.userId } });
       }
     });
   }

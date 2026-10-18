@@ -26,8 +26,8 @@ src/
 │   ├── utils/              Helper khusus server (api-response)
 │   └── modules/<modul>/
 │       ├── <modul>.actions.ts      Server Actions ("use server") — pintu masuk dari UI
-│       ├── <modul>.service.ts      Business logic
-│       └── <modul>.repository.ts   Query database (Prisma)
+│       ├── <modul>.service.ts      Business logic (+ query Prisma)
+│       └── <modul>.repository.ts   Opsional, bila query modul cukup banyak (contoh: employees)
 │
 ├── features/               FRONTEND — UI per modul
 │   └── <modul>/
@@ -53,7 +53,45 @@ app/(page)  →  features/<modul>/components  →  server/modules/<modul>/*.acti
                                      *.service.ts  →  *.repository.ts  →  Prisma
 ```
 
-## Aturan
+## Database
+
+11 tabel dalam 3 kelompok (lihat `prisma/schema.prisma`):
+
+| Kelompok | Tabel |
+| --- | --- |
+| Akun | `User`, `Role`, `PasswordResetToken` |
+| Karyawan | `Employee`, `Department`, `Position` |
+| Operasional | `Attendance`, `LeaveRequest`, `Salary`, `CompanySetting` |
+
+Semua nominal uang bertipe `Int` (rupiah). Tanggal-saja disimpan sebagai tengah malam UTC; "hari ini" dan jam memakai zona waktu `Asia/Jakarta` (`src/shared/utils/date.ts`).
+
+## Aturan bisnis
+
+**Role & akses** (`src/shared/constants/roles.ts`)
+- `SUPER_ADMIN`, `HR`: kelola semua data. `MANAGER`: data sendiri + bawahan langsung. `EMPLOYEE`: data sendiri.
+- Setiap server action memeriksa role di server (`src/server/auth/guard.ts`), bukan hanya menu yang disembunyikan.
+
+**Karyawan**
+- Dibuat oleh HR/Admin → akun login dibuat otomatis dengan password default `<role>123`.
+- Gaji pokok kosong → disalin dari gaji standar jabatan.
+- Karyawan yang sudah punya riwayat absensi/cuti/gaji **tidak bisa dihapus**; ubah status ke `RESIGNED`/`TERMINATED` (otomatis tidak bisa login).
+
+**Absensi**
+- Check-in/out sekali sehari. Terlambat bila lewat jam masuk + toleransi; lewat jam pulang = lembur.
+- Tanpa catatan absensi di hari kerja: cuti disetujui → Izin/Sakit, hari sudah lewat → Tidak Hadir, hari ini → Belum Absen.
+
+**Cuti**
+- `PENDING` → (atasan langsung) `MANAGER_APPROVED` → (HR/Admin) `HR_APPROVED` (final). HR/Admin boleh langsung final.
+- Ditolak wajib dengan alasan; pemohon bisa membatalkan selama belum final. Tidak boleh menyetujui cuti sendiri (kecuali SUPER_ADMIN).
+- Durasi = hari kerja (Senin–Jumat). Sisa cuti tahunan = `leaveQuota` − cuti tahunan disetujui di tahun berjalan (reset otomatis tiap tahun).
+
+**Gaji**
+- HR/Admin menekan "Hitung Gaji" per periode: gaji pokok + lembur (jam × tarif) − potongan cuti diluar tanggungan (gaji pokok ÷ hari kerja × hari).
+- Slip yang sudah ditandai dibayar tidak dihitung ulang. Karyawan hanya melihat slip miliknya.
+
+**Pengaturan** (Settings → Perusahaan): jam kerja, toleransi telat, tarif lembur, hari kerja per bulan, jatah cuti default.
+
+## Aturan kode
 
 - Kode di `features/` **tidak boleh** mengimpor `server/db` atau `*.service.ts`/`*.repository.ts` secara langsung. Akses backend hanya lewat `*.actions.ts`.
 - Kode di `server/` **tidak boleh** mengimpor dari `features/`.

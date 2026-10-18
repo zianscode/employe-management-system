@@ -1,49 +1,42 @@
 "use server";
 
-import { prisma } from "@/server/db/prisma";
-import { EmployeeService } from "./employee.service";
-import { ApiResponse } from "@/server/utils/api-response";
 import { revalidatePath } from "next/cache";
-import { Prisma } from "@prisma/client";
-import { Employee, EmployeeFormData } from "@/shared/types/employee.types";
+import { prisma } from "@/server/db/prisma";
+import { requireRole } from "@/server/auth/guard";
+import { ApiResponse } from "@/server/utils/api-response";
+import { ADMIN_ROLES } from "@/shared/constants/roles";
+import { Employee, EmployeeFormData, OrgOption } from "@/shared/types/employee.types";
+import { dateToDateKey } from "@/shared/utils/date";
+import { EmployeeService, EmployeeFilters } from "./employee.service";
+
+const service = new EmployeeService();
+const PROBATION_MONTHS = 3;
 
 export async function getRolesAction() {
   try {
-    const roles = await prisma.role.findMany();
-    return ApiResponse.success("Roles fetched", roles);
-  } catch {
-    return ApiResponse.error("Failed to fetch roles");
+    await requireRole(ADMIN_ROLES);
+    const roles = await prisma.role.findMany({ orderBy: { name: "asc" } });
+    return ApiResponse.success<OrgOption[]>("Roles fetched", roles.map((r) => ({ id: r.id, name: r.name })));
+  } catch (error) {
+    return ApiResponse.fromError<OrgOption[]>(error, "Gagal mengambil data role");
   }
 }
 
-const service = new EmployeeService();
-
-export async function getEmployeesAction(filters?: Record<string, string | undefined>) {
+export async function getEmployeesAction(filters?: EmployeeFilters) {
   try {
+    await requireRole(ADMIN_ROLES);
     const rawData = await service.getAllEmployees(filters);
-    
-    // Map Prisma objects to domain Entity
-    const data = rawData.map((emp: { 
-      id: string;
-      name: string;
-      email: string;
-      nip: string | null;
-      status: string;
-      joinDate: Date | null;
-      avatar: string | null;
-      department: { name: string } | null; 
-      position: { name: string } | null; 
-    }) => {
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const data: Employee[] = rawData.map((emp) => {
       let probationDaysLeft: number | null = null;
       if (emp.status === "PROBATION" && emp.joinDate) {
-        const join = new Date(emp.joinDate);
-        const probationEnd = new Date(join);
-        probationEnd.setMonth(probationEnd.getMonth() + 3); // 3 months probation
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        const probationEnd = new Date(emp.joinDate);
+        probationEnd.setMonth(probationEnd.getMonth() + PROBATION_MONTHS);
         probationEnd.setHours(0, 0, 0, 0);
-        const diffTime = probationEnd.getTime() - today.getTime();
-        probationDaysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        probationDaysLeft = Math.ceil((probationEnd.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
       }
 
       return {
@@ -54,215 +47,80 @@ export async function getEmployeesAction(filters?: Record<string, string | undef
         status: emp.status,
         division: emp.department?.name || "-",
         position: emp.position?.name || "-",
-        joinDate: emp.joinDate ? new Date(emp.joinDate).toLocaleDateString('id-ID') : "-",
+        joinDate: emp.joinDate ? emp.joinDate.toLocaleDateString("id-ID", { timeZone: "UTC" }) : "-",
         avatar: emp.avatar || "",
         probationDaysLeft,
       };
     });
 
     return ApiResponse.success("Employees fetched successfully", data);
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
-    return ApiResponse.error(errorMessage);
+  } catch (error) {
+    return ApiResponse.fromError<Employee[]>(error, "Gagal mengambil data karyawan");
+  }
+}
+
+/** Detail karyawan untuk halaman detail & form edit (tanpa data sensitif akun) */
+export async function getEmployeeByIdAction(id: string) {
+  try {
+    await requireRole(ADMIN_ROLES);
+    const emp = await service.getEmployeeDetail(id);
+    const { user, department, position, manager, ...fields } = emp;
+
+    return ApiResponse.success("Employee fetched", {
+      ...fields,
+      birthDate: emp.birthDate ? dateToDateKey(emp.birthDate) : "",
+      joinDate: emp.joinDate ? dateToDateKey(emp.joinDate) : "",
+      nip: emp.nip || "",
+      division: department?.name || "-",
+      position: position?.name || "-",
+      roleId: user?.roleId || "",
+      managerName: manager?.name || null,
+    });
+  } catch (error) {
+    return ApiResponse.fromError(error, "Karyawan tidak ditemukan");
   }
 }
 
 export async function createEmployeeAction(data: EmployeeFormData) {
   try {
-    const result = await service.registerEmployee(data);
-    
-    // Get role name for the success message
-    const role = await prisma.role.findUnique({ where: { id: data.roleId } });
-    const defaultPass = `${role?.name.toLowerCase() || "user"}123`;
-
+    await requireRole(ADMIN_ROLES);
+    const { employee, defaultPassword } = await service.registerEmployee(data);
     revalidatePath("/dashboard/employees");
-    return ApiResponse.success(`Karyawan berhasil dibuat. Password default: ${defaultPass}`, result);
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
-    return ApiResponse.error(errorMessage);
+    return ApiResponse.success(`Karyawan berhasil dibuat. Password default: ${defaultPassword}`, { id: employee.id });
+  } catch (error) {
+    return ApiResponse.fromError(error, "Gagal membuat karyawan");
   }
 }
 
 export async function updateEmployeeAction(id: string, data: EmployeeFormData) {
   try {
-    const result = await service.updateEmployee(id, data);
+    await requireRole(ADMIN_ROLES);
+    await service.updateEmployee(id, data);
     revalidatePath("/dashboard/employees");
-    return ApiResponse.success("Employee updated successfully", result);
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
-    return ApiResponse.error(errorMessage);
+    return ApiResponse.success("Data karyawan berhasil diperbarui");
+  } catch (error) {
+    return ApiResponse.fromError(error, "Gagal memperbarui data karyawan");
   }
 }
 
 export async function promoteEmployeeAction(id: string) {
   try {
-    const result = await service.updateEmployee(id, { status: "ACTIVE" });
+    await requireRole(ADMIN_ROLES);
+    await service.updateEmployee(id, { status: "ACTIVE" });
     revalidatePath("/dashboard/employees");
-    return ApiResponse.success("Karyawan berhasil dipromosikan menjadi aktif", result);
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
-    return ApiResponse.error(errorMessage);
+    return ApiResponse.success("Karyawan berhasil dipromosikan menjadi aktif");
+  } catch (error) {
+    return ApiResponse.fromError(error, "Gagal mempromosikan karyawan");
   }
 }
 
 export async function deleteEmployeeAction(id: string) {
   try {
-    await service.removeEmployee(id);
+    const current = await requireRole(ADMIN_ROLES);
+    await service.removeEmployee(id, current.userId);
     revalidatePath("/dashboard/employees");
-    return ApiResponse.success("Employee deleted successfully");
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
-    return ApiResponse.error(errorMessage);
-  }
-}
-
-type EmployeeWithRelations = Prisma.EmployeeGetPayload<{
-  include: { department: true; position: true };
-}>;
-
-export async function getEmployees() {
-  try {
-    const employees = await prisma.employee.findMany({
-      include: { department: true, position: true },
-      orderBy: { createdAt: "desc" },
-    });
-    
-    return employees.map((emp: EmployeeWithRelations) => ({
-      ...emp,
-      nip: emp.nip || "-",
-      joinDate: emp.joinDate ? emp.joinDate.toLocaleDateString('id-ID') : "-",
-      status: emp.status,
-      division: emp.department?.name || "-",
-      position: emp.position?.name || "-",
-    })) as unknown as Employee[];
+    return ApiResponse.success("Karyawan berhasil dihapus");
   } catch (error) {
-    console.error("Failed to fetch employees:", error);
-    return [];
-  }
-}
-
-export async function getEmployeeById(id: string) {
-  try {
-    const emp = await prisma.employee.findUnique({
-      where: { id },
-      include: { department: true, position: true },
-    });
-    if (!emp) return null;
-    return {
-      ...emp,
-      joinDate: emp.joinDate ? emp.joinDate.toISOString().split("T")[0] : "",
-      status: emp.status,
-      division: emp.department?.name || "-",
-      position: emp.position?.name || "-",
-    } as unknown as Employee;
-  } catch (error) {
-    console.error("Failed to fetch employee by id:", error);
-    return null;
-  }
-}
-
-export async function createEmployee(data: EmployeeFormData) {
-  try {
-    let finalPositionId = data.positionId;
-
-    // Handle Custom Position
-    if (data.positionId === "OTHER" && data.customPosition) {
-      const newPos = await prisma.position.upsert({
-        where: { name: data.customPosition },
-        update: {},
-        create: { name: data.customPosition, salaryBase: 0 }
-      });
-      finalPositionId = newPos.id;
-    }
-
-    const employee = await prisma.employee.create({
-      data: {
-        name: data.name,
-        email: data.email,
-        nip: data.nip,
-        gender: data.gender,
-        birthDate: new Date(data.birthDate),
-        position: finalPositionId ? { connect: { id: finalPositionId } } : undefined,
-        department: data.departmentId ? { connect: { id: data.departmentId } } : undefined,
-        status: data.status,
-        employmentType: data.employmentType,
-        joinDate: new Date(data.joinDate),
-        avatar: data.avatar,
-      },
-    });
-    revalidatePath("/dashboard/employees");
-    return { success: true, data: employee };
-  } catch (error) {
-    console.error("Failed to create employee:", error);
-    return { success: false, error: "Failed to create employee" };
-  }
-}
-
-
-
-export async function updateEmployee(id: string, data: EmployeeFormData) {
-  try {
-    let finalPositionId = data.positionId;
-
-    // Handle Custom Position
-    if (data.positionId === "OTHER" && data.customPosition) {
-      const newPos = await prisma.position.upsert({
-        where: { name: data.customPosition },
-        update: {},
-        create: { name: data.customPosition, salaryBase: 0 }
-      });
-      finalPositionId = newPos.id;
-    }
-
-    const employee = await prisma.employee.update({
-      where: { id },
-      data: {
-        name: data.name,
-        email: data.email,
-        nip: data.nip,
-        gender: data.gender,
-        birthDate: new Date(data.birthDate),
-        position: finalPositionId ? { connect: { id: finalPositionId } } : undefined,
-        department: data.departmentId ? { connect: { id: data.departmentId } } : undefined,
-        status: data.status,
-        employmentType: data.employmentType,
-        joinDate: new Date(data.joinDate),
-      },
-    });
-    revalidatePath("/dashboard/employees");
-    return { success: true, data: employee };
-  } catch (error) {
-    console.error("Failed to update employee:", error);
-    return { success: false, error: "Failed to update employee" };
-  }
-}
-
-export async function deleteEmployee(id: string) {
-  try {
-    // Find the employee first to get the userId
-    const employee = await prisma.employee.findUnique({
-      where: { id },
-      select: { userId: true }
-    });
-
-    await prisma.$transaction(async (tx) => {
-      // 1. Delete Employee
-      await tx.employee.delete({
-        where: { id },
-      });
-
-      // 2. If there's an associated user, delete it too
-      if (employee?.userId) {
-        await tx.user.delete({
-          where: { id: employee.userId },
-        });
-      }
-    });
-
-    revalidatePath("/dashboard/employees");
-    return { success: true };
-  } catch (error) {
-    console.error("Failed to delete employee:", error);
-    return { success: false, error: "Failed to delete employee" };
+    return ApiResponse.fromError(error, "Gagal menghapus karyawan");
   }
 }

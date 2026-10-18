@@ -1,13 +1,13 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { User, Mail, Briefcase, Building2, Calendar, Shield, ArrowLeft, Save } from "lucide-react";
+import { User, Mail, Briefcase, Building2, Calendar, Shield, ArrowLeft, Save, Wallet, UserCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { EmployeeStatus } from "@prisma/client";
 
 import { getOrgData } from "@/server/modules/employees/organization.actions";
 import { getRolesAction } from "@/server/modules/employees/employee.actions";
-import { EmployeeFormData } from "@/shared/types/employee.types";
+import { EmployeeFormData, OrgOption } from "@/shared/types/employee.types";
 
 interface EmployeeFormProps {
   initialData?: Partial<EmployeeFormData>; 
@@ -23,13 +23,15 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
   isSubmitting = false,
 }) => {
   const router = useRouter();
-  const [orgData, setOrgData] = useState<{ 
-    departments: { id: string; name: string }[], 
-    positions: { id: string; name: string }[],
-    roles: { id: string; name: string }[]
+  const [orgData, setOrgData] = useState<{
+    departments: OrgOption[];
+    positions: OrgOption[];
+    managers: OrgOption[];
+    roles: OrgOption[];
   }>({
     departments: [],
     positions: [],
+    managers: [],
     roles: []
   });
 
@@ -46,6 +48,8 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
     employmentType: initialData?.employmentType || "FULL_TIME",
     joinDate: initialData?.joinDate || new Date().toISOString().split("T")[0],
     customPosition: "",
+    salaryBase: initialData?.salaryBase || 0,
+    managerId: initialData?.managerId || "",
   });
 
   // Auto-generate NIP Logic
@@ -86,18 +90,15 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 
   useEffect(() => {
     const fetchOrgData = async () => {
-      const data = await getOrgData() as { 
-        departments: { id: string; name: string }[], 
-        positions: { id: string; name: string }[] 
-      };
+      const data = await getOrgData();
       const rolesRes = await getRolesAction();
-      const rolesData = rolesRes.success ? rolesRes.data : [];
+      const rolesData = rolesRes.success && rolesRes.data ? rolesRes.data : [];
       
       setOrgData({ ...data, roles: rolesData });
       
       // If creating new and data exists, set default IDs
       if (!initialData) {
-        const empRole = rolesData.find((r: { name: string; id: string }) => r.name === "EMPLOYEE");
+        const empRole = rolesData.find((r) => r.name === "EMPLOYEE");
         if (empRole) setFormData(prev => ({ ...prev, roleId: empRole.id }));
       }
     };
@@ -106,12 +107,12 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: name === "salaryBase" ? Number(value) || 0 : value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onSubmit({ ...formData });
+    await onSubmit({ ...formData, managerId: formData.managerId || null });
   };
 
   return (
@@ -363,6 +364,42 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
                     required
                     value={formData.joinDate}
                     onChange={handleChange}
+                    className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-[#E02F75]/50 outline-none transition-all font-medium"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-gray-700 ml-1">Atasan Langsung</label>
+                <div className="relative group">
+                  <UserCheck className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#E02F75] transition-colors" size={20} />
+                  <select
+                    name="managerId"
+                    value={formData.managerId || ""}
+                    onChange={handleChange}
+                    className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-[#E02F75]/50 outline-none transition-all font-medium cursor-pointer"
+                  >
+                    <option value="">Tidak ada (cuti langsung ke HR)</option>
+                    {orgData.managers.map(m => (
+                      <option key={m.id} value={m.id}>{m.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <p className="text-[11px] text-gray-500 ml-1">Atasan menyetujui cuti tahap pertama sebelum persetujuan final HR.</p>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-gray-700 ml-1">Gaji Pokok (Rp)</label>
+                <div className="relative group">
+                  <Wallet className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#E02F75] transition-colors" size={20} />
+                  <input
+                    type="number"
+                    name="salaryBase"
+                    min={0}
+                    step={1000}
+                    value={formData.salaryBase || ""}
+                    onChange={handleChange}
+                    placeholder="Kosongkan untuk memakai gaji standar jabatan"
                     className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-[#E02F75]/50 outline-none transition-all font-medium"
                   />
                 </div>

@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google"; 
 import "./globals.css";
-import LayoutProvider from "@/features/layout/presentation/components/LayoutProvider";
+import LayoutProvider from "@/features/layout/components/LayoutProvider";
+import { NextAuthProvider } from "@/shared/providers/NextAuthProvider";
+import { Toaster } from "sonner";
 
 // Configure Poppins font
 const poppins = Poppins({
@@ -23,7 +25,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${poppins.className} antialiased`}>
-        <LayoutProvider>{children}</LayoutProvider>
+        <NextAuthProvider>
+          <LayoutProvider>{children}</LayoutProvider>
+          <Toaster position="top-right" richColors />
+        </NextAuthProvider>
       </body>
     </html>
   );

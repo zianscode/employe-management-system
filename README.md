@@ -1,36 +1,72 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Employee Management System
 
-## Getting Started
+Aplikasi manajemen karyawan full-stack (frontend + backend dalam satu project) berbasis **Next.js 15 (App Router)**, **Prisma + PostgreSQL**, dan **NextAuth v5**.
 
-First, run the development server:
+## Menjalankan project
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npx prisma migrate dev     # buat/migrasi database
+npx prisma db seed         # isi data awal
+npm run dev                # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Variabel environment (`.env`): `DATABASE_URL`, `AUTH_SECRET`, `AUTH_URL`, `SMTP_EMAIL`, `SMTP_PASSWORD`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Struktur folder
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+prisma/                     Schema, migrasi, dan seed database
+src/
+├── app/                    ROUTING — halaman, layout, dan API route (tipis, hanya merangkai)
+│
+├── server/                 BACKEND — hanya berjalan di server
+│   ├── auth/               Konfigurasi NextAuth (auth.ts, auth.config.ts)
+│   ├── db/                 Prisma client
+│   ├── utils/              Helper khusus server (api-response)
+│   └── modules/<modul>/
+│       ├── <modul>.actions.ts      Server Actions ("use server") — pintu masuk dari UI
+│       ├── <modul>.service.ts      Business logic
+│       └── <modul>.repository.ts   Query database (Prisma)
+│
+├── features/               FRONTEND — UI per modul
+│   └── <modul>/
+│       ├── components/     Komponen React khusus modul
+│       └── hooks/          Custom hooks (state & pemanggilan action)
+│
+├── shared/                 DIPAKAI FRONTEND & BACKEND
+│   ├── components/         Komponen UI reusable (DataTable, Modal, StatusBadge, ...)
+│   ├── providers/          React providers (NextAuthProvider)
+│   ├── types/              Tipe data per modul (*.types.ts)
+│   └── utils/              Helper murni tanpa side-effect
+│
+└── middleware.ts           Proteksi route (NextAuth)
+```
 
-## Learn More
+Modul: `attendance`, `auth`, `dashboard`, `employees`, `leave`, `onboarding`, `profile`, `reports`, `salary`, `settings`, serta `layout` (sidebar & menu, hanya frontend).
 
-To learn more about Next.js, take a look at the following resources:
+## Alur data
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+app/(page)  →  features/<modul>/components  →  server/modules/<modul>/*.actions.ts
+                                                      ↓
+                                     *.service.ts  →  *.repository.ts  →  Prisma
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Aturan
 
-## Deploy on Vercel
+- Kode di `features/` **tidak boleh** mengimpor `server/db` atau `*.service.ts`/`*.repository.ts` secara langsung. Akses backend hanya lewat `*.actions.ts`.
+- Kode di `server/` **tidak boleh** mengimpor dari `features/`.
+- Tipe yang dipakai di dua sisi diletakkan di `shared/types/`.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Konvensi penamaan
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Jenis | Format | Contoh |
+| --- | --- | --- |
+| Komponen React | `PascalCase.tsx` | `EmployeeForm.tsx` |
+| Hook | `use-kebab-case.ts` | `use-attendance.ts` |
+| File backend | `<modul>.<peran>.ts` | `employee.service.ts` |
+| Tipe | `<modul>.types.ts` | `leave.types.ts` |
+| Utilitas | `kebab-case.ts` | `position-department.ts` |
+
+Import gunakan alias `@/` (contoh: `@/server/modules/leave/leave.actions`), kecuali file dalam folder yang sama (`./`).

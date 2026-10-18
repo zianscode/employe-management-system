@@ -2,10 +2,10 @@
 
 import React from "react";
 import { Search, Download, Filter, Calendar } from "lucide-react";
-import { useSalary } from "@/features/salary/presentation/hooks/useSalary";
-import { SalaryStats } from "@/features/salary/presentation/components/SalaryStats";
+import { useSalary } from "@/features/salary/hooks/use-salary";
+import { SalaryStats } from "@/features/salary/components/SalaryStats";
 import { DataTable } from "@/shared/components/DataTable";
-import { SalaryRecord } from "@/features/salary/domain/entities/salary";
+import { SalaryRecord } from "@/shared/types/salary.types";
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat("id-ID", {

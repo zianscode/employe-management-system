@@ -1,46 +1,19 @@
-"use client";
-
 import React from "react";
-import AttendanceHeader from "@/features/attendance/presentation/components/AttendanceHeader";
-import AttendanceStats from "@/features/attendance/presentation/components/AttendanceStats";
-import AttendanceControls from "../../../features/attendance/presentation/components/AttendanceControls";
-import { AttendanceTable } from "@/features/attendance/presentation/components/AttendanceTable";
-import { useAttendance } from "@/features/attendance/presentation/hooks/use-attendance";
+import AttendanceHeader from "@/features/attendance/components/AttendanceHeader";
+import AttendanceStats, { StatData } from "@/features/attendance/components/AttendanceStats";
+import { AttendanceClient } from "@/features/attendance/components/AttendanceClient";
+import { getAttendanceStatsAction } from "@/server/modules/attendance/attendance.actions";
 
-export default function AttendancePage() {
-  const {
-    data,
-    isLoading,
-    searchQuery,
-    setSearchQuery,
-    selectedDate,
-    setSelectedDate,
-    statusFilter,
-    setStatusFilter,
-  } = useAttendance("2024-01-15");
+export default async function AttendancePage() {
+  // Panggil action untuk memicu Server-Side Loading (dan memicu Skeleton)
+  const statsRes = await getAttendanceStatsAction();
+  const stats = (statsRes.success ? statsRes.data : []) as StatData[];
 
   return (
     <div className="py-4 pl-8 pr-6 space-y-4">
       <AttendanceHeader />
-
-      <AttendanceStats />
-
-      <AttendanceControls
-        searchQuery={searchQuery}
-        selectedDate={selectedDate}
-        statusFilter={statusFilter}
-        onSearchChange={setSearchQuery}
-        onDateChange={setSelectedDate}
-        onStatusChange={setStatusFilter}
-      />
-
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
-        <AttendanceTable
-          data={data}
-          isLoading={isLoading}
-          selectedDate={selectedDate}
-        />
-      </div>
+      <AttendanceStats stats={stats} />
+      <AttendanceClient />
     </div>
   );
 }

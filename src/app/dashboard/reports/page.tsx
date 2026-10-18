@@ -1,11 +1,11 @@
 "use client";
 
 import React from "react";
-import Filter from "@/features/reports/presentation/components/Filter";
-import { AttendanceReport } from "@/features/reports/presentation/components/AttendanceReport";
-import { useReports } from "@/features/reports/presentation/hooks/useReports";
+import Filter from "@/features/reports/components/Filter";
+import { AttendanceReport } from "@/features/reports/components/AttendanceReport";
+import { useReports } from "@/features/reports/hooks/use-reports";
 import { Clock, DollarSign, Users, Calendar } from "lucide-react";
-import { ReportTabId } from "@/features/reports/domain/entities/report";
+import { ReportTabId } from "@/shared/types/report.types";
 
 export default function ReportsPage() {
   const {
@@ -14,6 +14,8 @@ export default function ReportsPage() {
     stats,
     attendanceData,
     attendancePieData,
+    selectedMonth,
+    setSelectedMonth,
   } = useReports();
 
   const categoryTabs = [
@@ -31,7 +33,7 @@ export default function ReportsPage() {
       </div>
       
       <div className="space-y-4 mt-4">
-        <Filter />
+        <Filter selectedMonth={selectedMonth} onMonthChange={setSelectedMonth} />
 
         <div className="flex overflow-x-auto gap-2 bg-white/50 p-1.5 rounded-2xl border border-gray-100 shadow-sm backdrop-blur-md w-fit">
           {categoryTabs.map((tab) => {

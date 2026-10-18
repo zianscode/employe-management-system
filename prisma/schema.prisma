@@ -54,7 +54,6 @@ model Department {
 model Position {
   id         String     @id @default(cuid())
   name       String     @unique
-  /// Gaji pokok standar jabatan (rupiah). Disalin ke Employee.salaryBase saat karyawan dibuat.
   salaryBase Int        @default(0)
   employees  Employee[]
   createdAt  DateTime   @default(now())
@@ -179,8 +178,6 @@ enum LeaveType {
   UNPAID
 }
 
-/// Alur: PENDING -> (MANAGER_APPROVED) -> HR_APPROVED (final)
-///       PENDING / MANAGER_APPROVED -> REJECTED | CANCELLED
 enum LeaveStatus {
   PENDING
   MANAGER_APPROVED
@@ -219,7 +216,6 @@ model LeaveRequest {
   updatedAt DateTime @updatedAt
 }
 
-/// Slip gaji per karyawan per bulan. Semua nominal dalam rupiah.
 model Salary {
   id         String   @id @default(cuid())
   employeeId String
@@ -256,14 +252,11 @@ model CompanySetting {
   companyCode String?
   npwp        String?
   phone       String?
-
-  /// Format "HH:mm"
   workStartTime        String @default("08:00")
   workEndTime          String @default("17:00")
   lateToleranceMinutes Int    @default(15)
   overtimeRatePerHour  Int    @default(50000)
   workingDaysPerMonth  Int    @default(22)
-  /// Jatah cuti tahunan default untuk karyawan baru
   annualLeaveQuota     Int    @default(12)
 
   updatedAt DateTime @updatedAt

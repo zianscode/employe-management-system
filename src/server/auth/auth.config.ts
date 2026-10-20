@@ -1,49 +1,47 @@
 import type { NextAuthConfig } from "next-auth";
 import { canAccessRoute } from "@/shared/constants/roles";
 
+export const CHANGE_PASSWORD_PATH = "/change-password";
+const ONBOARDING_PATH = "/onboarding";
+const DASHBOARD_PATH = "/dashboard";
+
+function landingPathFor(user: { mustChangePassword?: boolean; isProfileComplete?: boolean }) {
+  if (user.mustChangePassword) return CHANGE_PASSWORD_PATH;
+  if (!user.isProfileComplete) return ONBOARDING_PATH;
+  return DASHBOARD_PATH;
+}
+
 export const authConfig = {
   pages: {
     signIn: "/login",
   },
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
-      const isLoggedIn = !!auth?.user;
-      const isProfileComplete = auth?.user?.isProfileComplete === true;
-      
-      const isOnDashboard = nextUrl.pathname.startsWith("/dashboard");
-      const isOnOnboarding = nextUrl.pathname.startsWith("/onboarding");
+      const path = nextUrl.pathname;
+      const isProtected = [DASHBOARD_PATH, ONBOARDING_PATH, CHANGE_PASSWORD_PATH].some((p) => path.startsWith(p));
+      const user = auth?.user;
 
-      if (isLoggedIn) {
-        if (isOnDashboard && !canAccessRoute(nextUrl.pathname, auth?.user?.role)) {
-          return Response.redirect(new URL("/dashboard", nextUrl));
-        }
+      if (!user) return !isProtected;
 
-        if (!isProfileComplete && !isOnOnboarding && isOnDashboard) {
-          return Response.redirect(new URL("/onboarding", nextUrl));
-        }
-        
-        if (isProfileComplete && isOnOnboarding) {
-          return Response.redirect(new URL("/dashboard", nextUrl));
-        }
+      const landing = landingPathFor(user);
+      const redirectTo = (target: string) => Response.redirect(new URL(target, nextUrl));
 
-        if (nextUrl.pathname === "/login" || nextUrl.pathname === "/") {
-           return Response.redirect(new URL("/dashboard", nextUrl));
-        }
-      } else if (isOnDashboard || isOnOnboarding) {
-        return false; 
+      if (path === "/" || path === "/login") return redirectTo(landing);
+      if (landing !== DASHBOARD_PATH && isProtected && !path.startsWith(landing)) return redirectTo(landing);
+      if (landing === DASHBOARD_PATH && (path.startsWith(ONBOARDING_PATH) || path.startsWith(CHANGE_PASSWORD_PATH))) {
+        return redirectTo(DASHBOARD_PATH);
       }
-      
+      if (path.startsWith(DASHBOARD_PATH) && !canAccessRoute(path, user.role)) return redirectTo(DASHBOARD_PATH);
+
       return true;
     },
-    async jwt({ token, user, trigger, session }) {
+    async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
         token.role = user.role;
         token.isProfileComplete = user.isProfileComplete;
+        token.mustChangePassword = user.mustChangePassword;
         token.employeeId = user.employeeId;
-      }
-      if (trigger === "update" && session) {
-        return { ...token, ...session };
       }
       return token;
     },
@@ -52,11 +50,12 @@ export const authConfig = {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
         session.user.isProfileComplete = token.isProfileComplete as boolean;
+        session.user.mustChangePassword = token.mustChangePassword as boolean;
         session.user.employeeId = token.employeeId as string;
-        session.user.image = token.picture as string; 
+        session.user.image = token.picture as string;
       }
       return session;
     },
   },
-  providers: [], 
+  providers: [],
 } satisfies NextAuthConfig;

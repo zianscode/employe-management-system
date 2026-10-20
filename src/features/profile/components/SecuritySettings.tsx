@@ -1,6 +1,7 @@
 import React from "react";
 import { Shield, Eye, EyeOff, Check } from "lucide-react";
 import { PasswordData } from "@/shared/types/profile.types";
+import { PASSWORD_MIN_LENGTH } from "@/shared/utils/password-policy";
 
 interface SecuritySettingsProps {
   data: PasswordData;
@@ -62,10 +63,9 @@ export const SecuritySettings: React.FC<SecuritySettingsProps> = ({
           {data.newPassword.length > 0 && (
             (() => {
               const reqs = [
-                { label: "Minimal 8 karakter", met: data.newPassword.length >= 8 },
-                { label: "Mengandung huruf besar dan kecil", met: /[a-z]/.test(data.newPassword) && /[A-Z]/.test(data.newPassword) },
+                { label: `Minimal ${PASSWORD_MIN_LENGTH} karakter`, met: data.newPassword.length >= PASSWORD_MIN_LENGTH },
+                { label: "Mengandung huruf", met: /[a-zA-Z]/.test(data.newPassword) },
                 { label: "Mengandung angka", met: /\d/.test(data.newPassword) },
-                { label: "Mengandung karakter khusus (!@#$%^&*)", met: /[!@#$%^&*]/.test(data.newPassword) },
               ];
               const unmetReqs = reqs.filter(r => !r.met);
               

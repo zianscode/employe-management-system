@@ -69,8 +69,8 @@ async function main() {
 
   const adminUser = await prisma.user.upsert({
     where: { email: adminEmail },
-    update: { password: hashedPassword, roleId: superAdminRole.id },
-    create: { email: adminEmail, password: hashedPassword, roleId: superAdminRole.id },
+    update: { roleId: superAdminRole.id },
+    create: { email: adminEmail, password: hashedPassword, roleId: superAdminRole.id, mustChangePassword: true },
   });
 
   const adminProfileData = {
@@ -113,7 +113,7 @@ async function main() {
     create: { ...adminEmployee, email: adminEmail },
   });
 
-  console.log(`✅ Seed selesai. Login: ${adminEmail} / admin123`);
+  console.log(`✅ Seed selesai. Login pertama: ${adminEmail} / admin123 (wajib ganti password)`);
 }
 
 main()

@@ -28,13 +28,15 @@ export default function LayoutProvider({
       const isOnDashboard = pathname.startsWith("/dashboard");
       const isOnOnboarding = pathname === "/onboarding";
 
-      if (!isProfileComplete && isOnDashboard && !isOnOnboarding) {
+      if (session.user.mustChangePassword && !pathname.startsWith("/change-password")) {
+        router.replace("/change-password");
+      } else if (!session.user.mustChangePassword && !isProfileComplete && isOnDashboard && !isOnOnboarding) {
         router.replace("/onboarding");
       }
     }
   }, [session, status, pathname, router]);
 
-  const isAuthPage = pathname === "/login" || pathname.startsWith("/auth") || pathname === "/onboarding";
+  const isAuthPage = ["/login", "/auth", "/onboarding", "/change-password"].some((path) => pathname.startsWith(path));
   
   if (isAuthPage) {
     return (

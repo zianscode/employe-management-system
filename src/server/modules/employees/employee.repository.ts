@@ -2,7 +2,7 @@ import { prisma } from "@/server/db/prisma";
 import { EmployeeStatus, EmploymentType, Prisma } from "@prisma/client";
 import { EmployeeFormData } from "@/shared/types/employee.types";
 import { companySettingService } from "@/server/modules/settings/company-setting.service";
-import { hashPassword } from "@/server/utils/password";
+import { generateTemporaryPassword, hashPassword } from "@/server/utils/password";
 import { normalizeEmail } from "@/shared/utils/format";
 
 type Tx = Prisma.TransactionClient;
@@ -73,15 +73,15 @@ class EmployeeRepository {
 
     const role = await prisma.role.findUnique({ where: { id: data.roleId } });
     if (!role) throw new Error("Role tidak ditemukan");
-    const defaultPassword = `${role.name.toLowerCase().replace(/_/g, "")}123`;
-    const hashedPassword = await hashPassword(defaultPassword);
+    const temporaryPassword = generateTemporaryPassword();
+    const hashedPassword = await hashPassword(temporaryPassword);
 
     const employee = await prisma.$transaction(async (tx) => {
       const positionId = await this.resolvePositionId(tx, data.positionId, data.customPosition);
       const position = positionId ? await tx.position.findUnique({ where: { id: positionId } }) : null;
 
       const user = await tx.user.create({
-        data: { email: normalizedEmail, password: hashedPassword, roleId: role.id },
+        data: { email: normalizedEmail, password: hashedPassword, roleId: role.id, mustChangePassword: true },
       });
 
       return tx.employee.create({
@@ -105,7 +105,7 @@ class EmployeeRepository {
       });
     });
 
-    return { employee, defaultPassword };
+    return { employee, temporaryPassword };
   }
 
   async update(id: string, data: Partial<EmployeeFormData>) {

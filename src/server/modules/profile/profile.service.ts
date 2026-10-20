@@ -1,5 +1,6 @@
 import { prisma } from "@/server/db/prisma";
-import { hashPassword, verifyPassword } from "@/server/utils/password";
+import { assertStrongPassword, hashPassword, verifyPassword } from "@/server/utils/password";
+import { isDataUrlImage, saveAvatar } from "@/server/utils/avatar-storage";
 import { ProfileData, PasswordData } from "@/shared/types/profile.types";
 import { dateToDateKey } from "@/shared/utils/date";
 import { normalizeEmail } from "@/shared/utils/format";
@@ -44,6 +45,8 @@ class ProfileService {
     const emailTaken = await prisma.user.findFirst({ where: { email, NOT: { id: userId } } });
     if (emailTaken) throw new Error("Email sudah dipakai akun lain");
 
+    const avatar = isDataUrlImage(data.avatar) ? await saveAvatar(userId, data.avatar) : data.avatar;
+
     return prisma.$transaction(async (tx) => {
       const employee = await tx.employee.update({
         where: { userId },
@@ -66,7 +69,7 @@ class ProfileService {
           education: data.education,
           skills: data.skills,
           bio: data.bio,
-          avatar: data.avatar,
+          avatar,
         },
       });
       await tx.user.update({ where: { id: userId }, data: { email } });
@@ -80,10 +83,13 @@ class ProfileService {
 
     const isMatch = await verifyPassword(data.currentPassword, user.password);
     if (!isMatch) throw new Error("Password saat ini yang Anda masukkan salah");
+    if (data.newPassword !== data.confirmPassword) throw new Error("Konfirmasi password tidak sama");
+    if (data.newPassword === data.currentPassword) throw new Error("Password baru harus berbeda dari password saat ini");
+    assertStrongPassword(data.newPassword);
 
     await prisma.user.update({
       where: { id: userId },
-      data: { password: await hashPassword(data.newPassword) },
+      data: { password: await hashPassword(data.newPassword), mustChangePassword: false },
     });
   }
 }

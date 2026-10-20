@@ -71,8 +71,15 @@ Semua nominal uang bertipe `Int` (rupiah). Tanggal-saja disimpan sebagai tengah 
 - `SUPER_ADMIN`, `HR`: kelola semua data. `MANAGER`: data sendiri + bawahan langsung. `EMPLOYEE`: data sendiri.
 - Setiap server action memeriksa role di server (`src/server/auth/guard.ts`), bukan hanya menu yang disembunyikan.
 
+**Akun & login**
+- Tidak ada registrasi publik: semua akun dibuat oleh HR/Admin lewat menu Karyawan.
+- Akun baru mendapat password sementara acak (ditampilkan sekali ke HR) dan wajib diganti saat login pertama.
+- Alur setelah login: ganti password (jika wajib) → onboarding data pribadi → dashboard.
+- Password minimal 8 karakter, berisi huruf dan angka (`src/shared/utils/password-policy.ts`).
+- 5 kali login gagal → akun terkunci 15 menit. Pesan error tidak membedakan email tidak terdaftar dan password salah.
+
 **Karyawan**
-- Dibuat oleh HR/Admin → akun login dibuat otomatis dengan password default `<role>123`.
+- Jabatan, divisi, tipe kerja, dan gaji ditetapkan HR; onboarding hanya mengisi data pribadi.
 - Gaji pokok kosong → disalin dari gaji standar jabatan.
 - Karyawan yang sudah punya riwayat absensi/cuti/gaji **tidak bisa dihapus**; ubah status ke `RESIGNED`/`TERMINATED` (otomatis tidak bisa login).
 

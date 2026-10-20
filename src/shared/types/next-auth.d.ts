@@ -5,6 +5,7 @@ declare module "next-auth" {
     id: string;
     role: string;
     isProfileComplete: boolean;
+    mustChangePassword: boolean;
     employeeId?: string;
     image?: string | null;
   }
@@ -17,6 +18,7 @@ declare module "next-auth" {
       image?: string | null;
       role: string;
       isProfileComplete: boolean;
+      mustChangePassword: boolean;
       employeeId: string;
     };
   }
@@ -27,6 +29,7 @@ declare module "next-auth/jwt" {
     id: string;
     role: string;
     isProfileComplete: boolean;
+    mustChangePassword: boolean;
     employeeId?: string;
     picture?: string | null;
   }

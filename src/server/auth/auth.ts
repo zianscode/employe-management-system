@@ -7,9 +7,10 @@ import { verifyPassword } from "@/server/utils/password";
 import { normalizeEmail } from "@/shared/utils/format";
 import { z } from "zod";
 import { EmployeeStatus } from "@prisma/client";
+import { clearFailedAttempts, isLocked, registerFailedAttempt } from "./login-attempts";
 
-class UserNotFoundError extends CredentialsSignin {
-  code = "user_not_found";
+class AccountLockedError extends CredentialsSignin {
+  code = "account_locked";
 }
 
 class AccountInactiveError extends CredentialsSignin {
@@ -38,10 +39,15 @@ const nextAuth = NextAuth({
           include: { role: true, employee: true },
         });
 
-        if (!user) throw new UserNotFoundError();
+        if (!user) return null;
+        if (isLocked(user)) throw new AccountLockedError();
 
         const passwordsMatch = await verifyPassword(password.trim(), user.password);
-        if (!passwordsMatch) return null;
+        if (!passwordsMatch) {
+          await registerFailedAttempt(user);
+          return null;
+        }
+        await clearFailedAttempts(user);
 
         if (user.employee && INACTIVE_STATUSES.includes(user.employee.status)) {
           throw new AccountInactiveError();
@@ -54,6 +60,7 @@ const nextAuth = NextAuth({
           image: user.employee?.avatar || null,
           role: user.role.name,
           isProfileComplete: user.employee?.isProfileComplete ?? false,
+          mustChangePassword: user.mustChangePassword,
           employeeId: user.employee?.id,
         };
       },
@@ -66,6 +73,7 @@ const nextAuth = NextAuth({
         token.id = user.id;
         token.role = user.role;
         token.isProfileComplete = user.isProfileComplete;
+        token.mustChangePassword = user.mustChangePassword;
         token.employeeId = user.employeeId;
         token.picture = user.image;
       }
@@ -88,6 +96,7 @@ const nextAuth = NextAuth({
 
           token.role = dbUser.role.name;
           token.isProfileComplete = dbUser.employee?.isProfileComplete ?? false;
+          token.mustChangePassword = dbUser.mustChangePassword;
           token.employeeId = dbUser.employee?.id;
 
           const avatar = dbUser.employee?.avatar;

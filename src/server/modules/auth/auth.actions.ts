@@ -29,20 +29,3 @@ export async function resetPasswordAction(token: string, newPassword: string) {
     return ApiResponse.fromError(error, "Gagal mereset password.");
   }
 }
-
-export async function registerAction(data: { name: string; email: string; password: string }) {
-  try {
-    await authService.register(data);
-    return ApiResponse.success("Registrasi berhasil! Silakan login.");
-  } catch (error) {
-    return ApiResponse.fromError(error, "Gagal melakukan registrasi.");
-  }
-}
-
-export async function checkUserExistsAction(email: string) {
-  try {
-    return ApiResponse.success("Check completed", { exists: await authService.userExists(email) });
-  } catch (error) {
-    return ApiResponse.fromError<{ exists: boolean }>(error, "Gagal mengecek status user.");
-  }
-}

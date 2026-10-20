@@ -83,8 +83,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       </button>
 
       <p className="text-center text-xs font-bold text-gray-400 mt-6">
-        Belum punya akun?{" "}
-        <Link href="/auth/register" className="text-[#E02F75] hover:underline transition-all">Daftar sekarang</Link>
+        Belum punya akun? Hubungi HR / Admin perusahaan Anda.
       </p>
     </form>
   );

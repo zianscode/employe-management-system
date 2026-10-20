@@ -7,15 +7,18 @@ datasource db {
 }
 
 model User {
-  id          String               @id @default(cuid())
-  email       String               @unique
-  password    String
-  roleId      String
-  role        Role                 @relation(fields: [roleId], references: [id])
-  employee    Employee?
-  resetTokens PasswordResetToken[]
-  createdAt   DateTime             @default(now())
-  updatedAt   DateTime             @updatedAt
+  id                  String               @id @default(cuid())
+  email               String               @unique
+  password            String
+  mustChangePassword  Boolean              @default(false)
+  failedLoginAttempts Int                  @default(0)
+  lockedUntil         DateTime?
+  roleId              String
+  role                Role                 @relation(fields: [roleId], references: [id])
+  employee            Employee?
+  resetTokens         PasswordResetToken[]
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
 }
 
 model Role {

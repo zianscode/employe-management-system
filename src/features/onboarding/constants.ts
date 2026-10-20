@@ -1,4 +1,4 @@
-import { User, Briefcase, CreditCard, ShieldAlert, Award } from "lucide-react";
+import { User, CreditCard, ShieldAlert, Award } from "lucide-react";
 
 export interface OnboardingFormData {
   phone: string;
@@ -6,9 +6,6 @@ export interface OnboardingFormData {
   placeOfBirth: string;
   birthDate: string;
   address: string;
-  positionName: string;
-  customPosition: string;
-  employmentType: string;
   identityNumber: string;
   npwpNumber: string;
   bankName: string;
@@ -27,10 +24,9 @@ export interface OnboardingFormData {
 
 export const STEPS = [
   { id: 1, title: "Personal Info", icon: User },
-  { id: 2, title: "Job Details", icon: Briefcase },
-  { id: 3, title: "Identity", icon: CreditCard },
-  { id: 4, title: "Emergency", icon: ShieldAlert },
-  { id: 5, title: "Pendidikan Terakhir", icon: Award },
+  { id: 2, title: "Identity", icon: CreditCard },
+  { id: 3, title: "Emergency", icon: ShieldAlert },
+  { id: 4, title: "Pendidikan Terakhir", icon: Award },
 ];
 
 export const COUNTRY_OPTIONS = [

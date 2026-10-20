@@ -14,7 +14,6 @@ import { useRouter } from "next/navigation";
 
 import { STEPS, OnboardingFormData } from "@/features/onboarding/constants";
 import { PersonalInfoStep } from "./steps/PersonalInfoStep";
-import { JobDetailsStep } from "./steps/JobDetailsStep";
 import { IdentityStep } from "./steps/IdentityStep";
 import { EmergencyStep } from "./steps/EmergencyStep";
 import { EducationStep } from "./steps/EducationStep";
@@ -33,9 +32,6 @@ export const OnboardingForm = () => {
     placeOfBirth: "",
     birthDate: "",
     address: "",
-    positionName: "",
-    customPosition: "",
-    employmentType: "FULL_TIME",
     identityNumber: "",
     npwpNumber: "",
     bankName: "",
@@ -67,23 +63,6 @@ export const OnboardingForm = () => {
         setErrors(prev => {
           const next = { ...prev };
           delete next[name];
-          return next;
-        });
-      }
-      return;
-    }
-
-    if (name === "positionName") {
-      setFormData(prev => ({ 
-        ...prev, 
-        positionName: value, 
-        customPosition: value === "other" ? prev.customPosition : "" 
-      }));
-      if (errors.positionName || errors.customPosition) {
-        setErrors(prev => {
-          const next = { ...prev };
-          delete next.positionName;
-          delete next.customPosition;
           return next;
         });
       }
@@ -158,15 +137,6 @@ export const OnboardingForm = () => {
     }
 
     if (step === 2) {
-      if (!formData.positionName) {
-        newErrors.positionName = "Posisi yang dilamar wajib dipilih";
-      } else if (formData.positionName === "other" && !formData.customPosition.trim()) {
-        newErrors.customPosition = "Nama posisi kustom wajib diisi";
-      }
-      if (!formData.employmentType) newErrors.employmentType = "Tipe pekerjaan wajib dipilih";
-    }
-
-    if (step === 3) {
       if (!formData.identityNumber) {
         newErrors.identityNumber = "Nomor KTP (NIK) wajib diisi";
       } else if (!/^\d{16}$/.test(formData.identityNumber)) {
@@ -212,7 +182,7 @@ export const OnboardingForm = () => {
       }
     }
 
-    if (step === 4) {
+    if (step === 3) {
       if (!formData.emergencyName) newErrors.emergencyName = "Nama kontak darurat wajib diisi";
       if (!formData.emergencyRelation) newErrors.emergencyRelation = "Hubungan wajib dipilih";
       if (!formData.emergencyPhone) {
@@ -222,7 +192,7 @@ export const OnboardingForm = () => {
       }
     }
 
-    if (step === 5) {
+    if (step === 4) {
       if (!formData.eduLevel) newErrors.eduLevel = "Jenjang pendidikan wajib dipilih";
       if (!formData.eduMajor) newErrors.eduMajor = "Jurusan / bidang studi wajib diisi";
       if (!formData.eduUniv) newErrors.eduUniv = "Nama sekolah / universitas wajib diisi";
@@ -307,7 +277,7 @@ export const OnboardingForm = () => {
         );
       case 2:
         return (
-          <JobDetailsStep
+          <IdentityStep
             formData={formData}
             errors={errors}
             focusedField={focusedField}
@@ -317,16 +287,6 @@ export const OnboardingForm = () => {
         );
       case 3:
         return (
-          <IdentityStep
-            formData={formData}
-            errors={errors}
-            focusedField={focusedField}
-            setFocusedField={setFocusedField}
-            handleInputChange={handleInputChange}
-          />
-        );
-      case 4:
-        return (
           <EmergencyStep
             formData={formData}
             errors={errors}
@@ -335,7 +295,7 @@ export const OnboardingForm = () => {
             handleInputChange={handleInputChange}
           />
         );
-      case 5:
+      case 4:
         return (
           <EducationStep
             formData={formData}

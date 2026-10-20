@@ -16,7 +16,11 @@ export default function NewEmployeePage() {
     try {
       const result = await createEmployeeAction(data);
       if (result.success) {
-        toast.success("Karyawan berhasil didaftarkan!", { description: result.message, duration: 8000 });
+        toast.success("Karyawan berhasil didaftarkan!", {
+          description: `${result.message}. Catat dan berikan kepada karyawan, password ini hanya ditampilkan sekali.`,
+          duration: Infinity,
+          closeButton: true,
+        });
         router.push("/dashboard/employees");
         router.refresh();
       } else {

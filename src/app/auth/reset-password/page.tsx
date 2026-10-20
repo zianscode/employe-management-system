@@ -4,6 +4,7 @@ import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Lock, ArrowLeft, Loader2, CheckCircle2, ShieldAlert, Eye, EyeOff } from "lucide-react";
+import { validatePasswordStrength } from "@/shared/utils/password-policy";
 import { validateResetTokenAction, resetPasswordAction } from "@/server/modules/auth/auth.actions";
 
 function ResetPasswordForm() {
@@ -43,6 +44,11 @@ function ResetPasswordForm() {
     e.preventDefault();
     if (password !== confirmPassword) {
       setError("Password tidak cocok.");
+      return;
+    }
+    const strengthError = validatePasswordStrength(password);
+    if (strengthError) {
+      setError(strengthError);
       return;
     }
 

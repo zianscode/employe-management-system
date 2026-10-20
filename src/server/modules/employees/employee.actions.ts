@@ -72,9 +72,12 @@ export async function getEmployeeByIdAction(id: string) {
 export async function createEmployeeAction(data: EmployeeFormData) {
   try {
     await requireRole(ADMIN_ROLES);
-    const { employee, defaultPassword } = await employeeService.registerEmployee(data);
+    const { employee, temporaryPassword } = await employeeService.registerEmployee(data);
     revalidatePath("/dashboard/employees");
-    return ApiResponse.success(`Karyawan berhasil dibuat. Password default: ${defaultPassword}`, { id: employee.id });
+    return ApiResponse.success(
+      `Karyawan berhasil dibuat. Password sementara: ${temporaryPassword} (wajib diganti saat login pertama)`,
+      { id: employee.id, temporaryPassword }
+    );
   } catch (error) {
     return ApiResponse.fromError(error, "Gagal membuat karyawan");
   }

@@ -47,9 +47,11 @@ export default function LayoutProvider({
   }
   
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50/50">
-      <Sidebar />
-      <main className="flex-1 overflow-y-auto">
+    <div className="flex h-screen overflow-hidden bg-gray-50/50 print:block print:h-auto print:overflow-visible print:bg-white">
+      <div className="print:hidden">
+        <Sidebar />
+      </div>
+      <main className="flex-1 overflow-y-auto print:overflow-visible">
         {children}
       </main>
     </div>

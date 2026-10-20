@@ -1,15 +1,25 @@
 import { prisma } from "@/server/db/prisma";
 import { AttendanceStatus, EmployeeStatus, LeaveStatus, LeaveType, Prisma } from "@prisma/client";
 import { CurrentUser } from "@/server/auth/guard";
+import { employeeScopeFor } from "@/server/auth/scope";
 import { companySettingService } from "@/server/modules/settings/company-setting.service";
-import { ROLES, isAdminRole } from "@/shared/constants/roles";
-import { Attendance, DailyAttendanceStatus, MyTodayAttendance } from "@/shared/types/attendance.types";
+import { holidayService } from "@/server/modules/settings/holiday.service";
+import { evaluateAttendance } from "./attendance.rules";
+import {
+  Attendance,
+  AttendanceMonthlyRow,
+  AttendanceMonthlySummary,
+  DailyAttendanceStatus,
+  MyTodayAttendance,
+} from "@/shared/types/attendance.types";
 import {
   dateKeyToDate,
+  dateToDateKey,
   formatDate,
   formatTime,
-  isWeekend,
+  isWorkingDay,
   minutesOfDay,
+  monthRange,
   parseTimeToMinutes,
   toDateKey,
 } from "@/shared/utils/date";
@@ -26,38 +36,60 @@ function formatWorkHours(hours: number) {
   return m ? `${h} jam ${m} mnt` : `${h} jam`;
 }
 
-class AttendanceService {
-  private employeeScope(user: CurrentUser): Prisma.EmployeeWhereInput {
-    if (isAdminRole(user.role)) return {};
-    if (!user.employeeId) return { id: "__none__" };
-    if (user.role === ROLES.MANAGER) return { OR: [{ id: user.employeeId }, { managerId: user.employeeId }] };
-    return { id: user.employeeId };
-  }
+interface ApprovedLeave {
+  employeeId: string;
+  type: LeaveType;
+  startDate: Date;
+  endDate: Date;
+}
 
-  private async approvedLeaveOn(employeeIds: string[], date: Date) {
+const leaveStatusOf = (leave: ApprovedLeave): DailyAttendanceStatus =>
+  leave.type === LeaveType.SICK ? AttendanceStatus.SICK : AttendanceStatus.PERMISSION;
+
+class AttendanceService {
+  private async approvedLeavesBetween(employeeIds: string[], start: Date, end: Date): Promise<ApprovedLeave[]> {
     return prisma.leaveRequest.findMany({
       where: {
         employeeId: { in: employeeIds },
         status: LeaveStatus.HR_APPROVED,
-        startDate: { lte: date },
-        endDate: { gte: date },
+        startDate: { lte: end },
+        endDate: { gte: start },
       },
-      select: { employeeId: true, type: true },
+      select: { employeeId: true, type: true, startDate: true, endDate: true },
     });
+  }
+
+  private async isWorkDayOver(dateKey: string) {
+    const todayKey = toDateKey();
+    if (dateKey !== todayKey) return dateKey < todayKey;
+    const setting = await companySettingService.get();
+    return minutesOfDay() > parseTimeToMinutes(setting.workEndTime);
+  }
+
+  private classifyWithoutRecord(input: {
+    dateKey: string;
+    joinDate: Date | null;
+    leave: ApprovedLeave | undefined;
+    workDayOver: boolean;
+    holidays: Set<string>;
+  }): DailyAttendanceStatus | null {
+    if (!isWorkingDay(dateKeyToDate(input.dateKey), input.holidays)) return null;
+    if (input.joinDate && toDateKey(input.joinDate) > input.dateKey) return null;
+    if (input.leave) return leaveStatusOf(input.leave);
+    return input.workDayOver ? AttendanceStatus.ABSENT : "NOT_YET";
   }
 
   async getMyToday(employeeId: string): Promise<MyTodayAttendance> {
     const setting = await companySettingService.get();
-    const dateKey = toDateKey();
-    const date = dateKeyToDate(dateKey);
+    const date = dateKeyToDate(toDateKey());
 
     const [record, leaves] = await Promise.all([
       prisma.attendance.findUnique({ where: { employeeId_date: { employeeId, date } } }),
-      this.approvedLeaveOn([employeeId], date),
+      this.approvedLeavesBetween([employeeId], date, date),
     ]);
 
     let status: DailyAttendanceStatus = record?.status ?? "NOT_YET";
-    if (!record && leaves[0]) status = leaves[0].type === LeaveType.SICK ? AttendanceStatus.SICK : AttendanceStatus.PERMISSION;
+    if (!record && leaves[0]) status = leaveStatusOf(leaves[0]);
 
     return {
       date: formatDate(date),
@@ -78,23 +110,16 @@ class AttendanceService {
     const now = new Date();
     const date = dateKeyToDate(toDateKey(now));
 
-    if ((await this.approvedLeaveOn([employeeId], date)).length > 0) {
+    if ((await this.approvedLeavesBetween([employeeId], date, date)).length > 0) {
       throw new Error("Anda sedang cuti hari ini");
     }
 
     const setting = await companySettingService.get();
-    const lateBy = minutesOfDay(now) - parseTimeToMinutes(setting.workStartTime);
-    const isLate = lateBy > setting.lateToleranceMinutes;
+    const { status, lateInMinutes } = evaluateAttendance({ checkIn: now }, setting);
 
     try {
       return await prisma.attendance.create({
-        data: {
-          employeeId,
-          date,
-          checkIn: now,
-          status: isLate ? AttendanceStatus.LATE : AttendanceStatus.PRESENT,
-          lateInMinutes: isLate ? lateBy : 0,
-        },
+        data: { employeeId, date, checkIn: now, status, lateInMinutes },
       });
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
@@ -113,21 +138,11 @@ class AttendanceService {
     if (attendance.checkOut) throw new Error("Anda sudah check-out hari ini");
 
     const setting = await companySettingService.get();
-    const endMinutes = parseTimeToMinutes(setting.workEndTime);
-    const nowMinutes = minutesOfDay(now);
-
-    const overtimeHours = nowMinutes > endMinutes ? round2((nowMinutes - endMinutes) / 60) : 0;
-    const leftEarly = nowMinutes < endMinutes && attendance.status === AttendanceStatus.PRESENT;
+    const evaluated = evaluateAttendance({ checkIn: attendance.checkIn, checkOut: now }, setting);
 
     return prisma.attendance.update({
       where: { id: attendance.id },
-      data: {
-        checkOut: now,
-        workHours: round2((now.getTime() - attendance.checkIn.getTime()) / 3_600_000),
-        overtimeHours,
-        isOvertime: overtimeHours > 0,
-        ...(leftEarly ? { status: AttendanceStatus.EARLY_LEAVE } : {}),
-      },
+      data: { checkOut: now, ...evaluated },
     });
   }
 
@@ -138,7 +153,7 @@ class AttendanceService {
     const employees = await prisma.employee.findMany({
       where: {
         AND: [
-          this.employeeScope(user),
+          employeeScopeFor(user),
           { OR: [{ status: { in: ACTIVE_STATUSES } }, { attendances: { some: { date } } }] },
         ],
       },
@@ -147,16 +162,14 @@ class AttendanceService {
     });
     const ids = employees.map((e) => e.id);
 
-    const [records, leaves, setting] = await Promise.all([
+    const [records, leaves, workDayOver, holidays] = await Promise.all([
       prisma.attendance.findMany({ where: { date, employeeId: { in: ids } } }),
-      this.approvedLeaveOn(ids, date),
-      companySettingService.get(),
+      this.approvedLeavesBetween(ids, date, date),
+      this.isWorkDayOver(dateKey),
+      holidayService.keysBetween(date, date),
     ]);
     const recordBy = new Map(records.map((r) => [r.employeeId, r]));
     const leaveBy = new Map(leaves.map((l) => [l.employeeId, l]));
-
-    const todayKey = toDateKey();
-    const workDayOver = dateKey < todayKey || (dateKey === todayKey && minutesOfDay() > parseTimeToMinutes(setting.workEndTime));
 
     const rows: Attendance[] = [];
     for (const emp of employees) {
@@ -178,22 +191,101 @@ class AttendanceService {
         continue;
       }
 
-      if (isWeekend(date)) continue;
-      if (emp.joinDate && toDateKey(emp.joinDate) > dateKey) continue;
-
       const leave = leaveBy.get(emp.id);
-      const status: DailyAttendanceStatus = leave
-        ? leave.type === LeaveType.SICK ? AttendanceStatus.SICK : AttendanceStatus.PERMISSION
-        : workDayOver ? AttendanceStatus.ABSENT : "NOT_YET";
+      const status = this.classifyWithoutRecord({ dateKey, joinDate: emp.joinDate, leave, workDayOver, holidays });
+      if (!status) continue;
 
       rows.push({ ...base, jamMasuk: "-", jamKeluar: "-", jamKerja: "-", status, keterangan: leave ? "Cuti disetujui" : "" });
     }
     return rows;
   }
 
+  async getMonthlySummary(user: CurrentUser, month: number, year: number): Promise<AttendanceMonthlySummary> {
+    const { start, end } = monthRange(month, year);
+    const todayKey = toDateKey();
+    const lastKey = dateToDateKey(end) < todayKey ? dateToDateKey(end) : todayKey;
+
+    const employees = await prisma.employee.findMany({
+      where: {
+        AND: [
+          employeeScopeFor(user),
+          { OR: [{ status: { in: ACTIVE_STATUSES } }, { attendances: { some: { date: { gte: start, lte: end } } } }] },
+        ],
+      },
+      select: { id: true, name: true, nip: true, joinDate: true, department: { select: { name: true } } },
+      orderBy: { name: "asc" },
+    });
+    const ids = employees.map((e) => e.id);
+
+    const [records, leaves, todayOver, holidays] = await Promise.all([
+      prisma.attendance.findMany({ where: { employeeId: { in: ids }, date: { gte: start, lte: end } } }),
+      this.approvedLeavesBetween(ids, start, end),
+      this.isWorkDayOver(todayKey),
+      holidayService.keysBetween(start, end),
+    ]);
+
+    const recordKey = (employeeId: string, dateKey: string) => `${employeeId}|${dateKey}`;
+    const recordBy = new Map(records.map((r) => [recordKey(r.employeeId, dateToDateKey(r.date)), r]));
+
+    const rows: AttendanceMonthlyRow[] = employees.map((emp) => ({
+      employeeId: emp.id,
+      nip: emp.nip || "-",
+      nama: emp.name,
+      divisi: emp.department?.name || "-",
+      hadir: 0,
+      terlambat: 0,
+      izin: 0,
+      sakit: 0,
+      alpha: 0,
+      menitTerlambat: 0,
+      jamLembur: 0,
+    }));
+
+    const cursor = new Date(start);
+    while (dateToDateKey(cursor) <= lastKey) {
+      const dateKey = dateToDateKey(cursor);
+      const workDayOver = dateKey < todayKey || todayOver;
+
+      employees.forEach((emp, i) => {
+        const row = rows[i];
+        const record = recordBy.get(recordKey(emp.id, dateKey));
+        let status: DailyAttendanceStatus | null;
+
+        if (record) {
+          status = record.status;
+          row.menitTerlambat += record.lateInMinutes;
+          row.jamLembur = round2(row.jamLembur + record.overtimeHours);
+        } else {
+          const leave = leaves.find((l) => l.employeeId === emp.id && l.startDate <= cursor && l.endDate >= cursor);
+          status = this.classifyWithoutRecord({ dateKey, joinDate: emp.joinDate, leave, workDayOver, holidays });
+        }
+
+        if (!status) return;
+        if (PRESENT_STATUSES.includes(status)) row.hadir++;
+        if (status === AttendanceStatus.LATE) row.terlambat++;
+        if (status === AttendanceStatus.PERMISSION) row.izin++;
+        if (status === AttendanceStatus.SICK) row.sakit++;
+        if (status === AttendanceStatus.ABSENT) row.alpha++;
+      });
+
+      cursor.setUTCDate(cursor.getUTCDate() + 1);
+    }
+
+    const sum = (key: "hadir" | "terlambat" | "izin" | "sakit" | "alpha") => rows.reduce((acc, r) => acc + r[key], 0);
+    const totals = { hadir: sum("hadir"), terlambat: sum("terlambat"), izin: sum("izin"), sakit: sum("sakit"), alpha: sum("alpha") };
+    const recorded = totals.hadir + totals.izin + totals.sakit + totals.alpha;
+
+    return {
+      rows,
+      totals,
+      attendanceRate: recorded ? Math.round((totals.hadir / recorded) * 100) : 0,
+    };
+  }
+
   async getTodayStats(user: CurrentUser) {
     const rows = await this.getDaily(user, toDateKey());
     const count = (statuses: DailyAttendanceStatus[]) => rows.filter((r) => statuses.includes(r.status)).length;
+    const onLeave = count([AttendanceStatus.PERMISSION, AttendanceStatus.SICK]);
 
     return [
       { label: "Total Karyawan", value: rows.length.toString(), change: "", type: "neutral" as const },
@@ -202,7 +294,7 @@ class AttendanceService {
       {
         label: "Tidak Hadir",
         value: count([AttendanceStatus.ABSENT, "NOT_YET"]).toString(),
-        change: count([AttendanceStatus.PERMISSION, AttendanceStatus.SICK]) ? `${count([AttendanceStatus.PERMISSION, AttendanceStatus.SICK])} cuti` : "",
+        change: onLeave ? `${onLeave} cuti` : "",
         type: "danger" as const,
       },
     ];

@@ -1,4 +1,4 @@
-import type { EmployeeStatus, EmploymentType } from "@prisma/client";
+import type { EmployeeStatus, EmploymentType, PtkpStatus } from "@prisma/client";
 
 export interface Employee {
   id: string;
@@ -29,6 +29,9 @@ export interface EmployeeFormData {
   avatar?: string;
   salaryBase?: number;
   managerId?: string | null;
+  ptkpStatus?: PtkpStatus;
+  bpjsKesehatan?: boolean;
+  bpjsKetenagakerjaan?: boolean;
 }
 
 export interface OrgOption {

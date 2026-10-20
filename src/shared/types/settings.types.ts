@@ -10,7 +10,7 @@ export interface SystemSettings {
   backupComplete: boolean;
 }
 
-export type SettingsTabId = "general" | "company" | "users" | "security" | "notifications" | "session";
+export type SettingsTabId = "general" | "company" | "holidays" | "users" | "security" | "notifications" | "session";
 
 export interface SystemUser {
   id: string;
@@ -33,4 +33,15 @@ export interface CompanySetting {
   overtimeRatePerHour: number;
   workingDaysPerMonth: number;
   annualLeaveQuota: number;
+  bpjsKesehatanWageCap: number;
+  jpWageCap: number;
+  jkkRateBps: number;
+  bpjsMinimumWage: number;
+}
+
+export interface HolidayRow {
+  id: string;
+  dateKey: string;
+  date: string;
+  name: string;
 }

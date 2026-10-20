@@ -10,6 +10,7 @@ import { getEmployeeByIdAction } from "@/server/modules/employees/employee.actio
 import { StatusBadge } from "@/shared/components/StatusBadge";
 import { formatCurrency } from "@/shared/utils/format";
 import { getProbationDaysLeft } from "@/shared/utils/employee";
+import { PayrollComponentsCard } from "@/features/salary/components/PayrollComponentsCard";
 
 interface FullEmployeeDetails {
   id: string;
@@ -307,6 +308,8 @@ export default async function EmployeeDetailPage({ params }: PageProps) {
         </div>
 
       </div>
+
+      <PayrollComponentsCard employeeId={employee.id} />
     </div>
   );
 }

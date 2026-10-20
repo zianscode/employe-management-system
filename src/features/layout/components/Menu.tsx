@@ -8,6 +8,7 @@ import {
   RxFileText,
   RxRocket,
   RxGear,
+  RxLayers,
 } from "react-icons/rx";
 import { MenuItem } from "./MenuItem";
 import { canAccessRoute, isAdminRole, ROLES } from "@/shared/constants/roles";
@@ -33,6 +34,12 @@ export default function Menu({ currentPath, isCollapsed, role = ROLES.EMPLOYEE }
       label: "Employees",
       icon: <RxGroup />,
       isActive: currentPath.startsWith("/dashboard/employees"),
+    },
+    {
+      href: "/dashboard/organization",
+      label: "Organization",
+      icon: <RxLayers />,
+      isActive: currentPath.startsWith("/dashboard/organization"),
     },
     {
       href: "/dashboard/attendance",

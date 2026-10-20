@@ -86,15 +86,32 @@ Semua nominal uang bertipe `Int` (rupiah). Tanggal-saja disimpan sebagai tengah 
 **Absensi**
 - Check-in/out sekali sehari. Terlambat bila lewat jam masuk + toleransi; lewat jam pulang = lembur.
 - Tanpa catatan absensi di hari kerja: cuti disetujui → Izin/Sakit, hari sudah lewat → Tidak Hadir, hari ini → Belum Absen.
+- Hari libur (Settings → Hari Libur) dan akhir pekan tidak dihitung sebagai hari kerja di absensi, durasi cuti, dan potongan gaji.
+- Koreksi absensi: karyawan mengajukan perbaikan jam masuk/pulang (maks. 30 hari ke belakang) dengan alasan; disetujui atasan langsung atau HR/Admin. Saat disetujui, status dihitung ulang dengan rumus yang sama (`attendance.rules.ts`).
 
 **Cuti**
 - `PENDING` → (atasan langsung) `MANAGER_APPROVED` → (HR/Admin) `HR_APPROVED` (final). HR/Admin boleh langsung final.
 - Ditolak wajib dengan alasan; pemohon bisa membatalkan selama belum final. Tidak boleh menyetujui cuti sendiri (kecuali SUPER_ADMIN).
 - Durasi = hari kerja (Senin–Jumat). Sisa cuti tahunan = `leaveQuota` − cuti tahunan disetujui di tahun berjalan (reset otomatis tiap tahun).
 
-**Gaji**
-- HR/Admin menekan "Hitung Gaji" per periode: gaji pokok + lembur (jam × tarif) − potongan cuti diluar tanggungan (gaji pokok ÷ hari kerja × hari).
-- Slip yang sudah ditandai dibayar tidak dihitung ulang. Karyawan hanya melihat slip miliknya.
+**Gaji** (aturan Indonesia, `src/server/modules/salary/payroll.rules.ts`)
+- HR/Admin menekan "Hitung Gaji" per periode untuk semua karyawan aktif. Slip yang sudah ditandai dibayar tidak dihitung ulang.
+- Komponen: gaji pokok + tunjangan tetap (per karyawan, di halaman detail karyawan) + lembur − potongan cuti diluar tanggungan − potongan tetap − iuran BPJS karyawan − PPh 21.
+- BPJS: Kesehatan 4% perusahaan / 1% karyawan (dasar maks. Rp12 jt); JHT 3,7% / 2%; JP 2% / 1% (dasar maks. diatur di Settings, Rp11.086.300 per Maret 2026); JKK 0,24–1,74% dan JKM 0,3% perusahaan. Dasar iuran = gaji pokok + tunjangan tetap.
+- PPh 21 (PP 58/2023, PMK 168/2023): Januari–November memakai tarif efektif rata-rata (TER) kategori A/B/C sesuai status PTKP; Desember dihitung ulang setahun dengan tarif Pasal 17 (bruto − biaya jabatan 5% maks. Rp6 jt − iuran JHT & JP karyawan − PTKP), dikurangi PPh yang sudah dipotong. Bruto PPh 21 termasuk premi JKK, JKM, dan BPJS Kesehatan yang dibayar perusahaan.
+- Slip gaji menyimpan rincian komponen saat dihitung, bisa dicetak/disimpan PDF dari menu Payroll. Karyawan hanya melihat slip miliknya.
+- Belum ditangani: karyawan resign di tengah tahun (perhitungan masa pajak terakhir), insentif PPh 21 DTP (PMK 105/2025), THR/bonus, pegawai tidak tetap.
+
+**Organisasi** (menu Organization, HR/Admin)
+- Kelola divisi dan jabatan beserta gaji pokok standar. Divisi/jabatan yang masih dipakai karyawan tidak bisa dihapus.
+- Mengubah gaji standar jabatan tidak mengubah gaji karyawan yang sudah ada.
+
+**Laporan** (menu Reports, HR/Admin/Manager) per bulan, bisa diekspor ke CSV
+- Absensi: rekap per karyawan + tren 6 bulan (status harian dihitung dengan aturan yang sama dengan halaman Absensi).
+- Gaji (HR/Admin saja): total, per divisi, tren 6 bulan.
+- Karyawan: per status/divisi/tipe kerja, karyawan baru, masa percobaan.
+- Cuti: hari cuti disetujui per jenis dan per karyawan.
+- Manager hanya melihat data dirinya dan bawahan langsung.
 
 **Pengaturan** (Settings → Perusahaan): jam kerja, toleransi telat, tarif lembur, hari kerja per bulan, jatah cuti default.
 

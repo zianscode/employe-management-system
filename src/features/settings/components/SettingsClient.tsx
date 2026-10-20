@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
-import { Settings, Building2, Users, Shield, Bell, LogOut } from "lucide-react";
+import { Settings, Building2, Users, Shield, Bell, LogOut, CalendarOff } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { isAdminRole } from "@/shared/constants/roles";
 import { useSettings } from "@/features/settings/hooks/use-settings";
 import { GeneralSettings } from "./GeneralSettings";
 import { CompanySettings } from "./CompanySettings";
+import { HolidaySettings } from "./HolidaySettings";
 import { UserManagement } from "./UserManagement";
 import { SystemSecurity } from "./SystemSecurity";
 import { NotificationSettings } from "./NotificationSettings";
@@ -24,6 +25,7 @@ export function SettingsClient() {
   const allTabs: { id: SettingsTabId; label: string; icon: React.ElementType; adminOnly: boolean }[] = [
     { id: "general", label: "Umum", icon: Settings, adminOnly: true },
     { id: "company", label: "Perusahaan", icon: Building2, adminOnly: true },
+    { id: "holidays", label: "Hari Libur", icon: CalendarOff, adminOnly: true },
     { id: "users", label: "Pengguna", icon: Users, adminOnly: true },
     { id: "security", label: "Keamanan", icon: Shield, adminOnly: true },
     { id: "notifications", label: "Notifikasi", icon: Bell, adminOnly: true },
@@ -61,6 +63,7 @@ export function SettingsClient() {
           <GeneralSettings settings={settings} onToggle={handleToggle} />
         )}
         {currentTab === "company" && <CompanySettings />}
+        {currentTab === "holidays" && <HolidaySettings />}
         {currentTab === "users" && (
           <UserManagement users={users} onRefresh={refreshUsers} />
         )}

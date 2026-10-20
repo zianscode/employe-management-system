@@ -35,6 +35,9 @@ export default function EditEmployeePage() {
           joinDate: d.joinDate,
           salaryBase: d.salaryBase,
           managerId: d.managerId,
+          ptkpStatus: d.ptkpStatus,
+          bpjsKesehatan: d.bpjsKesehatan,
+          bpjsKetenagakerjaan: d.bpjsKetenagakerjaan,
         });
       } else {
         toast.error(res.message || "Karyawan tidak ditemukan");

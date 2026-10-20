@@ -23,6 +23,10 @@ export async function getCompanySettingAction() {
       overtimeRatePerHour: s.overtimeRatePerHour,
       workingDaysPerMonth: s.workingDaysPerMonth,
       annualLeaveQuota: s.annualLeaveQuota,
+      bpjsKesehatanWageCap: s.bpjsKesehatanWageCap,
+      jpWageCap: s.jpWageCap,
+      jkkRateBps: s.jkkRateBps,
+      bpjsMinimumWage: s.bpjsMinimumWage,
     };
     return ApiResponse.success("Pengaturan perusahaan", setting);
   } catch (error) {

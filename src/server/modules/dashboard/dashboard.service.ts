@@ -5,16 +5,7 @@ import { ROLES } from "@/shared/constants/roles";
 import { attendanceService } from "@/server/modules/attendance/attendance.service";
 import { leaveService } from "@/server/modules/leave/leave.service";
 import { dateKeyToDate, toDateKey } from "@/shared/utils/date";
-
-const ATTENDANCE_LABELS: Record<string, string> = {
-  PRESENT: "Hadir",
-  LATE: "Terlambat",
-  EARLY_LEAVE: "Pulang Cepat",
-  ABSENT: "Tidak Hadir",
-  PERMISSION: "Izin / Cuti",
-  SICK: "Sakit",
-  NOT_YET: "Belum Absen",
-};
+import { ATTENDANCE_STATUS_LABELS } from "@/shared/constants/attendance";
 
 class DashboardService {
   async getStats(user: CurrentUser) {
@@ -30,7 +21,7 @@ class DashboardService {
       return {
         type: "PERSONAL" as const,
         stats: {
-          attendanceStatus: ATTENDANCE_LABELS[today.status] ?? today.status,
+          attendanceStatus: ATTENDANCE_STATUS_LABELS[today.status] ?? today.status,
           checkInTime: today.checkIn,
           remainingLeave: balance.remaining,
           totalSalaryReceived: paidSalaries,

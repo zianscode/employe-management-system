@@ -24,6 +24,7 @@ export const isAdminRole = (role?: string | null) =>
 const ROUTE_ROLES: Record<string, RoleName[]> = {
   "/dashboard/employees": ADMIN_ROLES,
   "/dashboard/reports": APPROVER_ROLES,
+  "/dashboard/organization": ADMIN_ROLES,
 };
 
 export function canAccessRoute(pathname: string, role?: string | null) {

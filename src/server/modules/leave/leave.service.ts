@@ -1,6 +1,8 @@
 import { prisma } from "@/server/db/prisma";
 import { LeaveStatus, LeaveType, Prisma } from "@prisma/client";
 import { CurrentUser } from "@/server/auth/guard";
+import { employeeScopeFor } from "@/server/auth/scope";
+import { holidayService } from "@/server/modules/settings/holiday.service";
 import { ROLES, isAdminRole } from "@/shared/constants/roles";
 import { LeaveBalance, LeaveRequest, LeaveRequestInput } from "@/shared/types/leave.types";
 import { countWorkingDays, dateKeyToDate, formatDate, toDateKey } from "@/shared/utils/date";
@@ -18,12 +20,7 @@ type LeaveWithRelations = Prisma.LeaveRequestGetPayload<{ include: typeof leaveI
 
 class LeaveService {
   scopeFor(user: CurrentUser): Prisma.LeaveRequestWhereInput {
-    if (isAdminRole(user.role)) return {};
-    if (!user.employeeId) return { id: "__none__" };
-    if (user.role === ROLES.MANAGER) {
-      return { OR: [{ employeeId: user.employeeId }, { employee: { managerId: user.employeeId } }] };
-    }
-    return { employeeId: user.employeeId };
+    return { employee: employeeScopeFor(user) };
   }
 
   private isOwn(req: LeaveWithRelations, user: CurrentUser) {
@@ -134,8 +131,8 @@ class LeaveService {
     if (isNaN(start.getTime()) || isNaN(end.getTime())) throw new Error("Tanggal tidak valid");
     if (end < start) throw new Error("Tanggal selesai tidak boleh sebelum tanggal mulai");
 
-    const duration = countWorkingDays(start, end);
-    if (duration === 0) throw new Error("Rentang tanggal tidak mengandung hari kerja (Senin-Jumat)");
+    const duration = countWorkingDays(start, end, await holidayService.keysBetween(start, end));
+    if (duration === 0) throw new Error("Rentang tanggal tidak mengandung hari kerja (Senin-Jumat, bukan hari libur)");
 
     const overlapping = await prisma.leaveRequest.findFirst({
       where: {

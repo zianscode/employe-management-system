@@ -46,14 +46,29 @@ export function isWeekend(date: Date): boolean {
   return day === 0 || day === 6;
 }
 
-export function countWorkingDays(start: Date, end: Date): number {
+export function isWorkingDay(date: Date, holidays?: Set<string>): boolean {
+  return !isWeekend(date) && !holidays?.has(dateToDateKey(date));
+}
+
+export function countWorkingDays(start: Date, end: Date, holidays?: Set<string>): number {
   let count = 0;
   const cursor = new Date(start);
   while (cursor <= end) {
-    if (!isWeekend(cursor)) count++;
+    if (isWorkingDay(cursor, holidays)) count++;
     cursor.setUTCDate(cursor.getUTCDate() + 1);
   }
   return count;
+}
+
+export function zonedDateTime(dateKey: string, time: string): Date {
+  const [y, m, d] = dateKey.split("-").map(Number);
+  const [h, min] = time.split(":").map(Number);
+  const guess = new Date(Date.UTC(y, m - 1, d, h, min));
+  const shownKey = toDateKey(guess);
+  const shownMinutes = minutesOfDay(guess);
+  const [sy, sm, sd] = shownKey.split("-").map(Number);
+  const shownAsUtc = Date.UTC(sy, sm - 1, sd, Math.floor(shownMinutes / 60), shownMinutes % 60);
+  return new Date(guess.getTime() - (shownAsUtc - guess.getTime()));
 }
 
 export function monthRange(month: number, year: number) {

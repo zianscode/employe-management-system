@@ -5,8 +5,9 @@ import { User, Mail, Briefcase, Building2, Calendar, Shield, ArrowLeft, Save, Wa
 import { useRouter } from "next/navigation";
 import { EmployeeStatus } from "@prisma/client";
 
-import { getOrgDataAction } from "@/server/modules/employees/organization.actions";
+import { getOrgDataAction } from "@/server/modules/organization/organization.actions";
 import { ROLE_DESCRIPTIONS, ROLES, RoleName } from "@/shared/constants/roles";
+import { PTKP_OPTIONS } from "@/shared/constants/payroll";
 import { getRolesAction } from "@/server/modules/employees/employee.actions";
 import { EmployeeFormData, OrgOption } from "@/shared/types/employee.types";
 
@@ -51,6 +52,9 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
     customPosition: "",
     salaryBase: initialData?.salaryBase || 0,
     managerId: initialData?.managerId || "",
+    ptkpStatus: initialData?.ptkpStatus || "TK0",
+    bpjsKesehatan: initialData?.bpjsKesehatan ?? true,
+    bpjsKetenagakerjaan: initialData?.bpjsKetenagakerjaan ?? true,
   });
 
   useEffect(() => {
@@ -390,6 +394,40 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
                     placeholder="Kosongkan untuk memakai gaji standar jabatan"
                     className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-[#E02F75]/50 outline-none transition-all font-medium"
                   />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-gray-700 ml-1">Status PTKP (Pajak)</label>
+                <select
+                  name="ptkpStatus"
+                  value={formData.ptkpStatus}
+                  onChange={handleChange}
+                  className="w-full px-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-[#E02F75]/50 outline-none transition-all font-medium cursor-pointer"
+                >
+                  {PTKP_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-gray-700 ml-1">Kepesertaan BPJS</label>
+                <div className="flex flex-col gap-2 px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl">
+                  {([
+                    ["bpjsKesehatan", "BPJS Kesehatan"],
+                    ["bpjsKetenagakerjaan", "BPJS Ketenagakerjaan (JHT, JP, JKK, JKM)"],
+                  ] as const).map(([field, label]) => (
+                    <label key={field} className="flex items-center gap-3 text-sm font-medium text-gray-700 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData[field]}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, [field]: e.target.checked }))}
+                        className="w-4 h-4 accent-[#E02F75]"
+                      />
+                      {label}
+                    </label>
+                  ))}
                 </div>
               </div>
             </div>

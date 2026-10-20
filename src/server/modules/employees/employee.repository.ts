@@ -96,6 +96,9 @@ class EmployeeRepository {
           joinDate: data.joinDate ? new Date(data.joinDate) : new Date(),
           salaryBase: data.salaryBase && data.salaryBase > 0 ? Math.round(data.salaryBase) : position?.salaryBase ?? 0,
           leaveQuota: setting.annualLeaveQuota,
+          ptkpStatus: data.ptkpStatus,
+          bpjsKesehatan: data.bpjsKesehatan,
+          bpjsKetenagakerjaan: data.bpjsKetenagakerjaan,
           isProfileComplete: false,
           user: { connect: { id: user.id } },
           ...(data.departmentId ? { department: { connect: { id: data.departmentId } } } : {}),
@@ -127,6 +130,9 @@ class EmployeeRepository {
           birthDate: data.birthDate ? new Date(data.birthDate) : undefined,
           employmentType: data.employmentType,
           salaryBase: data.salaryBase !== undefined ? Math.max(0, Math.round(data.salaryBase)) : undefined,
+          ptkpStatus: data.ptkpStatus,
+          bpjsKesehatan: data.bpjsKesehatan,
+          bpjsKetenagakerjaan: data.bpjsKetenagakerjaan,
           ...(positionId ? { position: { connect: { id: positionId } } } : {}),
           ...(data.departmentId ? { department: { connect: { id: data.departmentId } } } : {}),
           ...(data.managerId !== undefined
@@ -147,12 +153,13 @@ class EmployeeRepository {
   }
 
   async countHistory(id: string) {
-    const [attendances, leaveRequests, salaries] = await Promise.all([
+    const counts = await Promise.all([
       prisma.attendance.count({ where: { employeeId: id } }),
       prisma.leaveRequest.count({ where: { employeeId: id } }),
       prisma.salary.count({ where: { employeeId: id } }),
+      prisma.attendanceCorrection.count({ where: { employeeId: id } }),
     ]);
-    return attendances + leaveRequests + salaries;
+    return counts.reduce((sum, count) => sum + count, 0);
   }
 
   async delete(id: string) {

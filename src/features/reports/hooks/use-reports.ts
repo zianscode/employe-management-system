@@ -1,58 +1,85 @@
-import { useState, useMemo } from "react";
-import { ReportTabId, AttendanceTrend, AttendanceDistribution, ReportStat } from "@/shared/types/report.types";
-import { Clock, DollarSign, Users, Calendar, TrendingUp, BarChart3 } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
+import {
+  AttendanceReportData,
+  EmployeeReportData,
+  LeaveReportData,
+  ReportTabId,
+  SalaryReportData,
+} from "@/shared/types/report.types";
+import {
+  getAttendanceReportAction,
+  getEmployeeReportAction,
+  getLeaveReportAction,
+  getSalaryReportAction,
+} from "@/server/modules/reports/report.actions";
+import { toDateKey } from "@/shared/utils/date";
+
+export type ReportData =
+  | { tab: "absensi"; data: AttendanceReportData }
+  | { tab: "gaji"; data: SalaryReportData }
+  | { tab: "karyawan"; data: EmployeeReportData }
+  | { tab: "cuti"; data: LeaveReportData };
+
+async function fetchReport(tab: ReportTabId, month: number, year: number): Promise<ReportData | string> {
+  switch (tab) {
+    case "absensi": {
+      const res = await getAttendanceReportAction(month, year);
+      return res.success && res.data ? { tab, data: res.data } : res.message;
+    }
+    case "gaji": {
+      const res = await getSalaryReportAction(month, year);
+      return res.success && res.data ? { tab, data: res.data } : res.message;
+    }
+    case "karyawan": {
+      const res = await getEmployeeReportAction(month, year);
+      return res.success && res.data ? { tab, data: res.data } : res.message;
+    }
+    case "cuti": {
+      const res = await getLeaveReportAction(month, year);
+      return res.success && res.data ? { tab, data: res.data } : res.message;
+    }
+  }
+}
 
 export function useReports() {
   const [activeTab, setActiveTab] = useState<ReportTabId>("absensi");
-  const [selectedMonth, setSelectedMonth] = useState("Januari 2024");
+  const [selectedMonth, setSelectedMonth] = useState(() => toDateKey().slice(0, 7));
+  const [report, setReport] = useState<ReportData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const attendanceData: AttendanceTrend[] = [];
+  const [year, month] = selectedMonth.split("-").map(Number);
 
-  const attendancePieData: AttendanceDistribution[] = [
-    { name: "Hadir", value: 0, color: "#10B981" },
-    { name: "Izin", value: 0, color: "#3B82F6" },
-    { name: "Sakit", value: 0, color: "#F59E0B" },
-    { name: "Alpha", value: 0, color: "#EF4444" },
-  ];
-
-  interface SalaryTrend {
-    month: string;
-    totalGaji: number;
-    rataRata: number;
-    bonus: number;
-  }
-
-  const salaryData: SalaryTrend[] = [];
-
-  const stats: ReportStat[] = useMemo(() => {
-    switch (activeTab) {
-      case "absensi":
-        return [
-          { title: "Rata-rata Kehadiran", value: "0%", change: "0%", icon: TrendingUp, color: "from-green-400 to-green-600", bgColor: "bg-green-50" },
-          { title: "Total Izin", value: "0", change: "0", icon: Calendar, color: "from-blue-400 to-blue-600", bgColor: "bg-blue-50" },
-          { title: "Total Sakit", value: "0", change: "0", icon: Clock, color: "from-orange-400 to-orange-600", bgColor: "bg-orange-50" },
-          { title: "Total Alpha", value: "0", change: "0", icon: Users, color: "from-red-400 to-red-600", bgColor: "bg-red-50" },
-        ];
-      case "gaji":
-        return [
-          { title: "Total Pengeluaran Gaji", value: "Rp 0", change: "0%", icon: DollarSign, color: "from-blue-400 to-blue-600", bgColor: "bg-blue-50" },
-          { title: "Rata-rata Gaji", value: "Rp 0", change: "0%", icon: TrendingUp, color: "from-green-400 to-green-600", bgColor: "bg-green-50" },
-          { title: "Kenaikan YoY", value: "0%", change: "0%", icon: BarChart3, color: "from-purple-400 to-purple-600", bgColor: "bg-purple-50" },
-          { title: "Total Bonus", value: "Rp 0", change: "0%", icon: DollarSign, color: "from-orange-400 to-orange-600", bgColor: "bg-orange-50" },
-        ];
-      default:
-        return [];
+  const load = useCallback(async () => {
+    setIsLoading(true);
+    const result = await fetchReport(activeTab, month, year);
+    if (typeof result === "string") {
+      toast.error(result);
+      setReport(null);
+    } else {
+      setReport(result);
     }
-  }, [activeTab]);
+    setIsLoading(false);
+  }, [activeTab, month, year]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const periodLabel = new Date(Date.UTC(year, month - 1, 1)).toLocaleDateString("id-ID", {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
 
   return {
     activeTab,
     setActiveTab,
-    stats,
-    attendanceData,
-    attendancePieData,
-    salaryData,
     selectedMonth,
     setSelectedMonth,
+    report: report?.tab === activeTab ? report : null,
+    isLoading,
+    periodLabel,
+    fileSuffix: selectedMonth,
   };
 }

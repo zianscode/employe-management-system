@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Building2, Settings, Save } from "lucide-react";
+import { Building2, Settings, Save, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { CompanySetting } from "@/shared/types/settings.types";
+import { JKK_RISK_GROUPS } from "@/shared/constants/payroll";
 import { getCompanySettingAction, updateCompanySettingAction } from "@/server/modules/settings/company-setting.actions";
 
 const inputClass =
@@ -24,8 +25,8 @@ export const CompanySettings = () => {
     return <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm text-gray-500">Memuat pengaturan...</div>;
   }
 
-  const set = (key: keyof CompanySetting) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.type === "number" ? Number(e.target.value) : e.target.value;
+  const set = (key: keyof CompanySetting) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const value = e.target.type === "number" || e.target.tagName === "SELECT" ? Number(e.target.value) : e.target.value;
     setForm((prev) => (prev ? { ...prev, [key]: value } : prev));
   };
 
@@ -110,6 +111,43 @@ export const CompanySettings = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2">Jatah Cuti Tahunan Default (hari)</label>
             <input type="number" min={0} required value={form.annualLeaveQuota} onChange={set("annualLeaveQuota")} className={inputClass} />
             <p className="text-xs text-gray-400 mt-1">Berlaku untuk karyawan yang didaftarkan setelah perubahan ini</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+        <div className="flex items-center space-x-3 mb-6">
+          <div className="w-10 h-10 bg-gradient-to-br from-[#6700A3] to-[#E02F75] rounded-xl flex items-center justify-center">
+            <ShieldCheck className="text-white" size={20} />
+          </div>
+          <div>
+            <h3 className="text-xl font-semibold text-gray-900">BPJS</h3>
+            <p className="text-gray-500">Dasar perhitungan iuran BPJS Kesehatan & Ketenagakerjaan</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Kelompok Risiko JKK</label>
+            <select value={form.jkkRateBps} onChange={set("jkkRateBps")} className={inputClass}>
+              {JKK_RISK_GROUPS.map((g) => (
+                <option key={g.bps} value={g.bps}>{g.label}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Upah Minimum / UMK (Rp)</label>
+            <input type="number" min={0} step={1000} value={form.bpjsMinimumWage} onChange={set("bpjsMinimumWage")} className={inputClass} />
+            <p className="text-xs text-gray-400 mt-1">Batas bawah dasar iuran BPJS. Isi 0 jika tidak dipakai.</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Batas Upah BPJS Kesehatan (Rp)</label>
+            <input type="number" min={0} step={1000} required value={form.bpjsKesehatanWageCap} onChange={set("bpjsKesehatanWageCap")} className={inputClass} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Batas Upah Jaminan Pensiun (Rp)</label>
+            <input type="number" min={0} step={100} required value={form.jpWageCap} onChange={set("jpWageCap")} className={inputClass} />
+            <p className="text-xs text-gray-400 mt-1">Disesuaikan BPJS Ketenagakerjaan setiap Maret.</p>
           </div>
         </div>
       </div>

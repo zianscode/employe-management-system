@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { Search, Filter, Calendar, Calculator, CheckCircle2 } from "lucide-react";
+import { Search, Filter, Calendar, Calculator, CheckCircle2, FileText } from "lucide-react";
+import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { useSalary } from "@/features/salary/hooks/use-salary";
@@ -57,8 +58,10 @@ export default function SalaryPage() {
     { header: "Gaji Pokok", accessor: (item) => formatCurrency(item.basicSalary), className: "text-right" },
     { header: "Tunjangan", accessor: (item) => formatCurrency(item.allowance), className: "text-right" },
     { header: "Lembur", accessor: (item) => formatCurrency(item.overtimePay), className: "text-right" },
-    { header: "Potongan", accessor: (item) => formatCurrency(item.deduction), className: "text-right" },
-    { header: "Total Gaji", accessor: (item) => formatCurrency(item.totalSalary), className: "text-right font-bold" },
+    { header: "BPJS", accessor: (item) => formatCurrency(item.bpjsEmployee), className: "text-right" },
+    { header: "PPh 21", accessor: (item) => formatCurrency(item.pph21), className: "text-right" },
+    { header: "Potongan Lain", accessor: (item) => formatCurrency(item.deduction), className: "text-right" },
+    { header: "Diterima", accessor: (item) => formatCurrency(item.totalSalary), className: "text-right font-bold" },
     {
       header: "Status",
       accessor: (item) => (
@@ -73,6 +76,19 @@ export default function SalaryPage() {
       className: "text-center",
     },
   ];
+
+  columns.push({
+    header: "Slip",
+    accessor: (item) => (
+      <Link
+        href={`/dashboard/salary/${item.id}/slip`}
+        className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-[#E02F75] bg-[#E02F75]/10 rounded-lg hover:bg-[#E02F75]/20 w-fit"
+      >
+        <FileText size={14} />
+        Lihat
+      </Link>
+    ),
+  });
 
   if (isAdmin) {
     columns.push({

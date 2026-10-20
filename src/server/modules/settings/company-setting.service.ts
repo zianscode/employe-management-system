@@ -1,5 +1,6 @@
 import { prisma } from "@/server/db/prisma";
 import { z } from "zod";
+import { JKK_RISK_GROUPS_BPS } from "@/server/modules/salary/payroll.rules";
 
 const SETTING_ID = "default";
 const TIME_FORMAT = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -16,6 +17,10 @@ const CompanySettingSchema = z
     overtimeRatePerHour: z.coerce.number().int().min(0),
     workingDaysPerMonth: z.coerce.number().int().min(1).max(31),
     annualLeaveQuota: z.coerce.number().int().min(0).max(365),
+    bpjsKesehatanWageCap: z.coerce.number().int().min(0),
+    jpWageCap: z.coerce.number().int().min(0),
+    jkkRateBps: z.coerce.number().int().refine((v) => JKK_RISK_GROUPS_BPS.includes(v), "Tarif JKK tidak valid"),
+    bpjsMinimumWage: z.coerce.number().int().min(0),
   })
   .refine((s) => s.workEndTime > s.workStartTime, {
     message: "Jam pulang harus setelah jam masuk",

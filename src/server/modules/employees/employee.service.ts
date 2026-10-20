@@ -1,6 +1,6 @@
 import { employeeRepository as repository } from "./employee.repository";
 import { EmployeeFormData } from "@/shared/types/employee.types";
-import { EmployeeStatus } from "@prisma/client";
+import { EmployeeStatus, PtkpStatus } from "@prisma/client";
 import { normalizeEmail } from "@/shared/utils/format";
 import { z } from "zod";
 
@@ -19,6 +19,9 @@ const EmployeeSchema = z.object({
   managerId: z.string().optional().nullable(),
   customPosition: z.string().optional(),
   salaryBase: z.coerce.number().min(0).optional(),
+  ptkpStatus: z.nativeEnum(PtkpStatus).optional(),
+  bpjsKesehatan: z.boolean().optional(),
+  bpjsKetenagakerjaan: z.boolean().optional(),
 });
 
 export interface EmployeeFilters {

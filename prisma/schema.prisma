@@ -60,6 +60,17 @@ enum EmployeeStatus {
   TERMINATED
 }
 
+enum PtkpStatus {
+  TK0
+  TK1
+  TK2
+  TK3
+  K0
+  K1
+  K2
+  K3
+}
+
 enum EmploymentType {
   FULL_TIME
   PART_TIME
@@ -74,14 +85,17 @@ model Employee {
   userId String? @unique
   user   User?   @relation(fields: [userId], references: [id])
 
-  name           String
-  email          String         @unique
-  nip            String?        @unique
-  joinDate       DateTime?      @default(now())
-  status         EmployeeStatus @default(PROBATION)
-  employmentType EmploymentType @default(FULL_TIME)
-  salaryBase     Int            @default(0)
-  leaveQuota     Int            @default(12)
+  name                String
+  email               String         @unique
+  nip                 String?        @unique
+  joinDate            DateTime?      @default(now())
+  status              EmployeeStatus @default(PROBATION)
+  employmentType      EmploymentType @default(FULL_TIME)
+  salaryBase          Int            @default(0)
+  leaveQuota          Int            @default(12)
+  ptkpStatus          PtkpStatus     @default(TK0)
+  bpjsKesehatan       Boolean        @default(true)
+  bpjsKetenagakerjaan Boolean        @default(true)
 
   departmentId String?
   department   Department? @relation(fields: [departmentId], references: [id])
@@ -126,6 +140,10 @@ model Employee {
   managerApprovedLeaves LeaveRequest[] @relation("LeaveManagerApprover")
   hrApprovedLeaves      LeaveRequest[] @relation("LeaveHrApprover")
   rejectedLeaves        LeaveRequest[] @relation("LeaveRejector")
+
+  attendanceCorrections AttendanceCorrection[] @relation("CorrectionRequester")
+  reviewedCorrections   AttendanceCorrection[] @relation("CorrectionReviewer")
+  payrollComponents     PayrollComponent[]
 }
 
 enum AttendanceStatus {
@@ -159,6 +177,42 @@ model Attendance {
   updatedAt DateTime @updatedAt
 
   @@unique([employeeId, date])
+}
+
+enum CorrectionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+model AttendanceCorrection {
+  id         String   @id @default(cuid())
+  employeeId String
+  employee   Employee @relation("CorrectionRequester", fields: [employeeId], references: [id])
+
+  date     DateTime  @db.Date
+  checkIn  DateTime?
+  checkOut DateTime?
+  reason   String
+
+  status          CorrectionStatus @default(PENDING)
+  reviewedById    String?
+  reviewedBy      Employee?        @relation("CorrectionReviewer", fields: [reviewedById], references: [id])
+  reviewedAt      DateTime?
+  rejectionReason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([employeeId, date])
+}
+
+model Holiday {
+  id        String   @id @default(cuid())
+  date      DateTime @unique @db.Date
+  name      String
+  createdAt DateTime @default(now())
 }
 
 enum LeaveType {
@@ -220,6 +274,21 @@ model Salary {
   overtimePay    Int @default(0)
   unpaidLeaveCut Int @default(0)
 
+  bpjsKesEmployee Int @default(0)
+  bpjsKesEmployer Int @default(0)
+  jhtEmployee     Int @default(0)
+  jhtEmployer     Int @default(0)
+  jpEmployee      Int @default(0)
+  jpEmployer      Int @default(0)
+  jkkEmployer     Int @default(0)
+  jkmEmployer     Int @default(0)
+
+  ptkpStatus    PtkpStatus?
+  taxableIncome Int         @default(0)
+  pph21         Int         @default(0)
+  pph21Method   String?
+  components    Json?
+
   totalGross Int
   totalNet   Int
 
@@ -230,6 +299,22 @@ model Salary {
   updatedAt DateTime @updatedAt
 
   @@unique([employeeId, periodMonth, periodYear])
+}
+
+enum PayrollComponentType {
+  ALLOWANCE
+  DEDUCTION
+}
+
+model PayrollComponent {
+  id         String               @id @default(cuid())
+  employeeId String
+  employee   Employee             @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  name       String
+  type       PayrollComponentType
+  amount     Int
+  createdAt  DateTime             @default(now())
+  updatedAt  DateTime             @updatedAt
 }
 
 model CompanySetting {
@@ -244,6 +329,10 @@ model CompanySetting {
   overtimeRatePerHour  Int     @default(50000)
   workingDaysPerMonth  Int     @default(22)
   annualLeaveQuota     Int     @default(12)
+  bpjsKesehatanWageCap Int     @default(12000000)
+  jpWageCap            Int     @default(11086300)
+  jkkRateBps           Int     @default(24)
+  bpjsMinimumWage      Int     @default(0)
 
   updatedAt DateTime @updatedAt
 }

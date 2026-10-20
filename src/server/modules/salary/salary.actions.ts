@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireRole, requireUser } from "@/server/auth/guard";
 import { ApiResponse } from "@/server/utils/api-response";
 import { ADMIN_ROLES } from "@/shared/constants/roles";
-import { SalaryRecord } from "@/shared/types/salary.types";
+import { SalaryRecord, SalarySlip } from "@/shared/types/salary.types";
 import { payrollService } from "./payroll.service";
 
 export async function getSalariesAction(month: number, year: number) {
@@ -37,5 +37,14 @@ export async function markSalaryPaidAction(salaryId: string) {
     return ApiResponse.success("Slip gaji ditandai sudah dibayar");
   } catch (error) {
     return ApiResponse.fromError(error, "Gagal memperbarui status gaji");
+  }
+}
+
+export async function getSalarySlipAction(salaryId: string) {
+  try {
+    const user = await requireUser();
+    return ApiResponse.success("Slip gaji", await payrollService.getSlip(user, salaryId));
+  } catch (error) {
+    return ApiResponse.fromError<SalarySlip>(error, "Gagal mengambil slip gaji");
   }
 }

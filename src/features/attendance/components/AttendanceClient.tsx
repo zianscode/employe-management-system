@@ -5,10 +5,27 @@ import { useRouter } from "next/navigation";
 import AttendanceControls from "./AttendanceControls";
 import { AttendanceTable } from "./AttendanceTable";
 import { ClockInCard } from "./ClockInCard";
+import { CorrectionPanel } from "./CorrectionPanel";
 import { useAttendance } from "@/features/attendance/hooks/use-attendance";
 import { toDateKey } from "@/shared/utils/date";
+import { downloadCsv, CsvColumn } from "@/shared/utils/csv";
+import { Attendance } from "@/shared/types/attendance.types";
+import { ATTENDANCE_STATUS_LABELS } from "@/shared/constants/attendance";
+import AttendanceHeader from "./AttendanceHeader";
+import AttendanceStats, { StatData } from "./AttendanceStats";
 
-export function AttendanceClient() {
+const CSV_COLUMNS: CsvColumn<Attendance>[] = [
+  { header: "NIP", value: (r) => r.nip },
+  { header: "Nama", value: (r) => r.nama },
+  { header: "Tanggal", value: (r) => r.tanggal },
+  { header: "Jam Masuk", value: (r) => r.jamMasuk },
+  { header: "Jam Keluar", value: (r) => r.jamKeluar },
+  { header: "Jam Kerja", value: (r) => r.jamKerja },
+  { header: "Status", value: (r) => ATTENDANCE_STATUS_LABELS[r.status] ?? r.status },
+  { header: "Keterangan", value: (r) => r.keterangan },
+];
+
+export function AttendanceClient({ stats }: { stats: StatData[] }) {
   const router = useRouter();
   const {
     data,
@@ -24,6 +41,9 @@ export function AttendanceClient() {
 
   return (
     <>
+      <AttendanceHeader onDownload={() => downloadCsv(`absensi-${selectedDate}`, data, CSV_COLUMNS)} />
+      <AttendanceStats stats={stats} />
+
       <ClockInCard
         onChange={() => {
           refresh();
@@ -43,6 +63,13 @@ export function AttendanceClient() {
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 mt-4">
         <AttendanceTable data={data} isLoading={isLoading} selectedDate={selectedDate} />
       </div>
+
+      <CorrectionPanel
+        onChange={() => {
+          refresh();
+          router.refresh();
+        }}
+      />
     </>
   );
 }

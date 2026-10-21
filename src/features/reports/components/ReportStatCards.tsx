@@ -14,7 +14,7 @@ const TONE_CLASSES: Record<Tone, string> = {
   green: "bg-green-50 text-green-600",
   orange: "bg-orange-50 text-orange-600",
   red: "bg-red-50 text-red-600",
-  purple: "bg-purple-50 text-purple-600",
+  purple: "bg-brand-50 text-brand",
 };
 
 export function ReportStatCards({ cards }: { cards: ReportStatCard[] }) {

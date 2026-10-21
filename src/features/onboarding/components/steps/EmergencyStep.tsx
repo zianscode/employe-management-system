@@ -40,7 +40,7 @@ export const EmergencyStep = ({
           error={errors.emergencyName}
         />
         <div className="space-y-2">
-          <label className={`text-[9px] font-black uppercase tracking-[0.2em] ml-2 transition-colors duration-300 ${errors.emergencyRelation ? "text-[#E02F75]" : "text-slate-400"}`}>
+          <label className={`text-[9px] font-black uppercase tracking-[0.2em] ml-2 transition-colors duration-300 ${errors.emergencyRelation ? "text-brand" : "text-slate-400"}`}>
             Hubungan
           </label>
           <div className="relative">
@@ -49,8 +49,8 @@ export const EmergencyStep = ({
               required 
               value={formData.emergencyRelation} 
               onChange={handleInputChange} 
-              className={`w-full px-5 py-3 bg-white border rounded-xl text-slate-900 text-sm font-medium focus:ring-4 focus:ring-[#E02F75]/5 outline-none transition-all appearance-none cursor-pointer ${
-                errors.emergencyRelation ? "border-[#E02F75] focus:border-[#E02F75]" : "border-slate-200 focus:border-[#E02F75]/50"
+              className={`w-full px-5 py-3 bg-white border rounded-xl text-slate-900 text-sm font-medium focus:ring-4 focus:ring-brand/5 outline-none transition-all appearance-none cursor-pointer ${
+                errors.emergencyRelation ? "border-brand focus:border-brand" : "border-slate-200 focus:border-brand/50"
               }`}
             >
               <option value="">Pilih Relasi</option>
@@ -64,7 +64,7 @@ export const EmergencyStep = ({
             <ArrowRight className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none rotate-90" size={14} />
           </div>
           {errors.emergencyRelation && (
-            <p className="text-[#E02F75] text-[10px] font-bold mt-1 ml-2">
+            <p className="text-brand text-[10px] font-bold mt-1 ml-2">
               {errors.emergencyRelation}
             </p>
           )}

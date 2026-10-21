@@ -9,7 +9,7 @@ const DashboardHeader = () => {
   const firstName = session?.user?.name?.split(" ")[0] || "Admin";
 
   return (
-    <div className="bg-gradient-to-r from-[#FF5A57] via-[#E02F75] to-[#6700A3] px-8 py-6 rounded-2xl shadow-lg relative overflow-hidden">
+    <div className="bg-gradient-to-r from-accent via-brand to-brand-dark px-8 py-6 rounded-2xl shadow-lg relative overflow-hidden">
       <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-20 -mt-20 blur-3xl"></div>
       <div className="absolute bottom-0 left-0 w-32 h-32 bg-black/5 rounded-full -ml-10 -mb-10 blur-2xl"></div>
       
@@ -30,7 +30,7 @@ const DashboardHeader = () => {
           </div>
           <button className="p-2.5 bg-white/10 backdrop-blur-md text-white border border-white/20 rounded-xl hover:bg-white/20 transition-all relative group">
             <Bell size={20} />
-            <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-white rounded-full border border-[#E02F75] animate-pulse"></span>
+            <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-white rounded-full border border-brand animate-pulse"></span>
           </button>
         </div>
       </div>

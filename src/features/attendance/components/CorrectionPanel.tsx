@@ -24,7 +24,7 @@ const STATUS_STYLES: Record<AttendanceCorrectionRow["status"], { label: string; 
 };
 
 const inputClass =
-  "w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-[#E02F75]/50 outline-none transition-all font-medium";
+  "w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-brand/50 outline-none transition-all font-medium";
 
 const EMPTY_FORM: AttendanceCorrectionInput = { date: "", checkIn: "", checkOut: "", reason: "" };
 
@@ -141,7 +141,7 @@ export function CorrectionPanel({ onChange }: { onChange: () => void }) {
         {canSubmit && (
           <button
             onClick={() => setForm({ ...EMPTY_FORM, date: toDateKey() })}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#E02F75] to-[#6700A3] text-white rounded-xl text-sm font-bold shadow"
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-brand to-brand-dark text-white rounded-xl text-sm font-bold shadow"
           >
             <FilePen size={16} />
             Ajukan Koreksi
@@ -194,7 +194,7 @@ export function CorrectionPanel({ onChange }: { onChange: () => void }) {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="flex-1 py-3 bg-gradient-to-r from-[#E02F75] to-[#6700A3] text-white rounded-2xl font-bold disabled:opacity-50"
+                className="flex-1 py-3 bg-gradient-to-r from-brand to-brand-dark text-white rounded-2xl font-bold disabled:opacity-50"
               >
                 Kirim
               </button>

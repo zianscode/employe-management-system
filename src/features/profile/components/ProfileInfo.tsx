@@ -23,7 +23,7 @@ export const ProfileInfo: React.FC<ProfileInfoProps> = ({ data, setData, onSave 
 
   return (
     <div className="space-y-6">
-      <div className="bg-gradient-to-r from-[#FF5A57] via-[#E02F75] to-[#6700A3] px-8 py-8 rounded-[32px] text-white shadow-xl shadow-[#E02F75]/20">
+      <div className="bg-gradient-to-r from-accent via-brand to-brand-dark px-8 py-8 rounded-[32px] text-white shadow-xl shadow-brand/20">
         <div className="flex flex-col md:flex-row items-center gap-8">
           <div className="relative group">
             <div className="w-32 h-32 bg-white/20 backdrop-blur-md rounded-[40px] border-4 border-white/30 flex items-center justify-center text-4xl font-black overflow-hidden shadow-2xl transition-transform group-hover:scale-105">
@@ -33,7 +33,7 @@ export const ProfileInfo: React.FC<ProfileInfoProps> = ({ data, setData, onSave 
                 data.namaLengkap ? data.namaLengkap.split(" ").map(n => n[0]).join("").substring(0, 2) : "SA"
               )}
             </div>
-            <label className="absolute -bottom-2 -right-2 bg-white text-[#E02F75] p-2.5 rounded-2xl shadow-xl cursor-pointer hover:scale-110 active:scale-95 transition-all">
+            <label className="absolute -bottom-2 -right-2 bg-white text-brand p-2.5 rounded-2xl shadow-xl cursor-pointer hover:scale-110 active:scale-95 transition-all">
               <Camera size={20} />
               <input type="file" className="hidden" accept="image/*" onChange={handleAvatarChange} />
             </label>
@@ -82,8 +82,8 @@ export const ProfileInfo: React.FC<ProfileInfoProps> = ({ data, setData, onSave 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <div className="bg-white rounded-[32px] shadow-sm border border-gray-100 p-8 space-y-6">
           <h3 className="text-lg font-black text-gray-900 flex items-center gap-3 uppercase tracking-widest">
-            <div className="p-2 bg-[#E02F75]/10 rounded-xl">
-              <User className="text-[#E02F75]" size={20} />
+            <div className="p-2 bg-brand/10 rounded-xl">
+              <User className="text-brand" size={20} />
             </div>
             Informasi Pribadi
           </h3>
@@ -102,7 +102,7 @@ export const ProfileInfo: React.FC<ProfileInfoProps> = ({ data, setData, onSave 
                   <select
                     value={data[field.key as keyof ProfileData] as string}
                     onChange={(e) => setData({ ...data, [field.key]: e.target.value })}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:border-[#E02F75]/50 focus:bg-white outline-none transition-all font-semibold text-sm"
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:border-brand/50 focus:bg-white outline-none transition-all font-semibold text-sm"
                   >
                     <option value="MALE">Laki-laki</option>
                     <option value="FEMALE">Perempuan</option>
@@ -112,7 +112,7 @@ export const ProfileInfo: React.FC<ProfileInfoProps> = ({ data, setData, onSave 
                     type={field.type || "text"}
                     value={data[field.key as keyof ProfileData] as string}
                     onChange={(e) => setData({ ...data, [field.key]: e.target.value })}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:border-[#E02F75]/50 focus:bg-white outline-none transition-all font-semibold text-sm"
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:border-brand/50 focus:bg-white outline-none transition-all font-semibold text-sm"
                   />
                 )}
               </div>
@@ -123,7 +123,7 @@ export const ProfileInfo: React.FC<ProfileInfoProps> = ({ data, setData, onSave 
                 value={data.alamat}
                 onChange={(e) => setData({ ...data, alamat: e.target.value })}
                 rows={2}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:border-[#E02F75]/50 focus:bg-white outline-none transition-all font-semibold text-sm resize-none"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:border-brand/50 focus:bg-white outline-none transition-all font-semibold text-sm resize-none"
               />
             </div>
           </div>
@@ -193,8 +193,8 @@ export const ProfileInfo: React.FC<ProfileInfoProps> = ({ data, setData, onSave 
 
         <div className="bg-white rounded-[32px] shadow-sm border border-gray-100 p-8 space-y-6">
           <h3 className="text-lg font-black text-gray-900 flex items-center gap-3 uppercase tracking-widest">
-            <div className="p-2 bg-purple-500/10 rounded-xl">
-              <Award className="text-purple-500" size={20} />
+            <div className="p-2 bg-brand/10 rounded-xl">
+              <Award className="text-brand" size={20} />
             </div>
             Pendidikan & Skill
           </h3>
@@ -205,7 +205,7 @@ export const ProfileInfo: React.FC<ProfileInfoProps> = ({ data, setData, onSave 
                 value={data.education}
                 onChange={(e) => setData({ ...data, education: e.target.value })}
                 rows={2}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:border-purple-500/50 focus:bg-white outline-none transition-all font-semibold text-sm resize-none"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:border-brand/50 focus:bg-white outline-none transition-all font-semibold text-sm resize-none"
               />
             </div>
             <div className="space-y-1.5">
@@ -214,7 +214,7 @@ export const ProfileInfo: React.FC<ProfileInfoProps> = ({ data, setData, onSave 
                 value={data.skills}
                 onChange={(e) => setData({ ...data, skills: e.target.value })}
                 rows={2}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:border-purple-500/50 focus:bg-white outline-none transition-all font-semibold text-sm resize-none"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:border-brand/50 focus:bg-white outline-none transition-all font-semibold text-sm resize-none"
               />
             </div>
           </div>
@@ -239,7 +239,7 @@ export const ProfileInfo: React.FC<ProfileInfoProps> = ({ data, setData, onSave 
       <div className="flex justify-end pt-4">
         <button
           onClick={onSave}
-          className="bg-gradient-to-r from-[#FF5A57] to-[#E02F75] text-white px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-[#E02F75]/20 hover:shadow-2xl hover:shadow-[#E02F75]/30 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-3"
+          className="bg-gradient-to-r from-accent to-brand text-white px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-brand/20 hover:shadow-2xl hover:shadow-brand/30 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-3"
         >
           <Save size={20} />
           Simpan Seluruh Perubahan

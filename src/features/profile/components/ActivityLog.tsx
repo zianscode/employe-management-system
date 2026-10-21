@@ -10,7 +10,7 @@ export const ActivityLog: React.FC<ActivityLogProps> = ({ logs }) => {
   return (
     <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
       <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-        <Activity className="text-[#E02F75]" size={24} />
+        <Activity className="text-brand" size={24} />
         Log Aktivitas
       </h3>
       <div className="overflow-x-auto">

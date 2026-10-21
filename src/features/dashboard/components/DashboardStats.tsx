@@ -36,13 +36,13 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ data }) => {
   const stats = isPersonal ? [
     { label: "Status Absensi", value: (data.stats as PersonalStats).attendanceStatus, icon: Clock, color: "bg-blue-50 text-blue-600", gradient: "from-blue-500/20 to-blue-600/20" },
     { label: "Sisa Cuti", value: `${(data.stats as PersonalStats).remainingLeave} Hari`, icon: Calendar, color: "bg-green-50 text-green-600", gradient: "from-green-500/20 to-green-600/20" },
-    { label: "Gaji Dibayar", value: `${(data.stats as PersonalStats).totalSalaryReceived} Bulan`, icon: CreditCard, color: "bg-purple-50 text-purple-600", gradient: "from-purple-500/20 to-purple-600/20" },
+    { label: "Gaji Dibayar", value: `${(data.stats as PersonalStats).totalSalaryReceived} Bulan`, icon: CreditCard, color: "bg-brand-50 text-brand", gradient: "from-brand/20 to-brand/20" },
     { label: "Proyek Aktif", value: "3", icon: Briefcase, color: "bg-orange-50 text-orange-600", gradient: "from-orange-500/20 to-orange-600/20" },
   ] : [
     { label: "Total Karyawan", value: (data.stats as OrganizationalStats).totalEmployees.toString(), icon: Users, color: "bg-blue-50 text-blue-600", gradient: "from-blue-500/20 to-blue-600/20" },
     { label: "Hadir Hari Ini", value: (data.stats as OrganizationalStats).presentToday.toString(), icon: Clock, color: "bg-green-50 text-green-600", gradient: "from-green-500/20 to-green-600/20" },
     { label: "Permintaan Cuti", value: (data.stats as OrganizationalStats).leaveRequests.toString(), icon: Calendar, color: "bg-orange-50 text-orange-600", gradient: "from-orange-500/20 to-orange-600/20" },
-    { label: "Efisiensi Kerja", value: `${(data.stats as OrganizationalStats).efficiency}%`, icon: TrendingUp, color: "bg-purple-50 text-purple-600", gradient: "from-purple-500/20 to-purple-600/20" },
+    { label: "Efisiensi Kerja", value: `${(data.stats as OrganizationalStats).efficiency}%`, icon: TrendingUp, color: "bg-brand-50 text-brand", gradient: "from-brand/20 to-brand/20" },
   ];
 
   return (

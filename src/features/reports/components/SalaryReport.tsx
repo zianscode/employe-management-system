@@ -6,6 +6,7 @@ import { downloadCsv, CsvColumn } from "@/shared/utils/csv";
 import { formatCurrency } from "@/shared/utils/format";
 import { ReportStatCards } from "./ReportStatCards";
 import { ReportSection } from "./ReportSection";
+import { BRAND_COLORS } from "@/shared/constants/theme";
 
 const CSV_COLUMNS: CsvColumn<SalaryDepartmentRow>[] = [
   { header: "Divisi", value: (r) => r.divisi },
@@ -65,7 +66,7 @@ export function SalaryReport({ data, periodLabel, fileSuffix }: SalaryReportProp
               <XAxis dataKey="label" />
               <YAxis tickFormatter={(v: number) => `${Math.round(v / 1_000_000)} jt`} />
               <Tooltip formatter={(v: number) => formatCurrency(v)} />
-              <Bar dataKey="total" name="Total Net" fill="#E02F75" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="total" name="Total Net" fill={BRAND_COLORS.brand} radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>

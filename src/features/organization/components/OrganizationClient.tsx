@@ -35,7 +35,7 @@ interface DeleteTarget {
 const KIND_LABEL: Record<Kind, string> = { department: "Divisi", position: "Jabatan" };
 
 const inputClass =
-  "w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-[#E02F75]/50 outline-none transition-all font-medium";
+  "w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-brand/50 outline-none transition-all font-medium";
 
 interface OrganizationClientProps {
   departments: DepartmentRow[];
@@ -115,7 +115,7 @@ export function OrganizationClient({ departments, positions }: OrganizationClien
         </div>
         <button
           onClick={() => openForm(kind)}
-          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#E02F75] to-[#6700A3] text-white rounded-xl text-sm font-bold shadow"
+          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-brand to-brand-dark text-white rounded-xl text-sm font-bold shadow"
         >
           <Plus size={16} />
           Tambah {KIND_LABEL[kind]}
@@ -127,7 +127,7 @@ export function OrganizationClient({ departments, positions }: OrganizationClien
 
   return (
     <div className="space-y-4">
-      <div className="bg-gradient-to-r from-[#FF5A57] via-[#E02F75] to-[#6700A3] px-8 py-6 rounded-2xl shadow-lg">
+      <div className="bg-gradient-to-r from-accent via-brand to-brand-dark px-8 py-6 rounded-2xl shadow-lg">
         <h1 className="text-2xl font-bold text-white tracking-tight">Struktur Organisasi</h1>
         <p className="text-white/80 mt-1 text-sm font-medium">Kelola divisi dan jabatan beserta gaji pokok standarnya</p>
       </div>
@@ -214,7 +214,7 @@ export function OrganizationClient({ departments, positions }: OrganizationClien
               <button
                 type="submit"
                 disabled={isSaving}
-                className="flex-1 py-3 bg-gradient-to-r from-[#E02F75] to-[#6700A3] text-white rounded-2xl font-bold disabled:opacity-50"
+                className="flex-1 py-3 bg-gradient-to-r from-brand to-brand-dark text-white rounded-2xl font-bold disabled:opacity-50"
               >
                 Simpan
               </button>

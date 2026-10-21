@@ -4,6 +4,8 @@ import React from "react";
 import Image from "next/image";
 import { LoginForm } from "@/features/auth/components/LoginForm";
 import { useLogin } from "@/features/auth/hooks/use-login";
+import { BRAND_COLORS } from "@/shared/constants/theme";
+import { BrandLogo } from "@/shared/components/BrandLogo";
 
 export default function LoginPage() {
   const {
@@ -16,7 +18,7 @@ export default function LoginPage() {
   } = useLogin();
 
   return (
-    <div className="min-h-screen w-full relative overflow-hidden bg-white selection:bg-[#E02F75]/10">
+    <div className="min-h-screen w-full relative overflow-hidden bg-white selection:bg-brand/10">
       <div className="absolute inset-0 z-0 pointer-events-none">
         <div className="absolute inset-0 bg-white"></div>
 
@@ -33,9 +35,9 @@ export default function LoginPage() {
               x2="100%"
               y2="100%"
             >
-              <stop offset="0%" stopColor="#FF5A57" />
-              <stop offset="50%" stopColor="#E02F75" />
-              <stop offset="100%" stopColor="#6700A3" />
+              <stop offset="0%" stopColor={BRAND_COLORS.accent} />
+              <stop offset="50%" stopColor={BRAND_COLORS.brand} />
+              <stop offset="100%" stopColor={BRAND_COLORS.brandDark} />
             </linearGradient>
             <filter id="soft-blur" x="-20%" y="-20%" width="140%" height="140%">
               <feGaussianBlur in="SourceGraphic" stdDeviation="2" />
@@ -54,20 +56,8 @@ export default function LoginPage() {
       <div className="relative z-20 flex flex-col lg:flex-row min-h-screen w-full max-w-[1900px] mx-auto">
         <div className="hidden lg:flex lg:w-[60%] flex-col justify-between p-24 xl:p-32">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center shadow-xl border border-white/30">
-              <svg
-                className="w-6 h-6 text-white"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth="2.5"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A10.003 10.003 0 0012 3v8h8a9.835 9.835 0 01-5.123 8.81L13.13 20"
-                />
-              </svg>
+            <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center shadow-xl p-1">
+              <BrandLogo size={40} />
             </div>
             <span className="text-xl font-black text-white tracking-tighter uppercase italic">
               EMS<span className="text-white/50">.</span>PRO
@@ -127,30 +117,16 @@ export default function LoginPage() {
 
         <div className="w-full lg:w-[40%] flex flex-col items-center justify-center p-10 sm:p-16 lg:p-24 relative">
           <div className="lg:hidden flex items-center gap-2 mb-10">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF5A57] to-[#E02F75] flex items-center justify-center shadow-lg">
-              <svg
-                className="w-6 h-6 text-white"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth="2.5"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A10.003 10.003 0 0012 3v8h8a9.835 9.835 0 01-5.123 8.81L13.13 20"
-                />
-              </svg>
-            </div>
+            <BrandLogo size={44} />
             <span className="text-xl font-black text-gray-900 tracking-tighter uppercase italic">
-              EMS<span className="text-[#E02F75]">.</span>PRO
+              EMS<span className="text-brand">.</span>PRO
             </span>
           </div>
 
           <div className="w-full max-w-[400px]">
             <div className="mb-10 text-center lg:text-left">
               <h2 className="text-3xl sm:text-4xl font-black text-gray-900 mb-3 tracking-tighter">
-                Masuk<span className="text-[#E02F75]">.</span>
+                Masuk<span className="text-brand">.</span>
               </h2>
               <p className="text-gray-500 text-sm font-medium leading-relaxed">
                 Selamat datang kembali! Gunakan detail akun Anda untuk mengakses
@@ -205,7 +181,7 @@ export default function LoginPage() {
               Butuh bantuan?{" "}
               <a
                 href="#"
-                className="text-[#E02F75] hover:text-[#FF5A57] transition-all underline underline-offset-4 decoration-[#E02F75]/20"
+                className="text-brand hover:text-accent transition-all underline underline-offset-4 decoration-brand/20"
               >
                 Hubungi Admin
               </a>

@@ -24,7 +24,7 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
       <button
         onClick={onChange}
         className={`w-12 h-6 rounded-full transition-colors duration-200 relative ${
-          enabled ? "bg-[#6700A3]" : "bg-gray-300"
+          enabled ? "bg-brand-dark" : "bg-gray-300"
         }`}
       >
         <div

@@ -44,7 +44,7 @@ export default async function SalarySlipPage({ params }: PageProps) {
   return (
     <div className="py-4 pl-8 pr-6 print:p-0">
       <div className="flex items-center justify-between mb-4 print:hidden">
-        <Link href="/dashboard/salary" className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-[#E02F75]">
+        <Link href="/dashboard/salary" className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-brand">
           <ArrowLeft size={16} />
           Kembali
         </Link>
@@ -58,7 +58,7 @@ export default async function SalarySlipPage({ params }: PageProps) {
             {slip.companyNpwp && <p className="text-xs text-gray-500">NPWP {slip.companyNpwp}</p>}
           </div>
           <div className="text-right">
-            <p className="text-lg font-bold text-[#E02F75]">SLIP GAJI</p>
+            <p className="text-lg font-bold text-brand">SLIP GAJI</p>
             <p className="text-sm text-gray-600">Periode {slip.periodLabel}</p>
             <p className="text-xs text-gray-500 mt-1">
               {slip.status === "Dibayar" ? `Dibayar ${slip.paidAt}` : "Belum dibayar"}

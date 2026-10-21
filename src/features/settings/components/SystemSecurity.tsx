@@ -13,7 +13,7 @@ export const SystemSecurity: React.FC<SystemSecurityProps> = ({ settings, onTogg
     <div className="space-y-8">
       <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
         <div className="flex items-center space-x-3 mb-6">
-          <div className="w-10 h-10 bg-gradient-to-br from-[#FF5A57] to-[#E02F75] rounded-xl flex items-center justify-center">
+          <div className="w-10 h-10 bg-gradient-to-br from-accent to-brand rounded-xl flex items-center justify-center">
             <Shield className="text-white" size={20} />
           </div>
           <div>
@@ -45,7 +45,7 @@ export const SystemSecurity: React.FC<SystemSecurityProps> = ({ settings, onTogg
             <input
               type="number"
               defaultValue="30"
-              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#E02F75] outline-none"
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand outline-none"
             />
           </div>
           <div>
@@ -53,7 +53,7 @@ export const SystemSecurity: React.FC<SystemSecurityProps> = ({ settings, onTogg
             <input
               type="number"
               defaultValue="5"
-              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#E02F75] outline-none"
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand outline-none"
             />
           </div>
         </div>
@@ -61,7 +61,7 @@ export const SystemSecurity: React.FC<SystemSecurityProps> = ({ settings, onTogg
 
       <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
         <div className="flex items-center space-x-3 mb-6">
-          <div className="w-10 h-10 bg-gradient-to-br from-[#E02F75] to-[#6700A3] rounded-xl flex items-center justify-center">
+          <div className="w-10 h-10 bg-gradient-to-br from-brand to-brand-dark rounded-xl flex items-center justify-center">
             <Key className="text-white" size={20} />
           </div>
           <div>
@@ -77,7 +77,7 @@ export const SystemSecurity: React.FC<SystemSecurityProps> = ({ settings, onTogg
               <input
                 type="password"
                 defaultValue="••••••••••••••••"
-                className="flex-1 px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#E02F75] outline-none"
+                className="flex-1 px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand outline-none"
                 readOnly
               />
               <button className="px-4 py-3 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors">
@@ -95,7 +95,7 @@ export const SystemSecurity: React.FC<SystemSecurityProps> = ({ settings, onTogg
               onChange={() => onToggle("apiRateLimit")}
             />
           </div>
-          <button className="w-full py-3 bg-gradient-to-r from-[#FF5A57] to-[#E02F75] text-white rounded-lg hover:opacity-90 transition-opacity font-bold">
+          <button className="w-full py-3 bg-gradient-to-r from-accent to-brand text-white rounded-lg hover:opacity-90 transition-opacity font-bold">
             Generate New API Key
           </button>
         </div>

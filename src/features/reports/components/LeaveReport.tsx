@@ -5,6 +5,7 @@ import { LeaveReportData, LeaveReportRow } from "@/shared/types/report.types";
 import { downloadCsv, CsvColumn } from "@/shared/utils/csv";
 import { ReportStatCards } from "./ReportStatCards";
 import { ReportSection } from "./ReportSection";
+import { BRAND_COLORS } from "@/shared/constants/theme";
 
 const CSV_COLUMNS: CsvColumn<LeaveReportRow>[] = [
   { header: "NIP", value: (r) => r.nip },
@@ -53,7 +54,7 @@ export function LeaveReport({ data, periodLabel, fileSuffix }: LeaveReportProps)
               <XAxis dataKey="label" />
               <YAxis allowDecimals={false} />
               <Tooltip />
-              <Bar dataKey="value" name="Hari" fill="#6700A3" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="value" name="Hari" fill={BRAND_COLORS.accent} radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>

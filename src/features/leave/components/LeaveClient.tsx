@@ -157,7 +157,7 @@ export function LeaveClient({ stats, balance }: LeaveClientProps) {
 
       {balance && (
         <div className="flex items-center gap-3 bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-4">
-          <CalendarDays className="text-[#E02F75]" size={22} />
+          <CalendarDays className="text-brand" size={22} />
           <p className="text-sm text-gray-600">
             Sisa cuti tahunan {balance.year}:{" "}
             <span className="font-bold text-gray-900">{balance.remaining} hari</span>{" "}
@@ -198,7 +198,7 @@ export function LeaveClient({ stats, balance }: LeaveClientProps) {
             onChange={(e) => setRejectReason(e.target.value)}
             rows={3}
             placeholder="Alasan penolakan (wajib)"
-            className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-[#E02F75]/50 outline-none resize-none"
+            className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-brand/50 outline-none resize-none"
           />
           <div className="flex gap-3">
             <button

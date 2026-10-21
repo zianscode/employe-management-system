@@ -8,7 +8,7 @@ import { JKK_RISK_GROUPS } from "@/shared/constants/payroll";
 import { getCompanySettingAction, updateCompanySettingAction } from "@/server/modules/settings/company-setting.actions";
 
 const inputClass =
-  "w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#E02F75] outline-none";
+  "w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand outline-none";
 
 export const CompanySettings = () => {
   const [form, setForm] = useState<CompanySetting | null>(null);
@@ -43,7 +43,7 @@ export const CompanySettings = () => {
     <form onSubmit={handleSave} className="space-y-4">
       <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
         <div className="flex items-center space-x-3 mb-6">
-          <div className="w-10 h-10 bg-gradient-to-br from-[#FF5A57] to-[#E02F75] rounded-xl flex items-center justify-center">
+          <div className="w-10 h-10 bg-gradient-to-br from-accent to-brand rounded-xl flex items-center justify-center">
             <Building2 className="text-white" size={20} />
           </div>
           <div>
@@ -74,7 +74,7 @@ export const CompanySettings = () => {
 
       <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
         <div className="flex items-center space-x-3 mb-6">
-          <div className="w-10 h-10 bg-gradient-to-br from-[#E02F75] to-[#6700A3] rounded-xl flex items-center justify-center">
+          <div className="w-10 h-10 bg-gradient-to-br from-brand to-brand-dark rounded-xl flex items-center justify-center">
             <Settings className="text-white" size={20} />
           </div>
           <div>
@@ -117,7 +117,7 @@ export const CompanySettings = () => {
 
       <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
         <div className="flex items-center space-x-3 mb-6">
-          <div className="w-10 h-10 bg-gradient-to-br from-[#6700A3] to-[#E02F75] rounded-xl flex items-center justify-center">
+          <div className="w-10 h-10 bg-gradient-to-br from-brand-dark to-brand rounded-xl flex items-center justify-center">
             <ShieldCheck className="text-white" size={20} />
           </div>
           <div>
@@ -156,7 +156,7 @@ export const CompanySettings = () => {
         <button
           type="submit"
           disabled={isSaving}
-          className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#E02F75] to-[#6700A3] text-white rounded-xl font-bold shadow-lg disabled:opacity-50"
+          className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-brand to-brand-dark text-white rounded-xl font-bold shadow-lg disabled:opacity-50"
         >
           <Save size={18} />
           {isSaving ? "Menyimpan..." : "Simpan Pengaturan"}

@@ -120,16 +120,16 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
     <div className="w-full">
       <button 
         onClick={() => router.back()}
-        className="flex items-center gap-2 text-gray-500 hover:text-[#E02F75] transition-colors mb-6 group"
+        className="flex items-center gap-2 text-gray-500 hover:text-brand transition-colors mb-6 group"
       >
-        <div className="p-2 rounded-xl bg-gray-100 group-hover:bg-[#E02F75]/10 transition-all">
+        <div className="p-2 rounded-xl bg-gray-100 group-hover:bg-brand/10 transition-all">
           <ArrowLeft size={18} />
         </div>
         <span className="font-bold text-sm">Kembali</span>
       </button>
 
       <div className="bg-white rounded-[32px] shadow-xl border border-gray-100 overflow-hidden">
-        <div className="px-10 py-8 bg-gradient-to-r from-[#FF5A57] via-[#E02F75] to-[#6700A3] text-white">
+        <div className="px-10 py-8 bg-gradient-to-r from-accent via-brand to-brand-dark text-white">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-white/20 backdrop-blur-md rounded-2xl border border-white/30">
               <User size={28} />
@@ -149,7 +149,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
               <div className="space-y-2">
                 <label className="text-sm font-bold text-gray-700 ml-1">Nama Lengkap</label>
                 <div className="relative group">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#E02F75] transition-colors" size={20} />
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand transition-colors" size={20} />
                   <input
                     type="text"
                     name="name"
@@ -157,7 +157,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
                     value={formData.name}
                     onChange={handleChange}
                     placeholder="Contoh: Budi Santoso"
-                    className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-[#E02F75]/50 focus:ring-4 focus:ring-[#E02F75]/5 outline-none transition-all font-medium"
+                    className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-brand/50 focus:ring-4 focus:ring-brand/5 outline-none transition-all font-medium"
                   />
                 </div>
               </div>
@@ -165,7 +165,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
               <div className="space-y-2">
                 <label className="text-sm font-bold text-gray-700 ml-1">Email Kantor</label>
                 <div className="relative group">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#E02F75] transition-colors" size={20} />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand transition-colors" size={20} />
                   <input
                     type="email"
                     name="email"
@@ -173,7 +173,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
                     value={formData.email}
                     onChange={handleChange}
                     placeholder="budi@company.com"
-                    className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-[#E02F75]/50 focus:ring-4 focus:ring-[#E02F75]/5 outline-none transition-all font-medium"
+                    className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-brand/50 focus:ring-4 focus:ring-brand/5 outline-none transition-all font-medium"
                   />
                 </div>
               </div>
@@ -185,7 +185,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
                     name="gender"
                     value={formData.gender}
                     onChange={handleChange}
-                    className="w-full px-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-[#E02F75]/50 outline-none transition-all font-medium cursor-pointer"
+                    className="w-full px-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-brand/50 outline-none transition-all font-medium cursor-pointer"
                   >
                     <option value="MALE">Laki-laki</option>
                     <option value="FEMALE">Perempuan</option>
@@ -200,7 +200,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
                     required
                     value={formData.birthDate}
                     onChange={handleChange}
-                    className="w-full px-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-[#E02F75]/50 outline-none transition-all font-medium"
+                    className="w-full px-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-brand/50 outline-none transition-all font-medium"
                   />
                 </div>
               </div>
@@ -227,13 +227,13 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
               <div className="space-y-2">
                 <label className="text-sm font-bold text-gray-700 ml-1">Jabatan</label>
                 <div className="relative group">
-                  <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#E02F75] transition-colors" size={20} />
+                  <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand transition-colors" size={20} />
                   <select
                     name="positionId"
                     required
                     value={formData.positionId}
                     onChange={handleChange}
-                    className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-[#E02F75]/50 focus:ring-4 focus:ring-[#E02F75]/5 outline-none transition-all font-medium cursor-pointer"
+                    className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-brand/50 focus:ring-4 focus:ring-brand/5 outline-none transition-all font-medium cursor-pointer"
                   >
                     <option value="" disabled>Pilih Jabatan</option>
                     {orgData.positions.map(p => (
@@ -246,9 +246,9 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 
               {formData.positionId === "OTHER" && (
                 <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                  <label className="text-sm font-bold text-[#E02F75] ml-1">Nama Jabatan Kustom</label>
+                  <label className="text-sm font-bold text-brand ml-1">Nama Jabatan Kustom</label>
                   <div className="relative group">
-                    <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 text-[#E02F75]" size={20} />
+                    <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 text-brand" size={20} />
                     <input
                       type="text"
                       name="customPosition"
@@ -256,7 +256,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
                       value={formData.customPosition}
                       onChange={handleChange}
                       placeholder="Masukkan nama jabatan baru..."
-                      className="w-full pl-12 pr-4 py-4 bg-white border-2 border-[#E02F75]/30 rounded-2xl focus:border-[#E02F75] outline-none transition-all font-bold text-sm"
+                      className="w-full pl-12 pr-4 py-4 bg-white border-2 border-brand/30 rounded-2xl focus:border-brand outline-none transition-all font-bold text-sm"
                     />
                   </div>
                 </div>
@@ -265,13 +265,13 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
               <div className="space-y-2">
                 <label className="text-sm font-bold text-gray-700 ml-1">Tipe Pekerjaan</label>
                 <div className="relative group">
-                  <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#E02F75] transition-colors" size={20} />
+                  <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand transition-colors" size={20} />
                   <select
                     name="employmentType"
                     required
                     value={formData.employmentType}
                     onChange={handleChange}
-                    className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-[#E02F75]/50 focus:ring-4 focus:ring-[#E02F75]/5 outline-none transition-all font-medium cursor-pointer"
+                    className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-brand/50 focus:ring-4 focus:ring-brand/5 outline-none transition-all font-medium cursor-pointer"
                   >
                     <option value="FULL_TIME">Full Time</option>
                     <option value="PART_TIME">Part Time</option>
@@ -286,13 +286,13 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
               <div className="space-y-2">
                 <label className="text-sm font-bold text-gray-700 ml-1">Hak Akses (Role)</label>
                 <div className="relative group">
-                  <Shield className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#E02F75] transition-colors" size={20} />
+                  <Shield className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand transition-colors" size={20} />
                   <select
                     name="roleId"
                     required
                     value={formData.roleId}
                     onChange={handleChange}
-                    className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-[#E02F75]/50 focus:ring-4 focus:ring-[#E02F75]/5 outline-none transition-all font-medium cursor-pointer"
+                    className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-brand/50 focus:ring-4 focus:ring-brand/5 outline-none transition-all font-medium cursor-pointer"
                   >
                     <option value="" disabled>Pilih Hak Akses</option>
                     {orgData.roles.map(r => (
@@ -315,12 +315,12 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-gray-700 ml-1">Divisi</label>
                   <div className="relative group">
-                    <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#E02F75] transition-colors" size={20} />
+                    <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand transition-colors" size={20} />
                     <select
                       name="departmentId"
                       value={formData.departmentId}
                       onChange={handleChange}
-                      className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-[#E02F75]/50 outline-none transition-all font-medium cursor-pointer"
+                      className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-brand/50 outline-none transition-all font-medium cursor-pointer"
                     >
                       <option value="" disabled>Pilih Divisi</option>
                       {orgData.departments.map(d => (
@@ -336,7 +336,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
                     name="status"
                     value={formData.status}
                     onChange={handleChange}
-                    className="w-full px-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-[#E02F75]/50 outline-none transition-all font-medium cursor-pointer"
+                    className="w-full px-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-brand/50 outline-none transition-all font-medium cursor-pointer"
                   >
                     <option value="ACTIVE">Aktif</option>
                     <option value="PROBATION">Probation</option>
@@ -349,14 +349,14 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
               <div className="space-y-2">
                 <label className="text-sm font-bold text-gray-700 ml-1">Tanggal Bergabung</label>
                 <div className="relative group">
-                  <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#E02F75] transition-colors" size={20} />
+                  <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand transition-colors" size={20} />
                   <input
                     type="date"
                     name="joinDate"
                     required
                     value={formData.joinDate}
                     onChange={handleChange}
-                    className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-[#E02F75]/50 outline-none transition-all font-medium"
+                    className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-brand/50 outline-none transition-all font-medium"
                   />
                 </div>
               </div>
@@ -364,12 +364,12 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
               <div className="space-y-2">
                 <label className="text-sm font-bold text-gray-700 ml-1">Atasan Langsung</label>
                 <div className="relative group">
-                  <UserCheck className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#E02F75] transition-colors" size={20} />
+                  <UserCheck className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand transition-colors" size={20} />
                   <select
                     name="managerId"
                     value={formData.managerId || ""}
                     onChange={handleChange}
-                    className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-[#E02F75]/50 outline-none transition-all font-medium cursor-pointer"
+                    className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-brand/50 outline-none transition-all font-medium cursor-pointer"
                   >
                     <option value="">Tidak ada (cuti langsung ke HR)</option>
                     {orgData.managers.map(m => (
@@ -383,7 +383,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
               <div className="space-y-2">
                 <label className="text-sm font-bold text-gray-700 ml-1">Gaji Pokok (Rp)</label>
                 <div className="relative group">
-                  <Wallet className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#E02F75] transition-colors" size={20} />
+                  <Wallet className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand transition-colors" size={20} />
                   <input
                     type="number"
                     name="salaryBase"
@@ -392,7 +392,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
                     value={formData.salaryBase || ""}
                     onChange={handleChange}
                     placeholder="Kosongkan untuk memakai gaji standar jabatan"
-                    className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-[#E02F75]/50 outline-none transition-all font-medium"
+                    className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-brand/50 outline-none transition-all font-medium"
                   />
                 </div>
               </div>
@@ -403,7 +403,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
                   name="ptkpStatus"
                   value={formData.ptkpStatus}
                   onChange={handleChange}
-                  className="w-full px-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-[#E02F75]/50 outline-none transition-all font-medium cursor-pointer"
+                  className="w-full px-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-brand/50 outline-none transition-all font-medium cursor-pointer"
                 >
                   {PTKP_OPTIONS.map((option) => (
                     <option key={option.value} value={option.value}>{option.label}</option>
@@ -423,7 +423,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
                         type="checkbox"
                         checked={formData[field]}
                         onChange={(e) => setFormData((prev) => ({ ...prev, [field]: e.target.checked }))}
-                        className="w-4 h-4 accent-[#E02F75]"
+                        className="w-4 h-4 accent-brand"
                       />
                       {label}
                     </label>
@@ -444,7 +444,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex items-center gap-3 px-10 py-4 bg-gradient-to-r from-[#E02F75] to-[#6700A3] text-white rounded-2xl font-bold shadow-xl shadow-purple-200 hover:shadow-2xl hover:translate-y-[-2px] transition-all active:scale-95 disabled:opacity-50"
+              className="flex items-center gap-3 px-10 py-4 bg-gradient-to-r from-brand to-brand-dark text-white rounded-2xl font-bold shadow-xl shadow-brand/20 hover:shadow-2xl hover:translate-y-[-2px] transition-all active:scale-95 disabled:opacity-50"
             >
               <Save size={20} />
               <span>{isSubmitting ? "Menyimpan..." : initialData ? "Simpan Perubahan" : "Daftarkan Karyawan"}</span>

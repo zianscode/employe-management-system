@@ -29,7 +29,7 @@ export default function ReportsPage() {
 
   return (
     <div className="py-4 pl-8 pr-6">
-      <div className="bg-gradient-to-r from-[#FF5A57] via-[#E02F75] to-[#6700A3] px-8 py-6 rounded-2xl shadow-lg">
+      <div className="bg-gradient-to-r from-accent via-brand to-brand-dark px-8 py-6 rounded-2xl shadow-lg">
         <h1 className="text-2xl font-bold text-white mb-1 tracking-tight">Laporan & Analitik</h1>
         <p className="text-white/80 text-sm font-medium">
           {isAdmin ? "Rekap absensi, gaji, karyawan, dan cuti seluruh perusahaan" : "Rekap absensi, karyawan, dan cuti tim Anda"}
@@ -47,10 +47,10 @@ export default function ReportsPage() {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 whitespace-nowrap ${
-                    isActive ? "bg-white text-[#E02F75] shadow-lg border border-gray-100" : "text-gray-500 hover:text-[#E02F75] hover:bg-white"
+                    isActive ? "bg-white text-brand shadow-lg border border-gray-100" : "text-gray-500 hover:text-brand hover:bg-white"
                   }`}
                 >
-                  <Icon size={20} className={isActive ? "text-[#E02F75]" : "text-gray-400"} />
+                  <Icon size={20} className={isActive ? "text-brand" : "text-gray-400"} />
                   <span>{tab.label}</span>
                 </button>
               );
@@ -61,7 +61,7 @@ export default function ReportsPage() {
 
         {isLoading && (
           <div className="p-12 text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E02F75] mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand mx-auto mb-4"></div>
             <p className="text-gray-500">Menyusun laporan...</p>
           </div>
         )}

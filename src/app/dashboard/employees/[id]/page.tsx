@@ -45,9 +45,9 @@ interface FullEmployeeDetails {
 
 const getAvatarGradient = (name: string) => {
   const gradients = [
-    "from-pink-500 to-purple-600",
-    "from-purple-500 to-indigo-600",
-    "from-indigo-500 to-blue-600",
+    "from-brand to-brand-dark",
+    "from-accent to-accent-dark",
+    "from-brand-light to-brand",
     "from-blue-500 to-cyan-600",
     "from-cyan-500 to-teal-600",
   ];
@@ -92,9 +92,9 @@ export default async function EmployeeDetailPage({ params }: PageProps) {
       <div>
         <Link 
           href="/dashboard/employees"
-          className="flex items-center gap-2 text-gray-500 hover:text-[#E02F75] transition-colors group w-fit"
+          className="flex items-center gap-2 text-gray-500 hover:text-brand transition-colors group w-fit"
         >
-          <div className="p-2 rounded-xl bg-white border border-gray-100 group-hover:bg-[#E02F75]/10 group-hover:border-[#E02F75]/20 shadow-sm transition-all">
+          <div className="p-2 rounded-xl bg-white border border-gray-100 group-hover:bg-brand/10 group-hover:border-brand/20 shadow-sm transition-all">
             <ArrowLeft size={16} />
           </div>
           <span className="font-bold text-sm">Kembali ke Daftar Karyawan</span>
@@ -102,7 +102,7 @@ export default async function EmployeeDetailPage({ params }: PageProps) {
       </div>
 
       <div className="bg-white rounded-[32px] shadow-xl border border-gray-100 overflow-hidden relative">
-        <div className="absolute inset-0 bg-gradient-to-r from-[#FF5A57]/5 via-[#E02F75]/5 to-[#6700A3]/5 pointer-events-none"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-accent/5 via-brand/5 to-brand-dark/5 pointer-events-none"></div>
         <div className="px-8 py-10 sm:px-10 flex flex-col md:flex-row items-center md:items-start gap-8 relative z-10">
           <div className={`w-32 h-32 rounded-[32px] bg-gradient-to-br ${getAvatarGradient(employee.name)} flex items-center justify-center text-white text-4xl font-black shadow-lg border-4 border-white relative overflow-hidden flex-shrink-0`}>
             {employee.avatar ? (
@@ -141,15 +141,15 @@ export default async function EmployeeDetailPage({ params }: PageProps) {
 
             <div className="flex flex-wrap justify-center md:justify-start items-center gap-y-3 gap-x-6 text-sm text-gray-600 font-semibold">
               <span className="flex items-center gap-2">
-                <Briefcase size={16} className="text-[#E02F75]" />
+                <Briefcase size={16} className="text-brand" />
                 {employee.position}
               </span>
               <span className="flex items-center gap-2">
-                <Building2 size={16} className="text-[#E02F75]" />
+                <Building2 size={16} className="text-brand" />
                 Divisi {employee.division}
               </span>
               <span className="flex items-center gap-2">
-                <Calendar size={16} className="text-[#E02F75]" />
+                <Calendar size={16} className="text-brand" />
                 NIP: {employee.nip}
               </span>
             </div>
@@ -162,7 +162,7 @@ export default async function EmployeeDetailPage({ params }: PageProps) {
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-white p-8 rounded-[32px] shadow-lg border border-gray-100 space-y-6">
             <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
-              <div className="p-2 bg-pink-50 text-[#E02F75] rounded-xl">
+              <div className="p-2 bg-accent-50 text-brand rounded-xl">
                 <Briefcase size={20} />
               </div>
               <h3 className="text-lg font-black text-gray-900 tracking-tight">Detail Pekerjaan</h3>
@@ -221,7 +221,7 @@ export default async function EmployeeDetailPage({ params }: PageProps) {
         <div className="space-y-6">
           <div className="bg-white p-8 rounded-[32px] shadow-lg border border-gray-100 space-y-6">
             <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
-              <div className="p-2 bg-purple-50 text-purple-600 rounded-xl">
+              <div className="p-2 bg-brand-50 text-brand rounded-xl">
                 <BookOpen size={20} />
               </div>
               <h3 className="text-lg font-black text-gray-900 tracking-tight">Pendidikan & Bio</h3>
@@ -286,8 +286,8 @@ export default async function EmployeeDetailPage({ params }: PageProps) {
                 </div>
               </div>
 
-              <div className="p-4 bg-pink-50/50 border border-pink-100/50 rounded-2xl space-y-2.5">
-                <span className="text-[10px] font-black uppercase tracking-wider text-[#E02F75] block">Hubungan Darurat</span>
+              <div className="p-4 bg-accent-50/50 border border-accent-100/50 rounded-2xl space-y-2.5">
+                <span className="text-[10px] font-black uppercase tracking-wider text-brand block">Hubungan Darurat</span>
                 <div className="text-xs space-y-1.5 text-gray-700 font-semibold">
                   <div className="flex justify-between">
                     <span className="text-gray-500">Nama Kontak:</span>

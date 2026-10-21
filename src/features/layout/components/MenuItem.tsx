@@ -26,8 +26,8 @@ export const MenuItem = ({
   isCollapsed,
 }: MenuItemProps) => {
   const activeClasses = `
-    bg-gradient-to-r from-[#FF5A57]/10 via-[#E02F75]/10 to-[#6700A3]/10
-    text-gray-900 ${isCollapsed ? "border-none" : "border-r-4 border-[#FF5A57]"} shadow-sm
+    bg-gradient-to-r from-accent/10 via-brand/10 to-brand-dark/10
+    text-gray-900 ${isCollapsed ? "border-none" : "border-r-4 border-accent"} shadow-sm
   `;
 
   const inactiveClasses = `
@@ -54,7 +54,7 @@ export const MenuItem = ({
             <span
               className={`text-[20px] flex-shrink-0 transition-colors duration-200 ${
                 isActive
-                  ? "text-[#FF5A57]"
+                  ? "text-accent"
                   : "text-gray-400 group-hover:text-gray-600"
               }`}
             >
@@ -73,7 +73,7 @@ export const MenuItem = ({
           <span
             className={`transition-transform duration-200 ${
               isActive
-                ? "text-[#FF5A57]"
+                ? "text-accent"
                 : "text-gray-400 group-hover:text-gray-600"
             }`}
           >
@@ -93,7 +93,7 @@ export const MenuItem = ({
         <span
           className={`text-[22px] flex-shrink-0 transition-all duration-300 ${
             isActive
-              ? "text-[#E02F75] scale-110"
+              ? "text-brand scale-110"
               : "text-gray-400 group-hover:text-gray-600 group-hover:scale-110"
           }`}
         >
@@ -111,10 +111,10 @@ export const MenuItem = ({
           </span>
         )}
         {isActive && !isCollapsed && (
-          <div className="absolute right-0 top-1/2 h-8 w-1 -translate-y-1/2 rounded-l-full bg-gradient-to-b from-[#FF5A57] via-[#E02F75] to-[#6700A3]"></div>
+          <div className="absolute right-0 top-1/2 h-8 w-1 -translate-y-1/2 rounded-l-full bg-gradient-to-b from-accent via-brand to-brand-dark"></div>
         )}
         {isActive && isCollapsed && (
-          <div className="absolute left-0 top-1/2 h-8 w-1 -translate-y-1/2 rounded-r-full bg-gradient-to-b from-[#FF5A57] via-[#E02F75] to-[#6700A3]"></div>
+          <div className="absolute left-0 top-1/2 h-8 w-1 -translate-y-1/2 rounded-r-full bg-gradient-to-b from-accent via-brand to-brand-dark"></div>
         )}
       </Link>
     </div>

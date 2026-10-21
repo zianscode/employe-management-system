@@ -7,7 +7,7 @@ export default async function ProfilePage() {
 
   return (
     <div className="py-4 pl-8 pr-6">
-      <div className="bg-gradient-to-r from-[#FF5A57] via-[#E02F75] to-[#6700A3] px-8 py-6 rounded-2xl shadow-lg">
+      <div className="bg-gradient-to-r from-accent via-brand to-brand-dark px-8 py-6 rounded-2xl shadow-lg">
         <h1 className="text-2xl font-bold text-white mb-1 tracking-tight">Profil Saya</h1>
         <p className="text-white/80 text-sm font-medium">Kelola informasi profil dan pengaturan akun Anda</p>
       </div>

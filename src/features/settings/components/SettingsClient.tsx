@@ -47,8 +47,8 @@ export function SettingsClient() {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 whitespace-nowrap ${
                 isActive
-                  ? "bg-white text-[#E02F75] shadow-lg border border-gray-100"
-                  : "text-gray-500 hover:text-[#E02F75] hover:bg-white"
+                  ? "bg-white text-brand shadow-lg border border-gray-100"
+                  : "text-gray-500 hover:text-brand hover:bg-white"
               }`}
             >
               <Icon size={16} />

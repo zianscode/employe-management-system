@@ -6,6 +6,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend
 } from "recharts";
+import { BRAND_COLORS, CHART_COLORS } from "@/shared/constants/theme";
 
 export interface SalaryData {
   month: string;
@@ -23,7 +24,7 @@ interface DashboardChartsProps {
 }
 
 export default function DashboardCharts({ salaryData, deptData }: DashboardChartsProps) {
-  const COLORS = ["#E02F75", "#6700A3", "#FF5A57", "#00C49F", "#FFBB28"];
+  const COLORS = CHART_COLORS;
 
   return (
     <div className={`grid grid-cols-1 ${deptData.length > 0 ? "lg:grid-cols-2" : ""} gap-4`}>
@@ -37,7 +38,7 @@ export default function DashboardCharts({ salaryData, deptData }: DashboardChart
               {deptData.length > 0 ? "Total pengeluaran bersih per bulan" : "Riwayat penghasilan bersih bulanan"}
             </p>
           </div>
-          <div className="p-3 bg-pink-50 rounded-2xl text-[#E02F75]">
+          <div className="p-3 bg-accent-50 rounded-2xl text-brand">
             <span className="text-xs font-bold uppercase tracking-widest">Live Data</span>
           </div>
         </div>
@@ -46,8 +47,8 @@ export default function DashboardCharts({ salaryData, deptData }: DashboardChart
             <BarChart data={salaryData}>
               <defs>
                 <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#FF5A57" />
-                  <stop offset="100%" stopColor="#E02F75" />
+                  <stop offset="0%" stopColor={BRAND_COLORS.accent} />
+                  <stop offset="100%" stopColor={BRAND_COLORS.brand} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
@@ -82,7 +83,7 @@ export default function DashboardCharts({ salaryData, deptData }: DashboardChart
               <h3 className="text-xl font-black text-gray-900 tracking-tight">Distribusi Karyawan</h3>
               <p className="text-sm text-gray-500 font-medium">Berdasarkan departemen aktif</p>
             </div>
-            <div className="p-3 bg-purple-50 rounded-2xl text-[#6700A3]">
+            <div className="p-3 bg-brand-50 rounded-2xl text-brand-dark">
               <span className="text-xs font-bold uppercase tracking-widest">Enterprise</span>
             </div>
           </div>

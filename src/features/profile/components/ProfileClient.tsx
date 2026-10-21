@@ -51,8 +51,8 @@ export function ProfileClient() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 px-6 py-4 text-sm font-semibold transition-all duration-300 border-b-2 ${
                   isActive
-                    ? "border-[#E02F75] text-[#E02F75] bg-[#E02F75]/5"
-                    : "border-transparent text-gray-500 hover:text-[#E02F75] hover:bg-gray-50"
+                    ? "border-brand text-brand bg-brand/5"
+                    : "border-transparent text-gray-500 hover:text-brand hover:bg-gray-50"
                 }`}
               >
                 <Icon size={16} />

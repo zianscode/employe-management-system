@@ -37,7 +37,7 @@ export const PersonalInfoStep = ({
         <div className="relative group">
           <label 
             htmlFor="avatar-input"
-            className="relative w-24 h-24 rounded-3xl bg-white border border-slate-100 shadow-sm overflow-hidden flex items-center justify-center transition-all cursor-pointer hover:border-[#E02F75]/50 hover:shadow-md active:scale-95"
+            className="relative w-24 h-24 rounded-3xl bg-white border border-slate-100 shadow-sm overflow-hidden flex items-center justify-center transition-all cursor-pointer hover:border-brand/50 hover:shadow-md active:scale-95"
           >
             {avatarPreview ? (
               <Image 
@@ -67,7 +67,7 @@ export const PersonalInfoStep = ({
           <button 
             type="button" 
             onClick={handleRemoveAvatar}
-            className="inline-flex items-center gap-2 text-[#E02F75] text-[9px] font-black uppercase tracking-widest mt-2 px-3 py-1.5 bg-pink-50 rounded-lg hover:bg-pink-100 transition-all active:scale-95"
+            className="inline-flex items-center gap-2 text-brand text-[9px] font-black uppercase tracking-widest mt-2 px-3 py-1.5 bg-accent-50 rounded-lg hover:bg-accent-100 transition-all active:scale-95"
           >
             Hapus Foto
           </button>
@@ -76,7 +76,7 @@ export const PersonalInfoStep = ({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
-          <label className={`text-[9px] font-black uppercase tracking-[0.2em] ml-2 transition-colors duration-300 ${errors.phone ? "text-[#E02F75]" : focusedField === "phone" ? "text-[#E02F75]" : "text-slate-400"}`}>
+          <label className={`text-[9px] font-black uppercase tracking-[0.2em] ml-2 transition-colors duration-300 ${errors.phone ? "text-brand" : focusedField === "phone" ? "text-brand" : "text-slate-400"}`}>
             Nomor HP / WhatsApp
           </label>
           <div className="flex gap-2">
@@ -84,8 +84,8 @@ export const PersonalInfoStep = ({
               <select
                 value={countryCode}
                 onChange={(e) => setCountryCode(e.target.value)}
-                className={`w-full py-3 pl-4 pr-8 bg-white border rounded-xl text-slate-900 text-sm font-medium focus:ring-4 focus:ring-[#E02F75]/5 outline-none transition-all appearance-none cursor-pointer ${
-                  errors.phone ? "border-[#E02F75] focus:border-[#E02F75]" : "border-slate-200 focus:border-[#E02F75]/50"
+                className={`w-full py-3 pl-4 pr-8 bg-white border rounded-xl text-slate-900 text-sm font-medium focus:ring-4 focus:ring-brand/5 outline-none transition-all appearance-none cursor-pointer ${
+                  errors.phone ? "border-brand focus:border-brand" : "border-slate-200 focus:border-brand/50"
                 }`}
               >
                 {COUNTRY_OPTIONS.map((opt) => (
@@ -99,7 +99,7 @@ export const PersonalInfoStep = ({
 
             <div className="relative flex-1 group">
               <Phone 
-                className={`absolute left-5 top-1/2 -translate-y-1/2 transition-colors duration-300 ${errors.phone ? "text-[#E02F75]" : focusedField === "phone" ? "text-[#E02F75]" : "text-slate-300"}`} 
+                className={`absolute left-5 top-1/2 -translate-y-1/2 transition-colors duration-300 ${errors.phone ? "text-brand" : focusedField === "phone" ? "text-brand" : "text-slate-300"}`} 
                 size={16} 
               />
               <input 
@@ -111,20 +111,20 @@ export const PersonalInfoStep = ({
                 onFocus={() => setFocusedField("phone")}
                 onBlur={() => setFocusedField(null)}
                 placeholder="8123456789" 
-                className={`w-full pl-14 pr-5 py-3 bg-white border rounded-xl text-slate-900 text-sm font-medium placeholder:text-slate-200 focus:ring-4 focus:ring-[#E02F75]/5 outline-none transition-all ${
-                  errors.phone ? "border-[#E02F75] focus:border-[#E02F75]" : "border-slate-200 focus:border-[#E02F75]/50"
+                className={`w-full pl-14 pr-5 py-3 bg-white border rounded-xl text-slate-900 text-sm font-medium placeholder:text-slate-200 focus:ring-4 focus:ring-brand/5 outline-none transition-all ${
+                  errors.phone ? "border-brand focus:border-brand" : "border-slate-200 focus:border-brand/50"
                 }`} 
               />
             </div>
           </div>
           {errors.phone && (
-            <p className="text-[#E02F75] text-[10px] font-bold mt-1 ml-2">
+            <p className="text-brand text-[10px] font-bold mt-1 ml-2">
               {errors.phone}
             </p>
           )}
         </div>
         <div className="space-y-2">
-          <label className={`text-[9px] font-black uppercase tracking-[0.2em] ml-2 transition-colors duration-300 ${errors.gender ? "text-[#E02F75]" : "text-slate-400"}`}>
+          <label className={`text-[9px] font-black uppercase tracking-[0.2em] ml-2 transition-colors duration-300 ${errors.gender ? "text-brand" : "text-slate-400"}`}>
             Jenis Kelamin
           </label>
           <div className="relative">
@@ -133,8 +133,8 @@ export const PersonalInfoStep = ({
               required 
               value={formData.gender} 
               onChange={handleInputChange} 
-              className={`w-full px-5 py-3 bg-white border rounded-xl text-slate-900 text-sm font-medium focus:ring-4 focus:ring-[#E02F75]/5 outline-none transition-all appearance-none cursor-pointer ${
-                errors.gender ? "border-[#E02F75] focus:border-[#E02F75]" : "border-slate-200 focus:border-[#E02F75]/50"
+              className={`w-full px-5 py-3 bg-white border rounded-xl text-slate-900 text-sm font-medium focus:ring-4 focus:ring-brand/5 outline-none transition-all appearance-none cursor-pointer ${
+                errors.gender ? "border-brand focus:border-brand" : "border-slate-200 focus:border-brand/50"
               }`}
             >
               <option value="">Pilih Gender</option>
@@ -144,18 +144,18 @@ export const PersonalInfoStep = ({
             <ArrowRight className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none rotate-90" size={14} />
           </div>
           {errors.gender && (
-            <p className="text-[#E02F75] text-[10px] font-bold mt-1 ml-2">
+            <p className="text-brand text-[10px] font-bold mt-1 ml-2">
               {errors.gender}
             </p>
           )}
         </div>
         <div className="space-y-2">
-          <label className={`text-[9px] font-black uppercase tracking-[0.2em] ml-2 transition-colors duration-300 ${errors.placeOfBirth ? "text-[#E02F75]" : focusedField === "placeOfBirth" ? "text-[#E02F75]" : "text-slate-400"}`}>
+          <label className={`text-[9px] font-black uppercase tracking-[0.2em] ml-2 transition-colors duration-300 ${errors.placeOfBirth ? "text-brand" : focusedField === "placeOfBirth" ? "text-brand" : "text-slate-400"}`}>
             Tempat Lahir
           </label>
           <div className="relative">
             <MapPin 
-              className={`absolute left-5 top-1/2 -translate-y-1/2 transition-colors duration-300 ${errors.placeOfBirth ? "text-[#E02F75]" : focusedField === "placeOfBirth" ? "text-[#E02F75]" : "text-slate-300"}`} 
+              className={`absolute left-5 top-1/2 -translate-y-1/2 transition-colors duration-300 ${errors.placeOfBirth ? "text-brand" : focusedField === "placeOfBirth" ? "text-brand" : "text-slate-300"}`} 
               size={16} 
             />
             <select 
@@ -165,8 +165,8 @@ export const PersonalInfoStep = ({
               onChange={handleInputChange} 
               onFocus={() => setFocusedField("placeOfBirth")}
               onBlur={() => setFocusedField(null)}
-              className={`w-full pl-14 pr-10 py-3 bg-white border rounded-xl text-slate-900 text-sm font-medium focus:ring-4 focus:ring-[#E02F75]/5 outline-none transition-all appearance-none cursor-pointer ${
-                errors.placeOfBirth ? "border-[#E02F75] focus:border-[#E02F75]" : "border-slate-200 focus:border-[#E02F75]/50"
+              className={`w-full pl-14 pr-10 py-3 bg-white border rounded-xl text-slate-900 text-sm font-medium focus:ring-4 focus:ring-brand/5 outline-none transition-all appearance-none cursor-pointer ${
+                errors.placeOfBirth ? "border-brand focus:border-brand" : "border-slate-200 focus:border-brand/50"
               }`}
             >
               <option value="">Pilih Tempat Lahir</option>
@@ -180,7 +180,7 @@ export const PersonalInfoStep = ({
             <ArrowRight className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none rotate-90" size={14} />
           </div>
           {errors.placeOfBirth && (
-            <p className="text-[#E02F75] text-[10px] font-bold mt-1 ml-2">
+            <p className="text-brand text-[10px] font-bold mt-1 ml-2">
               {errors.placeOfBirth}
             </p>
           )}
@@ -199,7 +199,7 @@ export const PersonalInfoStep = ({
         />
       </div>
       <div className="space-y-2">
-        <label className={`text-[9px] font-black uppercase tracking-[0.2em] ml-2 transition-colors duration-300 ${errors.address ? "text-[#E02F75]" : "text-slate-400"}`}>
+        <label className={`text-[9px] font-black uppercase tracking-[0.2em] ml-2 transition-colors duration-300 ${errors.address ? "text-brand" : "text-slate-400"}`}>
           Alamat Lengkap
         </label>
         <textarea 
@@ -209,12 +209,12 @@ export const PersonalInfoStep = ({
           onChange={handleInputChange} 
           rows={3} 
           placeholder="Jl. Merdeka No. 123, Blok C..." 
-          className={`w-full px-5 py-3 bg-white border rounded-xl text-slate-900 text-sm font-medium focus:ring-4 focus:ring-[#E02F75]/5 outline-none transition-all resize-none ${
-            errors.address ? "border-[#E02F75] focus:border-[#E02F75]" : "border-slate-200 focus:border-[#E02F75]/50"
+          className={`w-full px-5 py-3 bg-white border rounded-xl text-slate-900 text-sm font-medium focus:ring-4 focus:ring-brand/5 outline-none transition-all resize-none ${
+            errors.address ? "border-brand focus:border-brand" : "border-slate-200 focus:border-brand/50"
           }`}
         ></textarea>
         {errors.address && (
-          <p className="text-[#E02F75] text-[10px] font-bold mt-1 ml-2">
+          <p className="text-brand text-[10px] font-bold mt-1 ml-2">
             {errors.address}
           </p>
         )}

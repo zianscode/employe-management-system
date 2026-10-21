@@ -16,7 +16,7 @@ const TYPE_LABEL: Record<PayrollComponentRow["type"], string> = {
   DEDUCTION: "Potongan",
 };
 
-const inputClass = "px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-[#E02F75]/50 outline-none";
+const inputClass = "px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-brand/50 outline-none";
 
 export function PayrollComponentsCard({ employeeId }: { employeeId: string }) {
   const [rows, setRows] = useState<PayrollComponentRow[]>([]);
@@ -58,7 +58,7 @@ export function PayrollComponentsCard({ employeeId }: { employeeId: string }) {
   return (
     <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 space-y-6">
       <div className="flex items-center gap-3">
-        <div className="p-3 rounded-2xl bg-[#E02F75]/10 text-[#E02F75]">
+        <div className="p-3 rounded-2xl bg-brand/10 text-brand">
           <Wallet size={22} />
         </div>
         <div>
@@ -123,7 +123,7 @@ export function PayrollComponentsCard({ employeeId }: { employeeId: string }) {
         <button
           type="submit"
           disabled={isSaving}
-          className="flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-[#E02F75] to-[#6700A3] text-white rounded-xl font-bold disabled:opacity-50"
+          className="flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-brand to-brand-dark text-white rounded-xl font-bold disabled:opacity-50"
         >
           <Plus size={16} />
           Tambah

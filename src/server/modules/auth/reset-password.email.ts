@@ -1,3 +1,5 @@
+import { BRAND_COLORS } from "@/shared/constants/theme";
+
 export const RESET_PASSWORD_SUBJECT = "Reset Password Akun EMS Pro Anda";
 
 export function resetPasswordEmail(resetLink: string, validHours: number): string {
@@ -8,7 +10,7 @@ export function resetPasswordEmail(resetLink: string, validHours: number): strin
       <p style="color: #475569; font-size: 16px; line-height: 1.5;">Silakan klik tombol di bawah ini untuk membuat password baru. Link ini hanya berlaku selama ${validHours} jam.</p>
 
       <div style="text-align: center; margin: 30px 0;">
-        <a href="${resetLink}" style="background-color: #E02F75; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Reset Password Sekarang</a>
+        <a href="${resetLink}" style="background-color: ${BRAND_COLORS.brand}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Reset Password Sekarang</a>
       </div>
 
       <p style="color: #64748b; font-size: 14px;">Atau copy link berikut ke browser Anda:</p>

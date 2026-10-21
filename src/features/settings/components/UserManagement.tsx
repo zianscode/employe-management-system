@@ -63,7 +63,7 @@ export const UserManagement = ({ users, onRefresh }: UserManagementProps) => {
     <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6 gap-4">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-[#FF5A57] to-[#E02F75] rounded-xl flex items-center justify-center">
+          <div className="w-10 h-10 bg-gradient-to-br from-accent to-brand rounded-xl flex items-center justify-center">
             <Users className="text-white" size={20} />
           </div>
           <div>
@@ -78,7 +78,7 @@ export const UserManagement = ({ users, onRefresh }: UserManagementProps) => {
             <input
               type="text"
               placeholder="Cari user..."
-              className="pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#E02F75] outline-none w-full sm:w-64"
+              className="pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand outline-none w-full sm:w-64"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -112,7 +112,7 @@ export const UserManagement = ({ users, onRefresh }: UserManagementProps) => {
                   </div>
                 </td>
                 <td className="py-4 px-2">
-                  <span className="px-3 py-1 bg-purple-50 text-purple-700 rounded-full text-xs font-medium">
+                  <span className="px-3 py-1 bg-brand-50 text-brand-dark rounded-full text-xs font-medium">
                     {user.role}
                   </span>
                 </td>

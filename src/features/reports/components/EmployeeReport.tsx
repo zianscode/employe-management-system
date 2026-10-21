@@ -38,7 +38,7 @@ function Breakdown({ title, items }: { title: string; items: CountItem[] }) {
               <span className="font-bold text-gray-900">{item.value}</span>
             </div>
             <div className="h-2 bg-gray-100 rounded-full">
-              <div className="h-2 bg-[#E02F75] rounded-full" style={{ width: `${(item.value / max) * 100}%` }} />
+              <div className="h-2 bg-brand rounded-full" style={{ width: `${(item.value / max) * 100}%` }} />
             </div>
           </div>
         ))}

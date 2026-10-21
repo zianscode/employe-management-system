@@ -76,7 +76,7 @@ async function main() {
   const adminProfileData = {
     name: "Budi Santoso",
     nip: "199505052024011001",
-    avatar: "/seed/admin.jpg",
+    avatar: "/images/seed/admin-avatar.jpg",
     gender: "MALE",
     birthDate: new Date("1995-05-05"),
     placeOfBirth: "Bandung",

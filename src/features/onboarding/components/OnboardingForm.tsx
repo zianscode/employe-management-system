@@ -318,7 +318,7 @@ export const OnboardingForm = () => {
       <div className="relative px-2">
         <div className="absolute top-[20px] left-8 right-8 h-[1px] bg-slate-200 overflow-hidden rounded-full">
             <div 
-              className="h-full bg-gradient-to-r from-[#FF5A57] to-[#E02F75] transition-all duration-700 ease-in-out shadow-[0_0_10px_rgba(224,47,117,0.3)]"
+              className="h-full bg-gradient-to-r from-accent to-brand transition-all duration-700 ease-in-out shadow-[0_0_10px_rgba(224,47,117,0.3)]"
               style={{ width: `${((currentStep - 1) / (STEPS.length - 1)) * 100}%` }}
             ></div>
         </div>
@@ -334,7 +334,7 @@ export const OnboardingForm = () => {
                 <div 
                   className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-500 relative z-10 ${
                     isCompleted 
-                      ? "bg-[#E02F75] text-white" 
+                      ? "bg-brand text-white" 
                       : isActive 
                         ? "bg-white text-slate-900 shadow-[0_8px_20px_-4px_rgba(0,0,0,0.1)] border border-slate-100 scale-110" 
                         : "bg-white text-slate-300 border border-slate-100"

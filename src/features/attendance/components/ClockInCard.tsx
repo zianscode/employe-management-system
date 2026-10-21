@@ -49,7 +49,7 @@ export function ClockInCard({ onChange }: ClockInCardProps) {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div className="flex items-center gap-4">
-        <div className="p-3 rounded-xl bg-[#E02F75]/10 text-[#E02F75]">
+        <div className="p-3 rounded-xl bg-brand/10 text-brand">
           <Clock size={24} />
         </div>
         <div>
@@ -70,7 +70,7 @@ export function ClockInCard({ onChange }: ClockInCardProps) {
           <button
             onClick={() => handle(clockInAction)}
             disabled={isSubmitting}
-            className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#E02F75] to-[#6700A3] text-white rounded-xl font-bold text-sm shadow-lg disabled:opacity-50"
+            className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-brand to-brand-dark text-white rounded-xl font-bold text-sm shadow-lg disabled:opacity-50"
           >
             <LogIn size={16} />
             Check-in
@@ -80,7 +80,7 @@ export function ClockInCard({ onChange }: ClockInCardProps) {
           <button
             onClick={() => handle(clockOutAction)}
             disabled={isSubmitting}
-            className="flex items-center gap-2 px-5 py-2.5 bg-white border border-[#E02F75] text-[#E02F75] rounded-xl font-bold text-sm disabled:opacity-50"
+            className="flex items-center gap-2 px-5 py-2.5 bg-white border border-brand text-brand rounded-xl font-bold text-sm disabled:opacity-50"
           >
             <LogOut size={16} />
             Check-out

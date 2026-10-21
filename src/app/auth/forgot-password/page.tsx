@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { Mail, ArrowLeft, Loader2, CheckCircle2 } from "lucide-react";
 import { forgotPasswordAction } from "@/server/modules/auth/auth.actions";
+import { BRAND_COLORS } from "@/shared/constants/theme";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -33,14 +34,14 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen w-full relative overflow-hidden bg-white flex items-center justify-center p-6 selection:bg-[#E02F75]/10">
+    <div className="min-h-screen w-full relative overflow-hidden bg-white flex items-center justify-center p-6 selection:bg-brand/10">
       <div className="absolute inset-0 z-0 pointer-events-none">
         <svg className="absolute top-0 right-0 h-full w-[100%] opacity-[0.03]" viewBox="0 0 100 100" preserveAspectRatio="none">
           <path d="M0 0 C 50 50, 50 50, 100 100 L 100 0 Z" fill="url(#grad)" />
           <defs>
             <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#E02F75" />
-              <stop offset="100%" stopColor="#6700A3" />
+              <stop offset="0%" stopColor={BRAND_COLORS.brand} />
+              <stop offset="100%" stopColor={BRAND_COLORS.brandDark} />
             </linearGradient>
           </defs>
         </svg>
@@ -48,7 +49,7 @@ export default function ForgotPasswordPage() {
 
       <div className="relative z-10 w-full max-w-[450px]">
         <div className="mb-10 text-center">
-          <h1 className="text-4xl font-black text-gray-900 tracking-tighter mb-3">Lupa Password<span className="text-[#E02F75]">?</span></h1>
+          <h1 className="text-4xl font-black text-gray-900 tracking-tighter mb-3">Lupa Password<span className="text-brand">?</span></h1>
           <p className="text-gray-500 text-sm font-medium">Jangan khawatir, kami akan membantu Anda mereset password akun Anda.</p>
         </div>
 
@@ -58,14 +59,14 @@ export default function ForgotPasswordPage() {
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Email Terdaftar</label>
                 <div className="relative group">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#E02F75] transition-colors" size={20} />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand transition-colors" size={20} />
                   <input
                     type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="nama@perusahaan.com"
-                    className="w-full pl-12 pr-5 py-4 bg-gray-50/50 border border-gray-200 rounded-2xl focus:bg-white focus:border-[#E02F75]/50 focus:ring-4 focus:ring-[#E02F75]/5 outline-none text-gray-900 font-medium transition-all shadow-sm"
+                    className="w-full pl-12 pr-5 py-4 bg-gray-50/50 border border-gray-200 rounded-2xl focus:bg-white focus:border-brand/50 focus:ring-4 focus:ring-brand/5 outline-none text-gray-900 font-medium transition-all shadow-sm"
                   />
                 </div>
               </div>
@@ -81,7 +82,7 @@ export default function ForgotPasswordPage() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full bg-gradient-to-r from-[#FF5A57] via-[#E02F75] to-[#6700A3] text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:shadow-[0_12px_24px_-8px_rgba(224,47,117,0.4)] active:scale-[0.98] transition-all duration-200 disabled:opacity-70 flex items-center justify-center gap-2"
+                  className="w-full bg-gradient-to-r from-accent via-brand to-brand-dark text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:shadow-[0_12px_24px_-8px_rgba(224,47,117,0.4)] active:scale-[0.98] transition-all duration-200 disabled:opacity-70 flex items-center justify-center gap-2"
                 >
                   {isLoading ? (
                     <>

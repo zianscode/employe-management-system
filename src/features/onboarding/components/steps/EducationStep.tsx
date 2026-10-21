@@ -27,9 +27,9 @@ export const EducationStep = ({
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-right-4 duration-500">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="p-5 bg-pink-50/60 border border-pink-100/50 rounded-2xl text-slate-700 text-[11px] font-medium leading-relaxed md:col-span-2">
+        <div className="p-5 bg-accent-50/60 border border-accent-100/50 rounded-2xl text-slate-700 text-[11px] font-medium leading-relaxed md:col-span-2">
           <div className="flex gap-3">
-            <Award size={16} className="text-[#E02F75] shrink-0 animate-pulse" />
+            <Award size={16} className="text-brand shrink-0 animate-pulse" />
             <span>
               <strong>Petunjuk Pengisian:</strong> Silakan masukkan data <strong>pendidikan terakhir</strong> yang telah Anda selesaikan, ATAU <strong>pendidikan saat ini yang sedang Anda tempuh</strong> (jika sedang melanjutkan studi / belum lulus).
             </span>
@@ -37,7 +37,7 @@ export const EducationStep = ({
         </div>
 
         <div className="space-y-2">
-          <label className={`text-[9px] font-black uppercase tracking-[0.2em] ml-2 transition-colors duration-300 ${errors.eduLevel ? "text-[#E02F75]" : "text-slate-400"}`}>
+          <label className={`text-[9px] font-black uppercase tracking-[0.2em] ml-2 transition-colors duration-300 ${errors.eduLevel ? "text-brand" : "text-slate-400"}`}>
             Jenjang Pendidikan (Terakhir / Sedang Ditempuh)
           </label>
           <div className="relative">
@@ -46,8 +46,8 @@ export const EducationStep = ({
               required 
               value={formData.eduLevel} 
               onChange={handleInputChange} 
-              className={`w-full pl-5 pr-10 py-3 bg-white border rounded-xl text-slate-900 text-sm font-medium focus:ring-4 focus:ring-[#E02F75]/5 outline-none transition-all appearance-none cursor-pointer ${
-                errors.eduLevel ? "border-[#E02F75] focus:border-[#E02F75]" : "border-slate-200 focus:border-[#E02F75]/50"
+              className={`w-full pl-5 pr-10 py-3 bg-white border rounded-xl text-slate-900 text-sm font-medium focus:ring-4 focus:ring-brand/5 outline-none transition-all appearance-none cursor-pointer ${
+                errors.eduLevel ? "border-brand focus:border-brand" : "border-slate-200 focus:border-brand/50"
               }`}
             >
               <option value="">Pilih Jenjang</option>
@@ -60,7 +60,7 @@ export const EducationStep = ({
             <ArrowRight className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none rotate-90" size={14} />
           </div>
           {errors.eduLevel && (
-            <p className="text-[#E02F75] text-[10px] font-bold mt-1 ml-2">
+            <p className="text-brand text-[10px] font-bold mt-1 ml-2">
               {errors.eduLevel}
             </p>
           )}
@@ -92,7 +92,7 @@ export const EducationStep = ({
           />
         </div>
         <div className="space-y-2">
-          <label className={`text-[9px] font-black uppercase tracking-[0.2em] ml-2 transition-colors duration-300 ${errors.eduStartYear ? "text-[#E02F75]" : "text-slate-400"}`}>
+          <label className={`text-[9px] font-black uppercase tracking-[0.2em] ml-2 transition-colors duration-300 ${errors.eduStartYear ? "text-brand" : "text-slate-400"}`}>
             Tahun Masuk Pendidikan
           </label>
           <div className="relative">
@@ -101,8 +101,8 @@ export const EducationStep = ({
               required 
               value={formData.eduStartYear} 
               onChange={handleInputChange} 
-              className={`w-full pl-5 pr-10 py-3 bg-white border rounded-xl text-slate-900 text-sm font-medium focus:ring-4 focus:ring-[#E02F75]/5 outline-none transition-all appearance-none cursor-pointer ${
-                errors.eduStartYear ? "border-[#E02F75] focus:border-[#E02F75]" : "border-slate-200 focus:border-[#E02F75]/50"
+              className={`w-full pl-5 pr-10 py-3 bg-white border rounded-xl text-slate-900 text-sm font-medium focus:ring-4 focus:ring-brand/5 outline-none transition-all appearance-none cursor-pointer ${
+                errors.eduStartYear ? "border-brand focus:border-brand" : "border-slate-200 focus:border-brand/50"
               }`}
             >
               <option value="">Pilih Tahun Masuk</option>
@@ -111,13 +111,13 @@ export const EducationStep = ({
             <ArrowRight className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none rotate-90" size={14} />
           </div>
           {errors.eduStartYear && (
-            <p className="text-[#E02F75] text-[10px] font-bold mt-1 ml-2">
+            <p className="text-brand text-[10px] font-bold mt-1 ml-2">
               {errors.eduStartYear}
             </p>
           )}
         </div>
         <div className="space-y-2">
-          <label className={`text-[9px] font-black uppercase tracking-[0.2em] ml-2 transition-colors duration-300 ${errors.eduEndYear ? "text-[#E02F75]" : "text-slate-400"}`}>
+          <label className={`text-[9px] font-black uppercase tracking-[0.2em] ml-2 transition-colors duration-300 ${errors.eduEndYear ? "text-brand" : "text-slate-400"}`}>
             Tahun Lulus / Estimasi Lulus (Pilih estimasi jika sedang ditempuh)
           </label>
           <div className="relative">
@@ -126,8 +126,8 @@ export const EducationStep = ({
               required 
               value={formData.eduEndYear} 
               onChange={handleInputChange} 
-              className={`w-full pl-5 pr-10 py-3 bg-white border rounded-xl text-slate-900 text-sm font-medium focus:ring-4 focus:ring-[#E02F75]/5 outline-none transition-all appearance-none cursor-pointer ${
-                errors.eduEndYear ? "border-[#E02F75] focus:border-[#E02F75]" : "border-slate-200 focus:border-[#E02F75]/50"
+              className={`w-full pl-5 pr-10 py-3 bg-white border rounded-xl text-slate-900 text-sm font-medium focus:ring-4 focus:ring-brand/5 outline-none transition-all appearance-none cursor-pointer ${
+                errors.eduEndYear ? "border-brand focus:border-brand" : "border-slate-200 focus:border-brand/50"
               }`}
             >
               <option value="">Pilih Tahun Lulus / Estimasi</option>
@@ -136,7 +136,7 @@ export const EducationStep = ({
             <ArrowRight className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none rotate-90" size={14} />
           </div>
           {errors.eduEndYear && (
-            <p className="text-[#E02F75] text-[10px] font-bold mt-1 ml-2">
+            <p className="text-brand text-[10px] font-bold mt-1 ml-2">
               {errors.eduEndYear}
             </p>
           )}
@@ -171,7 +171,7 @@ export const EducationStep = ({
           onChange={handleInputChange} 
           rows={4} 
           placeholder="Tuliskan pengalaman atau motivasi singkat Anda..." 
-          className="w-full px-5 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm font-medium focus:border-[#E02F75]/50 focus:ring-4 focus:ring-[#E02F75]/5 outline-none transition-all resize-none"
+          className="w-full px-5 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm font-medium focus:border-brand/50 focus:ring-4 focus:ring-brand/5 outline-none transition-all resize-none"
         ></textarea>
       </div>
     </div>

@@ -8,7 +8,7 @@ import { HolidayRow } from "@/shared/types/settings.types";
 import { toDateKey } from "@/shared/utils/date";
 import { createHolidayAction, deleteHolidayAction, getHolidaysAction } from "@/server/modules/settings/holiday.actions";
 
-const inputClass = "px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#E02F75] outline-none";
+const inputClass = "px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand outline-none";
 
 export function HolidaySettings() {
   const [year, setYear] = useState(() => Number(toDateKey().slice(0, 4)));
@@ -54,7 +54,7 @@ export function HolidaySettings() {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm space-y-6">
       <div className="flex items-center space-x-3">
-        <div className="w-10 h-10 bg-gradient-to-br from-[#FF5A57] to-[#E02F75] rounded-xl flex items-center justify-center">
+        <div className="w-10 h-10 bg-gradient-to-br from-accent to-brand rounded-xl flex items-center justify-center">
           <CalendarOff className="text-white" size={20} />
         </div>
         <div>
@@ -84,7 +84,7 @@ export function HolidaySettings() {
         <button
           type="submit"
           disabled={isSaving}
-          className="flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-[#E02F75] to-[#6700A3] text-white rounded-lg font-bold disabled:opacity-50"
+          className="flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-brand to-brand-dark text-white rounded-lg font-bold disabled:opacity-50"
         >
           <Plus size={16} />
           Tambah

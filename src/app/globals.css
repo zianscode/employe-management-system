@@ -1,8 +1,20 @@
 @import "tailwindcss";
 
+@theme {
+  --color-brand: #023074;
+  --color-brand-dark: #011d47;
+  --color-brand-light: #1d4f9c;
+  --color-brand-50: #eef3fb;
+  --color-brand-100: #d6e2f5;
+  --color-accent: #139957;
+  --color-accent-dark: #0d7a45;
+  --color-accent-50: #ecf8f2;
+  --color-accent-100: #d0eedf;
+}
+
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #0f172a;
   --font-poppins: 'Poppins', sans-serif;
 }
 

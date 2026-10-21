@@ -69,7 +69,7 @@ export default function EditEmployeePage() {
 
   if (loading) return (
     <div className="flex items-center justify-center min-h-[400px]">
-      <div className="w-8 h-8 border-4 border-[#E02F75] border-t-transparent rounded-full animate-spin"></div>
+      <div className="w-8 h-8 border-4 border-brand border-t-transparent rounded-full animate-spin"></div>
     </div>
   );
 

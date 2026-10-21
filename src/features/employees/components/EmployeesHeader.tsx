@@ -6,7 +6,7 @@ interface EmployeesHeaderProps {
 
 const EmployeesHeader: React.FC<EmployeesHeaderProps> = () => {
   return (
-    <div className="bg-gradient-to-r from-[#FF5A57] via-[#E02F75] to-[#6700A3] px-8 py-6 rounded-2xl shadow-lg border border-white/10">
+    <div className="bg-gradient-to-r from-accent via-brand to-brand-dark px-8 py-6 rounded-2xl shadow-lg border border-white/10">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white tracking-tight">Manajemen Karyawan</h1>

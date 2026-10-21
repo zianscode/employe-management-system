@@ -30,7 +30,7 @@ export const SecuritySettings: React.FC<SecuritySettingsProps> = ({
     <div className="space-y-4">
       <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-4">
         <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <Shield className="text-[#E02F75]" size={20} />
+          <Shield className="text-brand" size={20} />
           Ubah Password
         </h3>
         <div className="space-y-6">
@@ -48,7 +48,7 @@ export const SecuritySettings: React.FC<SecuritySettingsProps> = ({
                   type={field.show ? "text" : "password"}
                   value={data[field.key]}
                   onChange={(e) => setData({ ...data, [field.key]: e.target.value })}
-                  className="w-full px-4 py-3 pr-12 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#E02F75]/20 outline-none transition-all"
+                  className="w-full px-4 py-3 pr-12 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand/20 outline-none transition-all"
                 />
                 <button
                   type="button"
@@ -90,7 +90,7 @@ export const SecuritySettings: React.FC<SecuritySettingsProps> = ({
           <div className="flex justify-end">
             <button
               onClick={onUpdate}
-              className="bg-gradient-to-r from-[#E02F75] to-[#6700A3] text-white px-6 py-3 rounded-xl font-medium hover:shadow-lg transition-all flex items-center gap-2"
+              className="bg-gradient-to-r from-brand to-brand-dark text-white px-6 py-3 rounded-xl font-medium hover:shadow-lg transition-all flex items-center gap-2"
             >
               <Shield size={20} />
               Ubah Password

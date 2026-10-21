@@ -13,7 +13,7 @@ const EmployeesStats: React.FC<EmployeesStatsProps> = ({ employees }) => {
     { label: "Total Karyawan", value: employees.length.toString(), icon: Users, color: "text-blue-600", bgColor: "bg-blue-50" },
     { label: "Aktif", value: activeCount.toString(), icon: UserCheck, color: "text-green-600", bgColor: "bg-green-50" },
     { label: "Masa Percobaan", value: probationCount.toString(), icon: UserMinus, color: "text-orange-600", bgColor: "bg-orange-50" },
-    { label: "Divisi", value: new Set(employees.map(e => e.division)).size.toString(), icon: Star, color: "text-purple-600", bgColor: "bg-purple-50" },
+    { label: "Divisi", value: new Set(employees.map(e => e.division)).size.toString(), icon: Star, color: "text-brand", bgColor: "bg-brand-50" },
   ];
 
   return (

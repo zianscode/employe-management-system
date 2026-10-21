@@ -10,7 +10,7 @@ import { PASSWORD_RULE_TEXT, validatePasswordStrength } from "@/shared/utils/pas
 import { PasswordData } from "@/shared/types/profile.types";
 
 const inputClass =
-  "w-full px-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-[#E02F75]/50 outline-none transition-all font-medium";
+  "w-full px-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-brand/50 outline-none transition-all font-medium";
 
 const FIELDS: { name: keyof PasswordData; label: string }[] = [
   { name: "currentPassword", label: "Password Sementara" },
@@ -56,7 +56,7 @@ export function ChangePasswordForm() {
   return (
     <form onSubmit={handleSubmit} className="bg-white rounded-[32px] shadow-xl border border-gray-100 p-8 space-y-5">
       <div className="flex items-center gap-3">
-        <div className="p-3 rounded-2xl bg-[#E02F75]/10 text-[#E02F75]">
+        <div className="p-3 rounded-2xl bg-brand/10 text-brand">
           <KeyRound size={24} />
         </div>
         <div>
@@ -84,7 +84,7 @@ export function ChangePasswordForm() {
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full py-4 bg-gradient-to-r from-[#E02F75] to-[#6700A3] text-white rounded-2xl font-bold shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
+        className="w-full py-4 bg-gradient-to-r from-brand to-brand-dark text-white rounded-2xl font-bold shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
       >
         {isLoading && <Loader2 className="animate-spin" size={18} />}
         Simpan Password Baru

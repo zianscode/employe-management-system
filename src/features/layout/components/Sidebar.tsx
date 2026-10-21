@@ -9,6 +9,7 @@ import { BiChevronLeft, BiChevronRight } from "react-icons/bi";
 import { FaBars, FaTimes } from "react-icons/fa";
 import Menu from "./Menu";
 import { ROLES } from "@/shared/constants/roles";
+import { BrandLogo } from "@/shared/components/BrandLogo";
 
 export const Sidebar = () => {
   const { data: session } = useSession();
@@ -49,7 +50,7 @@ export const Sidebar = () => {
       {isMobile && (
         <button
           onClick={handleToggle}
-          className="fixed top-4 left-4 z-50 flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-[#FF5A57] via-[#E02F75] to-[#6700A3] text-white shadow-lg lg:hidden"
+          className="fixed top-4 left-4 z-50 flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-accent via-brand to-brand-dark text-white shadow-lg lg:hidden"
         >
           {isMobileOpen ? <FaTimes size={18} /> : <FaBars size={18} />}
         </button>
@@ -85,13 +86,9 @@ export const Sidebar = () => {
                 }`}
                 onClick={handleCloseMobile}
               >
-                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#FF5A57] via-[#E02F75] to-[#6700A3] text-white shadow-lg">
-                  <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                  </svg>
-                </div>
+                <BrandLogo size={40} className="h-10 w-10 flex-shrink-0" />
                 {!(isCollapsed && !isMobile) && (
-                  <span className="bg-gradient-to-r from-[#FF5A57] via-[#E02F75] to-[#6700A3] bg-clip-text text-transparent font-extrabold">
+                  <span className="bg-gradient-to-r from-accent via-brand to-brand-dark bg-clip-text text-transparent font-extrabold">
                     EMS
                   </span>
                 )}
@@ -101,7 +98,7 @@ export const Sidebar = () => {
                 <button
                   type="button"
                   onClick={handleToggle}
-                  className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-600 transition-all duration-200 hover:bg-gradient-to-br hover:from-[#FF5A57] hover:via-[#E02F75] hover:to-[#6700A3] hover:text-white ${
+                  className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-600 transition-all duration-200 hover:bg-gradient-to-br hover:from-accent hover:via-brand hover:to-brand-dark hover:text-white ${
                     isCollapsed ? "hidden" : ""
                   }`}
                 >
@@ -124,7 +121,7 @@ export const Sidebar = () => {
               <div className="flex justify-center p-4">
                 <button
                   onClick={handleToggle}
-                  className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-100 text-gray-600 hover:bg-gradient-to-br hover:from-[#FF5A57] hover:via-[#E02F75] hover:to-[#6700A3] hover:text-white shadow-sm transition-all"
+                  className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-100 text-gray-600 hover:bg-gradient-to-br hover:from-accent hover:via-brand hover:to-brand-dark hover:text-white shadow-sm transition-all"
                 >
                   <BiChevronRight size={24} />
                 </button>
@@ -138,7 +135,7 @@ export const Sidebar = () => {
                     isCollapsed && !isMobile ? "justify-center p-2" : "gap-3 p-3"
                   }`}
                 >
-                  <div className="h-10 w-10 flex-shrink-0 rounded-full bg-gradient-to-br from-[#FF5A57] via-[#E02F75] to-[#6700A3] flex items-center justify-center text-white text-sm font-black shadow-md border-2 border-white uppercase tracking-tighter overflow-hidden relative">
+                  <div className="h-10 w-10 flex-shrink-0 rounded-full bg-gradient-to-br from-accent via-brand to-brand-dark flex items-center justify-center text-white text-sm font-black shadow-md border-2 border-white uppercase tracking-tighter overflow-hidden relative">
                     {session?.user?.image ? (
                       <Image 
                         src={session.user.image} 

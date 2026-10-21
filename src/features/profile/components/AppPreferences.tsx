@@ -12,7 +12,7 @@ export const AppPreferences: React.FC<AppPreferencesProps> = ({ data, setData, o
   return (
     <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
       <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-        <Settings className="text-[#E02F75]" size={24} />
+        <Settings className="text-brand" size={24} />
         Preferensi Aplikasi
       </h3>
       <div className="space-y-6">
@@ -23,7 +23,7 @@ export const AppPreferences: React.FC<AppPreferencesProps> = ({ data, setData, o
           <select
             value={data.bahasa}
             onChange={(e) => setData({ ...data, bahasa: e.target.value })}
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#E02F75]/20 outline-none transition-all bg-white"
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand/20 outline-none transition-all bg-white"
           >
             <option>Bahasa Indonesia</option>
             <option>English</option>
@@ -36,7 +36,7 @@ export const AppPreferences: React.FC<AppPreferencesProps> = ({ data, setData, o
           <select
             value={data.zonaWaktu}
             onChange={(e) => setData({ ...data, zonaWaktu: e.target.value })}
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#E02F75]/20 outline-none transition-all bg-white"
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand/20 outline-none transition-all bg-white"
           >
             <option>Asia/Jakarta (WIB)</option>
             <option>Asia/Makassar (WITA)</option>
@@ -50,7 +50,7 @@ export const AppPreferences: React.FC<AppPreferencesProps> = ({ data, setData, o
           <select
             value={data.formatTanggal}
             onChange={(e) => setData({ ...data, formatTanggal: e.target.value })}
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#E02F75]/20 outline-none transition-all bg-white"
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand/20 outline-none transition-all bg-white"
           >
             <option>DD/MM/YYYY</option>
             <option>MM/DD/YYYY</option>
@@ -62,7 +62,7 @@ export const AppPreferences: React.FC<AppPreferencesProps> = ({ data, setData, o
           <select
             value={data.itemPerHalaman}
             onChange={(e) => setData({ ...data, itemPerHalaman: e.target.value })}
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#E02F75]/20 outline-none transition-all bg-white"
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand/20 outline-none transition-all bg-white"
           >
             <option>5</option>
             <option>10</option>
@@ -73,7 +73,7 @@ export const AppPreferences: React.FC<AppPreferencesProps> = ({ data, setData, o
         <div className="flex justify-end pt-4">
           <button
             onClick={onSave}
-            className="bg-gradient-to-r from-[#E02F75] to-[#6700A3] text-white px-6 py-3 rounded-xl font-medium hover:shadow-lg transition-all flex items-center gap-2"
+            className="bg-gradient-to-r from-brand to-brand-dark text-white px-6 py-3 rounded-xl font-medium hover:shadow-lg transition-all flex items-center gap-2"
           >
             <Save size={20} />
             Simpan Preferensi

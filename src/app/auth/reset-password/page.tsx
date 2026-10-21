@@ -72,7 +72,7 @@ function ResetPasswordForm() {
   if (isValidating) {
     return (
       <div className="flex flex-col items-center justify-center py-10">
-        <Loader2 className="animate-spin text-[#E02F75] mb-4" size={40} />
+        <Loader2 className="animate-spin text-brand mb-4" size={40} />
         <p className="text-gray-500 font-bold uppercase text-[10px] tracking-widest">Memvalidasi Token...</p>
       </div>
     );
@@ -87,7 +87,7 @@ function ResetPasswordForm() {
         <h3 className="text-xl font-black text-gray-900 mb-3 tracking-tight">Terjadi Kesalahan</h3>
         <p className="text-gray-500 text-sm font-medium leading-relaxed mb-8">{error}</p>
         <div className="space-y-4">
-          <Link href="/auth/forgot-password" className="inline-block w-full bg-[#E02F75] text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-[#FF5A57] transition-all">
+          <Link href="/auth/forgot-password" className="inline-block w-full bg-brand text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-accent transition-all">
             Minta Token Baru
           </Link>
           <Link href="/login" className="flex items-center justify-center gap-2 text-gray-400 hover:text-gray-900 text-[10px] font-black uppercase tracking-widest transition-colors py-2 group">
@@ -126,14 +126,14 @@ function ResetPasswordForm() {
       <div className="space-y-2">
         <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Password Baru</label>
         <div className="relative group">
-          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#E02F75] transition-colors" size={20} />
+          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand transition-colors" size={20} />
           <input
             type={showPassword ? "text" : "password"}
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
-            className="w-full pl-12 pr-12 py-4 bg-gray-50/50 border border-gray-200 rounded-2xl focus:bg-white focus:border-[#E02F75]/50 focus:ring-4 focus:ring-[#E02F75]/5 outline-none text-gray-900 font-medium transition-all shadow-sm"
+            className="w-full pl-12 pr-12 py-4 bg-gray-50/50 border border-gray-200 rounded-2xl focus:bg-white focus:border-brand/50 focus:ring-4 focus:ring-brand/5 outline-none text-gray-900 font-medium transition-all shadow-sm"
           />
           <button
             type="button"
@@ -148,14 +148,14 @@ function ResetPasswordForm() {
       <div className="space-y-2">
         <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Konfirmasi Password</label>
         <div className="relative group">
-          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#E02F75] transition-colors" size={20} />
+          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand transition-colors" size={20} />
           <input
             type={showPassword ? "text" : "password"}
             required
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             placeholder="••••••••"
-            className="w-full pl-12 pr-12 py-4 bg-gray-50/50 border border-gray-200 rounded-2xl focus:bg-white focus:border-[#E02F75]/50 focus:ring-4 focus:ring-[#E02F75]/5 outline-none text-gray-900 font-medium transition-all shadow-sm"
+            className="w-full pl-12 pr-12 py-4 bg-gray-50/50 border border-gray-200 rounded-2xl focus:bg-white focus:border-brand/50 focus:ring-4 focus:ring-brand/5 outline-none text-gray-900 font-medium transition-all shadow-sm"
           />
         </div>
       </div>
@@ -163,7 +163,7 @@ function ResetPasswordForm() {
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full bg-gradient-to-r from-[#FF5A57] via-[#E02F75] to-[#6700A3] text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:shadow-[0_12px_24px_-8px_rgba(224,47,117,0.4)] active:scale-[0.98] transition-all duration-200 disabled:opacity-70 flex items-center justify-center gap-2"
+        className="w-full bg-gradient-to-r from-accent via-brand to-brand-dark text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:shadow-[0_12px_24px_-8px_rgba(224,47,117,0.4)] active:scale-[0.98] transition-all duration-200 disabled:opacity-70 flex items-center justify-center gap-2"
       >
         {isLoading ? (
           <>
@@ -180,17 +180,17 @@ function ResetPasswordForm() {
 
 export default function ResetPasswordPage() {
   return (
-    <div className="min-h-screen w-full relative overflow-hidden bg-white flex items-center justify-center p-6 selection:bg-[#E02F75]/10">
+    <div className="min-h-screen w-full relative overflow-hidden bg-white flex items-center justify-center p-6 selection:bg-brand/10">
       <div className="relative z-10 w-full max-w-[450px]">
         <div className="mb-8 text-center">
-          <h1 className="text-4xl font-black text-gray-900 tracking-tighter mb-3">Atur Password Baru<span className="text-[#E02F75]">.</span></h1>
+          <h1 className="text-4xl font-black text-gray-900 tracking-tighter mb-3">Atur Password Baru<span className="text-brand">.</span></h1>
           <p className="text-gray-500 text-sm font-medium">Pastikan password baru Anda aman dan mudah diingat.</p>
         </div>
 
         <div className="bg-white p-10 rounded-[40px] shadow-[0_32px_80px_-16px_rgba(0,0,0,0.1)] border border-gray-100">
           <Suspense fallback={
              <div className="flex flex-col items-center justify-center py-10">
-               <Loader2 className="animate-spin text-[#E02F75] mb-4" size={40} />
+               <Loader2 className="animate-spin text-brand mb-4" size={40} />
                <p className="text-gray-500 font-bold uppercase text-[10px] tracking-widest">Loading...</p>
              </div>
           }>
@@ -199,7 +199,7 @@ export default function ResetPasswordPage() {
         </div>
 
         <p className="text-center mt-12 text-gray-400 text-[10px] font-black uppercase tracking-[0.3em]">
-          EMS<span className="text-[#E02F75]">.</span>PRO Security Protocol
+          EMS<span className="text-brand">.</span>PRO Security Protocol
         </p>
       </div>
     </div>

@@ -13,7 +13,7 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ sett
     <div className="space-y-8">
       <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
         <div className="flex items-center space-x-3 mb-6">
-          <div className="w-10 h-10 bg-gradient-to-br from-[#FF5A57] to-[#E02F75] rounded-xl flex items-center justify-center">
+          <div className="w-10 h-10 bg-gradient-to-br from-accent to-brand rounded-xl flex items-center justify-center">
             <Mail className="text-white" size={20} />
           </div>
           <div>
@@ -47,7 +47,7 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ sett
 
       <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
         <div className="flex items-center space-x-3 mb-6">
-          <div className="w-10 h-10 bg-gradient-to-br from-[#E02F75] to-[#6700A3] rounded-xl flex items-center justify-center">
+          <div className="w-10 h-10 bg-gradient-to-br from-brand to-brand-dark rounded-xl flex items-center justify-center">
             <Bell className="text-white" size={20} />
           </div>
           <div>
@@ -68,11 +68,11 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ sett
               <input
                 type={field.type || "text"}
                 defaultValue={field.val}
-                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#E02F75] outline-none"
+                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand outline-none"
               />
             </div>
           ))}
-          <button className="w-full py-3 bg-gradient-to-r from-[#E02F75] to-[#6700A3] text-white rounded-lg hover:opacity-90 transition-opacity font-bold">
+          <button className="w-full py-3 bg-gradient-to-r from-brand to-brand-dark text-white rounded-lg hover:opacity-90 transition-opacity font-bold">
             Test Email Configuration
           </button>
         </div>

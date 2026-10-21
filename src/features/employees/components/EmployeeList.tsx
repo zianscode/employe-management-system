@@ -18,9 +18,9 @@ interface EmployeeListProps {
 
 const getAvatarGradient = (index: number) => {
   const gradients = [
-    "from-pink-500 to-purple-600",
-    "from-purple-500 to-indigo-600",
-    "from-indigo-500 to-blue-600",
+    "from-brand to-brand-dark",
+    "from-accent to-accent-dark",
+    "from-brand-light to-brand",
     "from-blue-500 to-cyan-600",
     "from-cyan-500 to-teal-600",
   ];
@@ -136,14 +136,14 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
               <input
                 type="text"
                 placeholder="Cari..."
-                className="pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none w-full sm:w-80"
+                className="pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand outline-none w-full sm:w-80"
                 value={searchTerm}
                 onChange={(e) => onSearchChange(e.target.value)}
               />
             </div>
 
             <select
-              className="px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none bg-white"
+              className="px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand outline-none bg-white"
               value={statusFilter}
               onChange={(e) => onStatusChange(e.target.value)}
             >
@@ -154,7 +154,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({
             </select>
 
             <select
-              className="px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none bg-white"
+              className="px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand outline-none bg-white"
               value={divisionFilter}
               onChange={(e) => onDivisionChange(e.target.value)}
             >

@@ -13,7 +13,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings, onTo
     <div className="space-y-4">
       <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
         <div className="flex items-center space-x-3 mb-6">
-          <div className="w-10 h-10 bg-gradient-to-br from-[#FF5A57] to-[#E02F75] rounded-xl flex items-center justify-center">
+          <div className="w-10 h-10 bg-gradient-to-br from-accent to-brand rounded-xl flex items-center justify-center">
             <Settings className="text-white" size={20} />
           </div>
           <div>
@@ -28,7 +28,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings, onTo
             <input
               type="text"
               defaultValue="Employee Management System"
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#E02F75] outline-none"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand outline-none"
             />
           </div>
         </div>
@@ -36,7 +36,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ settings, onTo
 
       <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
         <div className="flex items-center space-x-3 mb-6">
-          <div className="w-10 h-10 bg-gradient-to-br from-[#E02F75] to-[#6700A3] rounded-xl flex items-center justify-center">
+          <div className="w-10 h-10 bg-gradient-to-br from-brand to-brand-dark rounded-xl flex items-center justify-center">
             <Database className="text-white" size={20} />
           </div>
           <div>

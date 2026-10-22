@@ -103,7 +103,6 @@ const nextAuth = NextAuth({
           token.picture = avatar && avatar.startsWith("data:image") && avatar.length > 2000 ? null : avatar;
         } catch (error) {
           console.error("[AUTH] DB Check Error:", error);
-          return null;
         }
       }
 

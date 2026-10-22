@@ -3,7 +3,7 @@
 import React from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Sidebar } from "./Sidebar";
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
 
 export default function LayoutProvider({
   children,
@@ -15,14 +15,6 @@ export default function LayoutProvider({
   const { data: session, status } = useSession();
   
   React.useEffect(() => {
-    if (status === "unauthenticated") {
-      const isProtectedRoute = pathname.startsWith("/dashboard") || pathname === "/onboarding";
-      if (isProtectedRoute) {
-        signOut({ callbackUrl: "/login", redirect: true });
-        return;
-      }
-    }
-
     if (status === "authenticated" && session?.user) {
       const isProfileComplete = session.user.isProfileComplete;
       const isOnDashboard = pathname.startsWith("/dashboard");

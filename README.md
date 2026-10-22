@@ -1,134 +1,150 @@
 # Employee Management System
 
-Aplikasi manajemen karyawan full-stack (frontend + backend dalam satu project) berbasis **Next.js 15 (App Router)**, **Prisma + PostgreSQL**, dan **NextAuth v5**.
+Aplikasi HR untuk mengelola data karyawan, absensi, cuti, dan penggajian. Frontend dan backend ada di satu project Next.js.
 
-## Menjalankan project
+Stack: Next.js 15 (App Router), React 19, Prisma 7 + PostgreSQL, NextAuth v5, Tailwind CSS 4.
+
+## Instalasi
+
+Siapkan database PostgreSQL kosong, lalu buat file `.env` di root project:
+
+```env
+DATABASE_URL="postgresql://user:password@localhost:5432/ems"
+AUTH_SECRET="isi-dengan-string-acak"
+AUTH_URL="http://localhost:3000"
+SMTP_EMAIL="email@gmail.com"
+SMTP_PASSWORD="app-password-gmail"
+```
+
+`AUTH_SECRET` bisa dibuat dengan `npx auth secret`. SMTP hanya dipakai untuk email reset password.
 
 ```bash
 npm install
-npx prisma migrate dev     # buat/migrasi database
-npx prisma db seed         # isi data awal
-npm run dev                # http://localhost:3000
+npx prisma migrate deploy
+npx prisma generate
+npx prisma db seed
+npm run dev
 ```
 
-Variabel environment (`.env`): `DATABASE_URL`, `AUTH_SECRET`, `AUTH_URL`, `SMTP_EMAIL`, `SMTP_PASSWORD`.
+Buka http://localhost:3000 dan login pakai akun admin dari seed:
+
+- Email: `budisantoso@gmail.com`
+- Password: `admin123`
+
+Setelah login pertama akan diminta ganti password.
 
 ## Struktur folder
 
 ```
-prisma/                     Schema, migrasi, dan seed database
+prisma/          schema, migrasi, seed
+public/
+  brand/         logo
+  images/seed/   gambar untuk data seed
+  uploads/       file upload user (tidak masuk git)
 src/
-├── app/                    ROUTING — halaman, layout, dan API route (tipis, hanya merangkai)
-│
-├── server/                 BACKEND — hanya berjalan di server
-│   ├── auth/               Konfigurasi NextAuth (auth.ts, auth.config.ts)
-│   ├── db/                 Prisma client
-│   ├── utils/              Helper khusus server (api-response)
-│   └── modules/<modul>/
-│       ├── <modul>.actions.ts      Server Actions ("use server") — pintu masuk dari UI
-│       ├── <modul>.service.ts      Business logic (+ query Prisma)
-│       └── <modul>.repository.ts   Opsional, bila query modul cukup banyak (contoh: employees)
-│
-├── features/               FRONTEND — UI per modul
-│   └── <modul>/
-│       ├── components/     Komponen React khusus modul
-│       └── hooks/          Custom hooks (state & pemanggilan action)
-│
-├── shared/                 DIPAKAI FRONTEND & BACKEND
-│   ├── components/         Komponen UI reusable (DataTable, Modal, StatusBadge, ...)
-│   ├── providers/          React providers (NextAuthProvider)
-│   ├── types/              Tipe data per modul (*.types.ts)
-│   └── utils/              Helper murni tanpa side-effect
-│
-└── middleware.ts           Proteksi route (NextAuth)
+  app/           halaman, layout, API route
+  server/        kode yang hanya jalan di server
+    auth/        NextAuth, guard role, lockout login
+    db/          Prisma client
+    utils/
+    modules/     per modul: *.actions.ts, *.service.ts, *.repository.ts
+  features/      komponen dan hook per modul
+  shared/        types, constants, utils, komponen umum
+  middleware.ts
 ```
 
-Modul: `attendance`, `auth`, `dashboard`, `employees`, `leave`, `onboarding`, `profile`, `reports`, `salary`, `settings`, serta `layout` (sidebar & menu, hanya frontend).
+Komponen di `features/` memanggil backend lewat `*.actions.ts` (server actions). Logika bisnis ada di `*.service.ts`. Repository hanya dipakai kalau query-nya banyak, contohnya modul employees.
 
-## Alur data
+Beberapa aturan yang dipegang:
 
-```
-app/(page)  →  features/<modul>/components  →  server/modules/<modul>/*.actions.ts
-                                                      ↓
-                                     *.service.ts  →  *.repository.ts  →  Prisma
-```
+- `features/` tidak import `server/db`, service, atau repository langsung.
+- `server/` tidak import dari `features/`.
+- Tipe yang dipakai kedua sisi taruh di `shared/types/`.
+- Import pakai alias `@/`, kecuali file di folder yang sama.
+
+Penamaan file: komponen `PascalCase.tsx`, hook `use-xxx.ts`, backend `<modul>.<peran>.ts` (misal `leave.service.ts`), tipe `<modul>.types.ts`, sisanya kebab-case.
 
 ## Database
 
-11 tabel dalam 3 kelompok (lihat `prisma/schema.prisma`):
+Lihat `prisma/schema.prisma`. Ringkasnya:
 
-| Kelompok | Tabel |
+- Akun: `User`, `Role`, `PasswordResetToken`
+- Karyawan: `Employee`, `Department`, `Position`
+- Absensi: `Attendance`, `AttendanceCorrection`, `Holiday`
+- Cuti: `LeaveRequest`
+- Gaji: `Salary`, `PayrollComponent`
+- Pengaturan: `CompanySetting`
+
+Nominal uang disimpan sebagai `Int` (rupiah). Kolom tanggal disimpan jam 00:00 UTC, sedangkan "hari ini" dan jam absen dihitung dengan zona `Asia/Jakarta` (lihat `src/shared/utils/date.ts`).
+
+## Role
+
+| Role | Akses |
 | --- | --- |
-| Akun | `User`, `Role`, `PasswordResetToken` |
-| Karyawan | `Employee`, `Department`, `Position` |
-| Operasional | `Attendance`, `LeaveRequest`, `Salary`, `CompanySetting` |
+| `SUPER_ADMIN` | semua data |
+| `HR` | semua data |
+| `MANAGER` | data sendiri dan bawahan langsung |
+| `EMPLOYEE` | data sendiri |
 
-Semua nominal uang bertipe `Int` (rupiah). Tanggal-saja disimpan sebagai tengah malam UTC; "hari ini" dan jam memakai zona waktu `Asia/Jakarta` (`src/shared/utils/date.ts`).
+Pengecekan role dilakukan di server untuk setiap action, jadi tidak cukup hanya menyembunyikan menu.
 
-## Aturan bisnis
+## Cara kerja fitur
 
-**Role & akses** (`src/shared/constants/roles.ts`)
-- `SUPER_ADMIN`, `HR`: kelola semua data. `MANAGER`: data sendiri + bawahan langsung. `EMPLOYEE`: data sendiri.
-- Setiap server action memeriksa role di server (`src/server/auth/guard.ts`), bukan hanya menu yang disembunyikan.
+### Akun
 
-**Akun & login**
-- Tidak ada registrasi publik: semua akun dibuat oleh HR/Admin lewat menu Karyawan.
-- Akun baru mendapat password sementara acak (ditampilkan sekali ke HR) dan wajib diganti saat login pertama.
-- Alur setelah login: ganti password (jika wajib) → onboarding data pribadi → dashboard.
-- Password minimal 8 karakter, berisi huruf dan angka (`src/shared/utils/password-policy.ts`).
-- 5 kali login gagal → akun terkunci 15 menit. Pesan error tidak membedakan email tidak terdaftar dan password salah.
+Tidak ada halaman register. Akun dibuat HR/Admin dari menu Karyawan dan mendapat password sementara yang hanya tampil sekali. Saat login pertama user harus ganti password, lalu mengisi onboarding, baru bisa masuk dashboard.
 
-**Karyawan**
-- Jabatan, divisi, tipe kerja, dan gaji ditetapkan HR; onboarding hanya mengisi data pribadi.
-- Gaji pokok kosong → disalin dari gaji standar jabatan.
-- Karyawan yang sudah punya riwayat absensi/cuti/gaji **tidak bisa dihapus**; ubah status ke `RESIGNED`/`TERMINATED` (otomatis tidak bisa login).
+Password minimal 8 karakter dan harus ada huruf dan angka. Setelah 5 kali salah login, akun dikunci 15 menit.
 
-**Absensi**
-- Check-in/out sekali sehari. Terlambat bila lewat jam masuk + toleransi; lewat jam pulang = lembur.
-- Tanpa catatan absensi di hari kerja: cuti disetujui → Izin/Sakit, hari sudah lewat → Tidak Hadir, hari ini → Belum Absen.
-- Hari libur (Settings → Hari Libur) dan akhir pekan tidak dihitung sebagai hari kerja di absensi, durasi cuti, dan potongan gaji.
-- Koreksi absensi: karyawan mengajukan perbaikan jam masuk/pulang (maks. 30 hari ke belakang) dengan alasan; disetujui atasan langsung atau HR/Admin. Saat disetujui, status dihitung ulang dengan rumus yang sama (`attendance.rules.ts`).
+### Karyawan
 
-**Cuti**
-- `PENDING` → (atasan langsung) `MANAGER_APPROVED` → (HR/Admin) `HR_APPROVED` (final). HR/Admin boleh langsung final.
-- Ditolak wajib dengan alasan; pemohon bisa membatalkan selama belum final. Tidak boleh menyetujui cuti sendiri (kecuali SUPER_ADMIN).
-- Durasi = hari kerja (Senin–Jumat). Sisa cuti tahunan = `leaveQuota` − cuti tahunan disetujui di tahun berjalan (reset otomatis tiap tahun).
+Jabatan, divisi, tipe kerja, dan gaji diisi HR. Kalau gaji pokok dikosongkan, nilainya diambil dari gaji standar jabatan.
 
-**Gaji** (aturan Indonesia, `src/server/modules/salary/payroll.rules.ts`)
-- HR/Admin menekan "Hitung Gaji" per periode untuk semua karyawan aktif. Slip yang sudah ditandai dibayar tidak dihitung ulang.
-- Komponen: gaji pokok + tunjangan tetap (per karyawan, di halaman detail karyawan) + lembur − potongan cuti diluar tanggungan − potongan tetap − iuran BPJS karyawan − PPh 21.
-- BPJS: Kesehatan 4% perusahaan / 1% karyawan (dasar maks. Rp12 jt); JHT 3,7% / 2%; JP 2% / 1% (dasar maks. diatur di Settings, Rp11.086.300 per Maret 2026); JKK 0,24–1,74% dan JKM 0,3% perusahaan. Dasar iuran = gaji pokok + tunjangan tetap.
-- PPh 21 (PP 58/2023, PMK 168/2023): Januari–November memakai tarif efektif rata-rata (TER) kategori A/B/C sesuai status PTKP; Desember dihitung ulang setahun dengan tarif Pasal 17 (bruto − biaya jabatan 5% maks. Rp6 jt − iuran JHT & JP karyawan − PTKP), dikurangi PPh yang sudah dipotong. Bruto PPh 21 termasuk premi JKK, JKM, dan BPJS Kesehatan yang dibayar perusahaan.
-- Slip gaji menyimpan rincian komponen saat dihitung, bisa dicetak/disimpan PDF dari menu Payroll. Karyawan hanya melihat slip miliknya.
-- Belum ditangani: karyawan resign di tengah tahun (perhitungan masa pajak terakhir), insentif PPh 21 DTP (PMK 105/2025), THR/bonus, pegawai tidak tetap.
+Karyawan yang sudah punya data absensi, cuti, atau gaji tidak bisa dihapus. Ubah statusnya ke `RESIGNED` atau `TERMINATED`, nanti dia otomatis tidak bisa login.
 
-**Organisasi** (menu Organization, HR/Admin)
-- Kelola divisi dan jabatan beserta gaji pokok standar. Divisi/jabatan yang masih dipakai karyawan tidak bisa dihapus.
-- Mengubah gaji standar jabatan tidak mengubah gaji karyawan yang sudah ada.
+### Absensi
 
-**Laporan** (menu Reports, HR/Admin/Manager) per bulan, bisa diekspor ke CSV
-- Absensi: rekap per karyawan + tren 6 bulan (status harian dihitung dengan aturan yang sama dengan halaman Absensi).
-- Gaji (HR/Admin saja): total, per divisi, tren 6 bulan.
-- Karyawan: per status/divisi/tipe kerja, karyawan baru, masa percobaan.
-- Cuti: hari cuti disetujui per jenis dan per karyawan.
-- Manager hanya melihat data dirinya dan bawahan langsung.
+Check-in dan check-out sekali sehari. Telat kalau lewat jam masuk + toleransi, lembur kalau pulang lewat jam pulang. Kalau di hari kerja tidak ada absen: tercatat Izin/Sakit jika ada cuti yang disetujui, Tidak Hadir jika harinya sudah lewat.
 
-**Pengaturan** (Settings → Perusahaan): jam kerja, toleransi telat, tarif lembur, hari kerja per bulan, jatah cuti default.
+Akhir pekan dan hari libur (diatur di Settings > Hari Libur) tidak dihitung hari kerja, baik untuk absensi, durasi cuti, maupun potongan gaji.
 
-## Aturan kode
+Karyawan bisa mengajukan koreksi jam masuk/pulang untuk 30 hari terakhir. Yang menyetujui atasan langsung atau HR/Admin.
 
-- Kode di `features/` **tidak boleh** mengimpor `server/db` atau `*.service.ts`/`*.repository.ts` secara langsung. Akses backend hanya lewat `*.actions.ts`.
-- Kode di `server/` **tidak boleh** mengimpor dari `features/`.
-- Tipe yang dipakai di dua sisi diletakkan di `shared/types/`.
+### Cuti
 
-## Konvensi penamaan
+Alurnya `PENDING` > `MANAGER_APPROVED` (atasan) > `HR_APPROVED` (HR/Admin). HR/Admin bisa langsung approve sampai final. Penolakan wajib diberi alasan, dan pengaju bisa membatalkan selama belum final.
 
-| Jenis | Format | Contoh |
-| --- | --- | --- |
-| Komponen React | `PascalCase.tsx` | `EmployeeForm.tsx` |
-| Hook | `use-kebab-case.ts` | `use-attendance.ts` |
-| File backend | `<modul>.<peran>.ts` | `employee.service.ts` |
-| Tipe | `<modul>.types.ts` | `leave.types.ts` |
-| Utilitas | `kebab-case.ts` | `position-department.ts` |
+Durasi cuti dihitung dalam hari kerja. Sisa cuti tahunan = `leaveQuota` dikurangi cuti tahunan yang disetujui di tahun yang sama.
 
-Import gunakan alias `@/` (contoh: `@/server/modules/leave/leave.actions`), kecuali file dalam folder yang sama (`./`).
+### Gaji
+
+HR/Admin klik "Hitung Gaji" per periode, semua karyawan aktif dihitung sekaligus. Slip yang sudah ditandai dibayar tidak akan dihitung ulang.
+
+Gaji bersih = gaji pokok + tunjangan tetap + lembur - potongan cuti di luar tanggungan - potongan tetap - BPJS karyawan - PPh 21. Tunjangan dan potongan tetap diatur per karyawan di halaman detail karyawan.
+
+Tarif BPJS:
+
+| Program | Perusahaan | Karyawan | Batas dasar |
+| --- | --- | --- | --- |
+| Kesehatan | 4% | 1% | Rp12.000.000 |
+| JHT | 3,7% | 2% | - |
+| JP | 2% | 1% | Rp11.086.300 (bisa diubah di Settings) |
+| JKK | 0,24% - 1,74% | - | - |
+| JKM | 0,3% | - | - |
+
+PPh 21 mengikuti PP 58/2023 dan PMK 168/2023. Januari sampai November pakai TER kategori A/B/C sesuai status PTKP. Desember dihitung ulang setahun pakai tarif Pasal 17, lalu dikurangi pajak yang sudah dipotong sebelumnya. Rumusnya ada di `src/server/modules/salary/payroll.rules.ts`.
+
+Slip gaji bisa dicetak atau disimpan sebagai PDF. Karyawan hanya bisa lihat slip miliknya.
+
+### Organisasi dan laporan
+
+Menu Organization untuk mengelola divisi dan jabatan. Mengubah gaji standar jabatan tidak mengubah gaji karyawan yang sudah ada.
+
+Menu Reports berisi laporan bulanan absensi, gaji, karyawan, dan cuti, semuanya bisa diekspor ke CSV. Laporan gaji hanya untuk HR/Admin, manager hanya melihat timnya.
+
+## Belum dikerjakan
+
+- Perhitungan pajak untuk karyawan yang resign di tengah tahun
+- PPh 21 DTP (PMK 105/2025)
+- THR dan bonus
+- Karyawan tidak tetap / harian

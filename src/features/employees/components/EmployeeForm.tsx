@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { User, Mail, Briefcase, Building2, Calendar, Shield, ArrowLeft, Save, Wallet, UserCheck } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { EmployeeStatus } from "@prisma/client";
 
@@ -10,20 +10,19 @@ import { ROLE_DESCRIPTIONS, ROLES, RoleName } from "@/shared/constants/roles";
 import { PTKP_OPTIONS } from "@/shared/constants/payroll";
 import { getRolesAction } from "@/server/modules/employees/employee.actions";
 import { EmployeeFormData, OrgOption } from "@/shared/types/employee.types";
+import { PageHeader } from "@/shared/components/ui/Page";
+import { Card, CardBody, CardHeader } from "@/shared/components/ui/Card";
+import { Field, Input, Select } from "@/shared/components/ui/Form";
+import { Button } from "@/shared/components/ui/Button";
 
 interface EmployeeFormProps {
-  initialData?: Partial<EmployeeFormData>; 
+  initialData?: Partial<EmployeeFormData>;
   onSubmit: (data: EmployeeFormData) => Promise<void>;
   title: string;
   isSubmitting?: boolean;
 }
 
-const EmployeeForm: React.FC<EmployeeFormProps> = ({
-  initialData,
-  onSubmit,
-  title,
-  isSubmitting = false,
-}) => {
+const EmployeeForm: React.FC<EmployeeFormProps> = ({ initialData, onSubmit, title, isSubmitting = false }) => {
   const router = useRouter();
   const [orgData, setOrgData] = useState<{
     departments: OrgOption[];
@@ -34,7 +33,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
     departments: [],
     positions: [],
     managers: [],
-    roles: []
+    roles: [],
   });
 
   const [formData, setFormData] = useState<EmployeeFormData>({
@@ -62,17 +61,14 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
       const bDate = formData.birthDate.replace(/-/g, "");
       const jDate = formData.joinDate.replace(/-/g, "").substring(0, 6);
       const genderCode = formData.gender === "MALE" ? "1" : "2";
-      
-      const sequence = "001"; 
-      
-      const generatedNip = `${bDate}${jDate}${genderCode}${sequence}`;
-      setFormData(prev => ({ ...prev, nip: generatedNip }));
+      const sequence = "001";
+      setFormData((prev) => ({ ...prev, nip: `${bDate}${jDate}${genderCode}${sequence}` }));
     }
   }, [formData.birthDate, formData.joinDate, formData.gender, initialData?.nip]);
 
   useEffect(() => {
     if (formData.positionId && formData.positionId !== "OTHER") {
-      const selectedPos = orgData.positions.find(p => p.id === formData.positionId);
+      const selectedPos = orgData.positions.find((p) => p.id === formData.positionId);
       if (selectedPos) {
         const mapping: Record<string, string> = {
           "Chief Executive Officer": "Direksi",
@@ -81,9 +77,9 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
         };
         const targetDeptName = mapping[selectedPos.name];
         if (targetDeptName) {
-          const targetDept = orgData.departments.find(d => d.name === targetDeptName);
+          const targetDept = orgData.departments.find((d) => d.name === targetDeptName);
           if (targetDept) {
-            setFormData(prev => ({ ...prev, departmentId: targetDept.id }));
+            setFormData((prev) => ({ ...prev, departmentId: targetDept.id }));
           }
         }
       }
@@ -95,12 +91,12 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
       const data = await getOrgDataAction();
       const rolesRes = await getRolesAction();
       const rolesData = rolesRes.success && rolesRes.data ? rolesRes.data : [];
-      
+
       setOrgData({ ...data, roles: rolesData });
-      
+
       if (!initialData) {
         const empRole = rolesData.find((r) => r.name === ROLES.EMPLOYEE);
-        if (empRole) setFormData(prev => ({ ...prev, roleId: empRole.id }));
+        if (empRole) setFormData((prev) => ({ ...prev, roleId: empRole.id }));
       }
     };
     fetchOrgData();
@@ -116,343 +112,197 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
     await onSubmit({ ...formData, managerId: formData.managerId || null });
   };
 
+  const selectedRoleName = orgData.roles.find((r) => r.id === formData.roleId)?.name as RoleName | undefined;
+
   return (
-    <div className="w-full">
-      <button 
-        onClick={() => router.back()}
-        className="flex items-center gap-2 text-gray-500 hover:text-brand transition-colors mb-6 group"
-      >
-        <div className="p-2 rounded-xl bg-gray-100 group-hover:bg-brand/10 transition-all">
-          <ArrowLeft size={18} />
-        </div>
-        <span className="font-bold text-sm">Kembali</span>
-      </button>
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <PageHeader
+        title={title}
+        description="Data dengan tanda * wajib diisi"
+        back={
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Kembali
+          </button>
+        }
+      />
 
-      <div className="bg-white rounded-[32px] shadow-xl border border-gray-100 overflow-hidden">
-        <div className="px-10 py-8 bg-gradient-to-r from-accent via-brand to-brand-dark text-white">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-white/20 backdrop-blur-md rounded-2xl border border-white/30">
-              <User size={28} />
+      <Card>
+        <CardHeader title="Data pribadi" />
+        <CardBody className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field label="Nama lengkap" htmlFor="name" required>
+            <Input id="name" name="name" required value={formData.name} onChange={handleChange} placeholder="Budi Santoso" />
+          </Field>
+          <Field label="Email kantor" htmlFor="email" required>
+            <Input id="email" type="email" name="email" required value={formData.email} onChange={handleChange} placeholder="budi@perusahaan.com" />
+          </Field>
+          <Field label="Jenis kelamin" htmlFor="gender">
+            <Select id="gender" name="gender" value={formData.gender} onChange={handleChange}>
+              <option value="MALE">Laki-laki</option>
+              <option value="FEMALE">Perempuan</option>
+            </Select>
+          </Field>
+          <Field label="Tanggal lahir" htmlFor="birthDate" required>
+            <Input id="birthDate" type="date" name="birthDate" required value={formData.birthDate} onChange={handleChange} />
+          </Field>
+          <Field label="NIP" htmlFor="nip" hint="Dibuat otomatis dari tanggal lahir, tanggal bergabung, dan jenis kelamin">
+            <Input id="nip" name="nip" readOnly disabled value={formData.nip} className="tabular-nums" />
+          </Field>
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardHeader title="Pekerjaan" />
+        <CardBody className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field label="Jabatan" htmlFor="positionId" required>
+            <Select id="positionId" name="positionId" required value={formData.positionId} onChange={handleChange}>
+              <option value="" disabled>
+                Pilih jabatan
+              </option>
+              {orgData.positions.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+              <option value="OTHER">Lainnya</option>
+            </Select>
+          </Field>
+          {formData.positionId === "OTHER" && (
+            <Field label="Nama jabatan baru" htmlFor="customPosition" required>
+              <Input
+                id="customPosition"
+                name="customPosition"
+                required
+                value={formData.customPosition}
+                onChange={handleChange}
+                placeholder="Misal: Staff Gudang"
+              />
+            </Field>
+          )}
+          <Field label="Divisi" htmlFor="departmentId">
+            <Select id="departmentId" name="departmentId" value={formData.departmentId} onChange={handleChange}>
+              <option value="" disabled>
+                Pilih divisi
+              </option>
+              {orgData.departments.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Tipe kerja" htmlFor="employmentType" required>
+            <Select id="employmentType" name="employmentType" required value={formData.employmentType} onChange={handleChange}>
+              <option value="FULL_TIME">Full time</option>
+              <option value="PART_TIME">Part time</option>
+              <option value="CONTRACT">Kontrak</option>
+              <option value="INTERNSHIP">Magang</option>
+              <option value="REMOTE">Remote</option>
+              <option value="FREELANCE">Freelance</option>
+            </Select>
+          </Field>
+          <Field label="Status" htmlFor="status">
+            <Select id="status" name="status" value={formData.status} onChange={handleChange}>
+              <option value="ACTIVE">Aktif</option>
+              <option value="PROBATION">Masa percobaan</option>
+              <option value="RESIGNED">Resign</option>
+              <option value="TERMINATED">Diberhentikan</option>
+            </Select>
+          </Field>
+          <Field label="Tanggal bergabung" htmlFor="joinDate" required>
+            <Input id="joinDate" type="date" name="joinDate" required value={formData.joinDate} onChange={handleChange} />
+          </Field>
+          <Field label="Atasan langsung" htmlFor="managerId" hint="Atasan menyetujui cuti lebih dulu sebelum HR">
+            <Select id="managerId" name="managerId" value={formData.managerId || ""} onChange={handleChange}>
+              <option value="">Tidak ada</option>
+              {orgData.managers.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field
+            label="Hak akses"
+            htmlFor="roleId"
+            required
+            hint={selectedRoleName ? ROLE_DESCRIPTIONS[selectedRoleName] : undefined}
+          >
+            <Select id="roleId" name="roleId" required value={formData.roleId} onChange={handleChange}>
+              <option value="" disabled>
+                Pilih hak akses
+              </option>
+              {orgData.roles.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardHeader title="Gaji dan pajak" />
+        <CardBody className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field label="Gaji pokok (Rp)" htmlFor="salaryBase" hint="Kosongkan untuk memakai gaji standar jabatan">
+            <Input
+              id="salaryBase"
+              type="number"
+              name="salaryBase"
+              min={0}
+              step={1000}
+              value={formData.salaryBase || ""}
+              onChange={handleChange}
+              className="tabular-nums"
+            />
+          </Field>
+          <Field label="Status PTKP" htmlFor="ptkpStatus">
+            <Select id="ptkpStatus" name="ptkpStatus" value={formData.ptkpStatus} onChange={handleChange}>
+              {PTKP_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <fieldset className="sm:col-span-2">
+            <legend className="mb-2 text-sm font-medium text-gray-700">Kepesertaan BPJS</legend>
+            <div className="space-y-2">
+              {(
+                [
+                  ["bpjsKesehatan", "BPJS Kesehatan"],
+                  ["bpjsKetenagakerjaan", "BPJS Ketenagakerjaan (JHT, JP, JKK, JKM)"],
+                ] as const
+              ).map(([field, label]) => (
+                <label key={field} className="flex items-center gap-2 text-sm text-gray-700">
+                  <input
+                    type="checkbox"
+                    checked={formData[field]}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, [field]: e.target.checked }))}
+                    className="h-4 w-4 rounded border-gray-300 accent-brand"
+                  />
+                  {label}
+                </label>
+              ))}
             </div>
-            <div>
-              <h1 className="text-2xl font-black tracking-tight">{title}</h1>
-              <p className="text-white/70 text-sm font-medium">Lengkapi informasi detail karyawan Anda</p>
-            </div>
-          </div>
-        </div>
+          </fieldset>
+        </CardBody>
+      </Card>
 
-        <form onSubmit={handleSubmit} className="p-10">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-            <div className="space-y-6">
-              <h3 className="text-sm font-black uppercase tracking-[0.2em] text-gray-400 mb-4">Informasi Pribadi</h3>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-700 ml-1">Nama Lengkap</label>
-                <div className="relative group">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand transition-colors" size={20} />
-                  <input
-                    type="text"
-                    name="name"
-                    required
-                    value={formData.name}
-                    onChange={handleChange}
-                    placeholder="Contoh: Budi Santoso"
-                    className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-brand/50 focus:ring-4 focus:ring-brand/5 outline-none transition-all font-medium"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-700 ml-1">Email Kantor</label>
-                <div className="relative group">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand transition-colors" size={20} />
-                  <input
-                    type="email"
-                    name="email"
-                    required
-                    value={formData.email}
-                    onChange={handleChange}
-                    placeholder="budi@company.com"
-                    className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-brand/50 focus:ring-4 focus:ring-brand/5 outline-none transition-all font-medium"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-gray-700 ml-1">Jenis Kelamin</label>
-                  <select
-                    name="gender"
-                    value={formData.gender}
-                    onChange={handleChange}
-                    className="w-full px-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-brand/50 outline-none transition-all font-medium cursor-pointer"
-                  >
-                    <option value="MALE">Laki-laki</option>
-                    <option value="FEMALE">Perempuan</option>
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-gray-700 ml-1">Tanggal Lahir</label>
-                  <input
-                    type="date"
-                    name="birthDate"
-                    required
-                    value={formData.birthDate}
-                    onChange={handleChange}
-                    className="w-full px-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-brand/50 outline-none transition-all font-medium"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-700 ml-1">NIP (Auto-Generated)</label>
-                <div className="relative group">
-                  <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                  <input
-                    type="text"
-                    name="nip"
-                    readOnly
-                    value={formData.nip}
-                    placeholder="NIP akan terisi otomatis..."
-                    className="w-full pl-12 pr-4 py-4 bg-gray-100 border border-gray-100 rounded-2xl text-gray-500 font-bold cursor-not-allowed"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-6">
-              <h3 className="text-sm font-black uppercase tracking-[0.2em] text-gray-400 mb-4">Detail Pekerjaan</h3>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-700 ml-1">Jabatan</label>
-                <div className="relative group">
-                  <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand transition-colors" size={20} />
-                  <select
-                    name="positionId"
-                    required
-                    value={formData.positionId}
-                    onChange={handleChange}
-                    className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-brand/50 focus:ring-4 focus:ring-brand/5 outline-none transition-all font-medium cursor-pointer"
-                  >
-                    <option value="" disabled>Pilih Jabatan</option>
-                    {orgData.positions.map(p => (
-                      <option key={p.id} value={p.id}>{p.name}</option>
-                    ))}
-                    <option value="OTHER">Lainnya...</option>
-                  </select>
-                </div>
-              </div>
-
-              {formData.positionId === "OTHER" && (
-                <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                  <label className="text-sm font-bold text-brand ml-1">Nama Jabatan Kustom</label>
-                  <div className="relative group">
-                    <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 text-brand" size={20} />
-                    <input
-                      type="text"
-                      name="customPosition"
-                      required
-                      value={formData.customPosition}
-                      onChange={handleChange}
-                      placeholder="Masukkan nama jabatan baru..."
-                      className="w-full pl-12 pr-4 py-4 bg-white border-2 border-brand/30 rounded-2xl focus:border-brand outline-none transition-all font-bold text-sm"
-                    />
-                  </div>
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-700 ml-1">Tipe Pekerjaan</label>
-                <div className="relative group">
-                  <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand transition-colors" size={20} />
-                  <select
-                    name="employmentType"
-                    required
-                    value={formData.employmentType}
-                    onChange={handleChange}
-                    className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-brand/50 focus:ring-4 focus:ring-brand/5 outline-none transition-all font-medium cursor-pointer"
-                  >
-                    <option value="FULL_TIME">Full Time</option>
-                    <option value="PART_TIME">Part Time</option>
-                    <option value="CONTRACT">Contract</option>
-                    <option value="INTERNSHIP">Internship</option>
-                    <option value="REMOTE">Remote</option>
-                    <option value="FREELANCE">Freelance</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-700 ml-1">Hak Akses (Role)</label>
-                <div className="relative group">
-                  <Shield className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand transition-colors" size={20} />
-                  <select
-                    name="roleId"
-                    required
-                    value={formData.roleId}
-                    onChange={handleChange}
-                    className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-brand/50 focus:ring-4 focus:ring-brand/5 outline-none transition-all font-medium cursor-pointer"
-                  >
-                    <option value="" disabled>Pilih Hak Akses</option>
-                    {orgData.roles.map(r => (
-                      <option key={r.id} value={r.id}>{r.name}</option>
-                    ))}
-                  </select>
-                </div>
-                
-                {formData.roleId && (
-                  <div className="mt-3 p-3 bg-gray-50 border border-gray-100 rounded-xl">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Cakupan Akses:</p>
-                    <p className="text-[11px] font-medium text-gray-600">
-                      {ROLE_DESCRIPTIONS[orgData.roles.find(r => r.id === formData.roleId)?.name as RoleName]}
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-gray-700 ml-1">Divisi</label>
-                  <div className="relative group">
-                    <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand transition-colors" size={20} />
-                    <select
-                      name="departmentId"
-                      value={formData.departmentId}
-                      onChange={handleChange}
-                      className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-brand/50 outline-none transition-all font-medium cursor-pointer"
-                    >
-                      <option value="" disabled>Pilih Divisi</option>
-                      {orgData.departments.map(d => (
-                        <option key={d.id} value={d.id}>{d.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-gray-700 ml-1">Status</label>
-                  <select
-                    name="status"
-                    value={formData.status}
-                    onChange={handleChange}
-                    className="w-full px-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-brand/50 outline-none transition-all font-medium cursor-pointer"
-                  >
-                    <option value="ACTIVE">Aktif</option>
-                    <option value="PROBATION">Probation</option>
-                    <option value="RESIGNED">Resign</option>
-                    <option value="TERMINATED">Terminated</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-700 ml-1">Tanggal Bergabung</label>
-                <div className="relative group">
-                  <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand transition-colors" size={20} />
-                  <input
-                    type="date"
-                    name="joinDate"
-                    required
-                    value={formData.joinDate}
-                    onChange={handleChange}
-                    className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-brand/50 outline-none transition-all font-medium"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-700 ml-1">Atasan Langsung</label>
-                <div className="relative group">
-                  <UserCheck className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand transition-colors" size={20} />
-                  <select
-                    name="managerId"
-                    value={formData.managerId || ""}
-                    onChange={handleChange}
-                    className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-brand/50 outline-none transition-all font-medium cursor-pointer"
-                  >
-                    <option value="">Tidak ada (cuti langsung ke HR)</option>
-                    {orgData.managers.map(m => (
-                      <option key={m.id} value={m.id}>{m.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <p className="text-[11px] text-gray-500 ml-1">Atasan menyetujui cuti tahap pertama sebelum persetujuan final HR.</p>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-700 ml-1">Gaji Pokok (Rp)</label>
-                <div className="relative group">
-                  <Wallet className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand transition-colors" size={20} />
-                  <input
-                    type="number"
-                    name="salaryBase"
-                    min={0}
-                    step={1000}
-                    value={formData.salaryBase || ""}
-                    onChange={handleChange}
-                    placeholder="Kosongkan untuk memakai gaji standar jabatan"
-                    className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-brand/50 outline-none transition-all font-medium"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-700 ml-1">Status PTKP (Pajak)</label>
-                <select
-                  name="ptkpStatus"
-                  value={formData.ptkpStatus}
-                  onChange={handleChange}
-                  className="w-full px-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-brand/50 outline-none transition-all font-medium cursor-pointer"
-                >
-                  {PTKP_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>{option.label}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-700 ml-1">Kepesertaan BPJS</label>
-                <div className="flex flex-col gap-2 px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl">
-                  {([
-                    ["bpjsKesehatan", "BPJS Kesehatan"],
-                    ["bpjsKetenagakerjaan", "BPJS Ketenagakerjaan (JHT, JP, JKK, JKM)"],
-                  ] as const).map(([field, label]) => (
-                    <label key={field} className="flex items-center gap-3 text-sm font-medium text-gray-700 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={formData[field]}
-                        onChange={(e) => setFormData((prev) => ({ ...prev, [field]: e.target.checked }))}
-                        className="w-4 h-4 accent-brand"
-                      />
-                      {label}
-                    </label>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-12 flex justify-end gap-4 border-t border-gray-50 pt-8">
-            <button
-              type="button"
-              onClick={() => router.back()}
-              className="px-8 py-4 text-gray-500 font-bold hover:bg-gray-50 rounded-2xl transition-all active:scale-95"
-            >
-              Batal
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="flex items-center gap-3 px-10 py-4 bg-gradient-to-r from-brand to-brand-dark text-white rounded-2xl font-bold shadow-xl shadow-brand/20 hover:shadow-2xl hover:translate-y-[-2px] transition-all active:scale-95 disabled:opacity-50"
-            >
-              <Save size={20} />
-              <span>{isSubmitting ? "Menyimpan..." : initialData ? "Simpan Perubahan" : "Daftarkan Karyawan"}</span>
-            </button>
-          </div>
-        </form>
+      <div className="flex justify-end gap-2">
+        <Button variant="secondary" onClick={() => router.back()}>
+          Batal
+        </Button>
+        <Button type="submit" loading={isSubmitting}>
+          {initialData ? "Simpan perubahan" : "Simpan karyawan"}
+        </Button>
       </div>
-    </div>
+    </form>
   );
 };
 

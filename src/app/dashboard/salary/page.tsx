@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Search, Filter, Calendar, Calculator, CheckCircle2, FileText } from "lucide-react";
+import { Calculator, Search } from "lucide-react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
@@ -12,6 +12,19 @@ import { SalaryRecord } from "@/shared/types/salary.types";
 import { isAdminRole } from "@/shared/constants/roles";
 import { formatCurrency } from "@/shared/utils/format";
 import { generatePayrollAction, markSalaryPaidAction } from "@/server/modules/salary/salary.actions";
+import { Page, PageHeader } from "@/shared/components/ui/Page";
+import { Card } from "@/shared/components/ui/Card";
+import { Button } from "@/shared/components/ui/Button";
+import { Input, Select } from "@/shared/components/ui/Form";
+import { Badge } from "@/shared/components/ui/Badge";
+
+type SalaryColumn = {
+  header: string;
+  accessor: keyof SalaryRecord | ((item: SalaryRecord) => React.ReactNode);
+  className?: string;
+};
+
+const money = (value: number) => <span className="tabular-nums">{formatCurrency(value)}</span>;
 
 export default function SalaryPage() {
   const { data: session } = useSession();
@@ -51,146 +64,103 @@ export default function SalaryPage() {
     setIsProcessing(false);
   };
 
-  const columns: { header: string; accessor: keyof SalaryRecord | ((item: SalaryRecord) => React.ReactNode); className?: string }[] = [
-    { header: "NIP", accessor: "nip", className: "font-medium" },
-    { header: "Nama", accessor: "name", className: "font-medium" },
-    { header: "Jabatan", accessor: "position" },
-    { header: "Gaji Pokok", accessor: (item) => formatCurrency(item.basicSalary), className: "text-right" },
-    { header: "Tunjangan", accessor: (item) => formatCurrency(item.allowance), className: "text-right" },
-    { header: "Lembur", accessor: (item) => formatCurrency(item.overtimePay), className: "text-right" },
-    { header: "BPJS", accessor: (item) => formatCurrency(item.bpjsEmployee), className: "text-right" },
-    { header: "PPh 21", accessor: (item) => formatCurrency(item.pph21), className: "text-right" },
-    { header: "Potongan Lain", accessor: (item) => formatCurrency(item.deduction), className: "text-right" },
-    { header: "Diterima", accessor: (item) => formatCurrency(item.totalSalary), className: "text-right font-bold" },
+  const columns: SalaryColumn[] = [
+    {
+      header: "Karyawan",
+      accessor: (item) => (
+        <div>
+          <p className="font-medium text-gray-900">{item.name}</p>
+          <p className="text-xs text-gray-500">{item.position}</p>
+        </div>
+      ),
+    },
+    { header: "Gaji pokok", accessor: (item) => money(item.basicSalary), className: "text-right" },
+    { header: "Tunjangan", accessor: (item) => money(item.allowance), className: "text-right" },
+    { header: "Lembur", accessor: (item) => money(item.overtimePay), className: "text-right" },
+    { header: "BPJS", accessor: (item) => money(item.bpjsEmployee), className: "text-right" },
+    { header: "PPh 21", accessor: (item) => money(item.pph21), className: "text-right" },
+    { header: "Potongan lain", accessor: (item) => money(item.deduction), className: "text-right" },
+    {
+      header: "Diterima",
+      accessor: (item) => <span className="font-medium text-gray-900">{money(item.totalSalary)}</span>,
+      className: "text-right",
+    },
     {
       header: "Status",
+      accessor: (item) =>
+        item.status === "Dibayar" ? <Badge tone="green">Dibayar</Badge> : <Badge tone="yellow">Belum dibayar</Badge>,
+    },
+    {
+      header: "",
+      className: "text-right",
       accessor: (item) => (
-        <span
-          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-            item.status === "Dibayar" ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"
-          }`}
-        >
-          {item.status}
-        </span>
+        <div className="flex items-center justify-end gap-2">
+          {isAdmin && item.status === "Pending" && (
+            <Button size="sm" variant="secondary" onClick={() => run(() => markSalaryPaidAction(item.id))} disabled={isProcessing}>
+              Tandai dibayar
+            </Button>
+          )}
+          <Link href={`/dashboard/salary/${item.id}/slip`} className="text-sm font-medium text-brand hover:underline">
+            Slip
+          </Link>
+        </div>
       ),
-      className: "text-center",
     },
   ];
 
-  columns.push({
-    header: "Slip",
-    accessor: (item) => (
-      <Link
-        href={`/dashboard/salary/${item.id}/slip`}
-        className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-brand bg-brand/10 rounded-lg hover:bg-brand/20 w-fit"
-      >
-        <FileText size={14} />
-        Lihat
-      </Link>
-    ),
-  });
-
-  if (isAdmin) {
-    columns.push({
-      header: "Aksi",
-      accessor: (item) =>
-        item.status === "Pending" ? (
-          <button
-            onClick={() => run(() => markSalaryPaidAction(item.id))}
-            disabled={isProcessing}
-            className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-green-700 bg-green-50 rounded-lg hover:bg-green-100 disabled:opacity-50"
-          >
-            <CheckCircle2 size={14} />
-            Tandai Dibayar
-          </button>
-        ) : null,
-    });
-  }
-
   return (
-    <div className="py-4 pl-8 pr-6">
-      <div className="bg-gradient-to-r from-accent via-brand to-brand-dark px-8 py-6 rounded-2xl shadow-lg">
-        <div className="flex flex-col md:flex-row justify-between items-start gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-white mb-1">{isAdmin ? "Manajemen Gaji" : "Slip Gaji Saya"}</h1>
-            <p className="text-white/80 text-sm">
-              {isAdmin ? "Hitung, kelola, dan pantau penggajian karyawan" : "Riwayat gaji Anda per periode"}
-            </p>
+    <Page>
+      <PageHeader
+        title={isAdmin ? "Penggajian" : "Gaji saya"}
+        description={isAdmin ? `Perhitungan gaji periode ${periodLabel}` : "Riwayat gaji per periode"}
+        actions={
+          isAdmin && (
+            <Button onClick={() => run(() => generatePayrollAction(month, year))} loading={isProcessing}>
+              {!isProcessing && <Calculator className="h-4 w-4" />}
+              Hitung gaji {periodLabel}
+            </Button>
+          )
+        }
+      />
+
+      <SalaryStats stats={stats} />
+
+      <Card>
+        <div className="flex flex-col gap-3 border-b border-gray-200 p-4 sm:flex-row sm:items-center">
+          <div className="relative flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <Input
+              placeholder="Cari nama atau NIP"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 sm:max-w-xs"
+            />
           </div>
-          {isAdmin && (
-            <button
-              onClick={() => run(() => generatePayrollAction(month, year))}
-              disabled={isProcessing}
-              className="bg-white text-brand hover:bg-gray-100 px-5 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 shadow-lg disabled:opacity-50"
-            >
-              <Calculator size={16} />
-              {isProcessing ? "Memproses..." : `Hitung Gaji ${periodLabel}`}
-            </button>
-          )}
-        </div>
-      </div>
-
-      <div className="space-y-4 mt-4">
-        <SalaryStats stats={stats} />
-
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100">
-          <div className="p-4 border-b border-gray-100">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-1">Data Penggajian</h2>
-                <p className="text-gray-600">Periode {periodLabel}</p>
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-3">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                  <input
-                    type="text"
-                    placeholder="Cari..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand outline-none w-full sm:w-64"
-                  />
-                </div>
-
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                  <input
-                    type="month"
-                    value={selectedMonth}
-                    onChange={(e) => e.target.value && setSelectedMonth(e.target.value)}
-                    className="pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand outline-none bg-white cursor-pointer"
-                  />
-                </div>
-
-                <div className="relative">
-                  <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="pl-10 pr-8 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand outline-none bg-white appearance-none cursor-pointer"
-                  >
-                    <option>Semua Status</option>
-                    <option>Dibayar</option>
-                    <option>Pending</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <DataTable columns={columns} data={data} />
-
-          <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-2xl">
-            <div className="flex items-center justify-between text-sm text-gray-600">
-              <span>Menampilkan {filteredCount} dari {totalCount} data</span>
-              {isAdmin && totalCount === 0 && (
-                <span>Belum ada data. Klik &quot;Hitung Gaji&quot; untuk membuat slip periode ini.</span>
-              )}
-            </div>
+          <div className="flex gap-3">
+            <Input
+              type="month"
+              value={selectedMonth}
+              onChange={(e) => e.target.value && setSelectedMonth(e.target.value)}
+              className="sm:w-44"
+            />
+            <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="sm:w-40">
+              <option value="Semua Status">Semua status</option>
+              <option value="Dibayar">Dibayar</option>
+              <option value="Pending">Belum dibayar</option>
+            </Select>
           </div>
         </div>
-      </div>
-    </div>
+
+        <DataTable
+          columns={columns}
+          data={data}
+          emptyMessage={isAdmin ? `Belum ada data gaji ${periodLabel}. Klik "Hitung gaji" untuk membuatnya.` : "Belum ada data gaji"}
+        />
+
+        <div className="border-t border-gray-200 px-4 py-3 text-sm text-gray-500">
+          {filteredCount} dari {totalCount} data
+        </div>
+      </Card>
+    </Page>
   );
 }

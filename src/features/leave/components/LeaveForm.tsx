@@ -1,12 +1,14 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Calendar, FileText, User, Loader2, Send } from "lucide-react";
 import { LeaveType } from "@prisma/client";
-import { getEmployeesForLeaveAction } from "@/server/modules/leave/leave.actions";
 import { useSession } from "next-auth/react";
+import { getEmployeesForLeaveAction } from "@/server/modules/leave/leave.actions";
 import { LeaveRequestInput } from "@/shared/types/leave.types";
 import { isAdminRole } from "@/shared/constants/roles";
+import { ModalActions } from "@/shared/components/Modal";
+import { Button } from "@/shared/components/ui/Button";
+import { Field, Input, Select, Textarea } from "@/shared/components/ui/Form";
 
 interface LeaveFormProps {
   onSubmit: (data: LeaveRequestInput) => Promise<void>;
@@ -16,7 +18,7 @@ interface LeaveFormProps {
 
 export const LeaveForm: React.FC<LeaveFormProps> = ({ onSubmit, onCancel, isSubmitting }) => {
   const { data: session } = useSession();
-  
+
   const isAdminOrHR = isAdminRole(session?.user?.role);
   const currentUserEmployeeId = session?.user?.employeeId;
 
@@ -26,13 +28,13 @@ export const LeaveForm: React.FC<LeaveFormProps> = ({ onSubmit, onCancel, isSubm
     type: "ANNUAL" as LeaveType,
     startDate: "",
     endDate: "",
-    reason: ""
+    reason: "",
   });
 
   useEffect(() => {
     async function fetchEmployees() {
       if (!isAdminOrHR && currentUserEmployeeId) {
-        setFormData(prev => ({ ...prev, employeeId: currentUserEmployeeId }));
+        setFormData((prev) => ({ ...prev, employeeId: currentUserEmployeeId }));
         return;
       }
 
@@ -41,7 +43,7 @@ export const LeaveForm: React.FC<LeaveFormProps> = ({ onSubmit, onCancel, isSubm
         const mappedData = res.success && res.data ? res.data : [];
         setEmployees(mappedData);
         if (mappedData.length > 0) {
-          setFormData(prev => ({ ...prev, employeeId: mappedData[0].id }));
+          setFormData((prev) => ({ ...prev, employeeId: mappedData[0].id }));
         }
       }
     }
@@ -55,133 +57,60 @@ export const LeaveForm: React.FC<LeaveFormProps> = ({ onSubmit, onCancel, isSubm
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-4">
       {isAdminOrHR ? (
-        <div className="space-y-2">
-          <label className="text-sm font-bold text-gray-700 ml-1">Karyawan</label>
-          <div className="relative group">
-            <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand transition-colors" size={20} />
-            <select
-              name="employeeId"
-              required
-              value={formData.employeeId}
-              onChange={handleChange}
-              className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-brand/50 outline-none transition-all font-medium cursor-pointer"
-            >
-              <option value="" disabled>Pilih Karyawan</option>
-              {employees.map(emp => (
-                <option key={emp.id} value={emp.id}>{emp.name} ({emp.nip})</option>
-              ))}
-            </select>
-          </div>
-        </div>
+        <Field label="Karyawan" htmlFor="employeeId" required>
+          <Select id="employeeId" name="employeeId" required value={formData.employeeId} onChange={handleChange}>
+            <option value="" disabled>
+              Pilih karyawan
+            </option>
+            {employees.map((emp) => (
+              <option key={emp.id} value={emp.id}>
+                {emp.name} ({emp.nip})
+              </option>
+            ))}
+          </Select>
+        </Field>
       ) : (
-        <div className="p-4 bg-brand/5 border border-brand/10 rounded-2xl">
-           <div className="flex items-center gap-3">
-              <div className="p-2 bg-white rounded-xl shadow-sm">
-                <User className="text-brand" size={18} />
-              </div>
-              <div>
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Mengajukan Sebagai</p>
-                <p className="text-sm font-bold text-gray-800">{session?.user?.name || "Diri Sendiri"}</p>
-              </div>
-           </div>
-        </div>
+        <p className="text-sm text-gray-500">
+          Diajukan atas nama <span className="font-medium text-gray-900">{session?.user?.name}</span>
+        </p>
       )}
 
-      <div className="space-y-2">
-        <label className="text-sm font-bold text-gray-700 ml-1">Jenis Cuti</label>
-        <div className="relative group">
-          <FileText className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand transition-colors" size={20} />
-          <select
-            name="type"
-            required
-            value={formData.type}
-            onChange={handleChange}
-            className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-brand/50 outline-none transition-all font-medium cursor-pointer"
-          >
-            <option value="ANNUAL">Cuti Tahunan</option>
-            <option value="SICK">Sakit</option>
-            <option value="EMERGENCY">Izin Penting</option>
-            <option value="UNPAID">Cuti Diluar Tanggungan</option>
-          </select>
-        </div>
-      </div>
+      <Field label="Jenis cuti" htmlFor="type" required>
+        <Select id="type" name="type" required value={formData.type} onChange={handleChange}>
+          <option value="ANNUAL">Cuti tahunan</option>
+          <option value="SICK">Sakit</option>
+          <option value="EMERGENCY">Izin penting</option>
+          <option value="UNPAID">Cuti di luar tanggungan</option>
+        </Select>
+      </Field>
 
       <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <label className="text-sm font-bold text-gray-700 ml-1">Tanggal Mulai</label>
-          <div className="relative group">
-            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand transition-colors" size={20} />
-            <input
-              type="date"
-              name="startDate"
-              required
-              value={formData.startDate}
-              onChange={handleChange}
-              className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-brand/50 outline-none transition-all font-medium"
-            />
-          </div>
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-bold text-gray-700 ml-1">Tanggal Selesai</label>
-          <div className="relative group">
-            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand transition-colors" size={20} />
-            <input
-              type="date"
-              name="endDate"
-              required
-              value={formData.endDate}
-              onChange={handleChange}
-              className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-brand/50 outline-none transition-all font-medium"
-            />
-          </div>
-        </div>
+        <Field label="Mulai" htmlFor="startDate" required>
+          <Input id="startDate" type="date" name="startDate" required value={formData.startDate} onChange={handleChange} />
+        </Field>
+        <Field label="Selesai" htmlFor="endDate" required>
+          <Input id="endDate" type="date" name="endDate" required value={formData.endDate} onChange={handleChange} />
+        </Field>
       </div>
 
-      <div className="space-y-2">
-        <label className="text-sm font-bold text-gray-700 ml-1">Alasan</label>
-        <textarea
-          name="reason"
-          required
-          value={formData.reason}
-          onChange={handleChange}
-          rows={3}
-          placeholder="Tuliskan alasan pengajuan cuti..."
-          className="w-full px-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-brand/50 outline-none transition-all font-medium resize-none"
-        />
-      </div>
+      <Field label="Alasan" htmlFor="reason" required>
+        <Textarea id="reason" name="reason" required value={formData.reason} onChange={handleChange} rows={3} />
+      </Field>
 
-      <div className="flex gap-3 pt-4">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="flex-1 py-4 bg-gray-100 text-gray-700 rounded-2xl font-bold hover:bg-gray-200 transition-all active:scale-[0.98]"
-        >
+      <ModalActions>
+        <Button variant="secondary" onClick={onCancel}>
           Batal
-        </button>
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="flex-1 py-4 bg-gradient-to-r from-accent to-brand text-white rounded-2xl font-bold shadow-lg shadow-brand/20 hover:shadow-xl hover:shadow-brand/30 transition-all active:scale-[0.98] disabled:opacity-70 flex items-center justify-center gap-2"
-        >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="animate-spin" size={20} />
-              Mengirim...
-            </>
-          ) : (
-            <>
-              <Send size={18} />
-              Ajukan Sekarang
-            </>
-          )}
-        </button>
-      </div>
+        </Button>
+        <Button type="submit" loading={isSubmitting}>
+          Kirim pengajuan
+        </Button>
+      </ModalActions>
     </form>
   );
 };

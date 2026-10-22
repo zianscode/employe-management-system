@@ -1,12 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { 
-  CheckCircle2, 
-  ArrowRight, 
-  ArrowLeft,
-  Loader2
-} from "lucide-react";
+import { Check } from "lucide-react";
 import { completeOnboardingAction } from "@/server/modules/onboarding/onboarding.actions";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
@@ -17,12 +12,14 @@ import { PersonalInfoStep } from "./steps/PersonalInfoStep";
 import { IdentityStep } from "./steps/IdentityStep";
 import { EmergencyStep } from "./steps/EmergencyStep";
 import { EducationStep } from "./steps/EducationStep";
+import { Card, CardBody, CardHeader } from "@/shared/components/ui/Card";
+import { Button } from "@/shared/components/ui/Button";
+import { cn } from "@/shared/utils/cn";
 
 export const OnboardingForm = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const [focusedField, setFocusedField] = useState<string | null>(null);
   const [countryCode, setCountryCode] = useState("+62");
   const [errors, setErrors] = useState<Record<string, string>>({});
   
@@ -208,7 +205,7 @@ export const OnboardingForm = () => {
     e.preventDefault();
     
     if (!validateStep(currentStep)) {
-      toast.error("Mohon lengkapi data dengan benar sebelum melanjutkan.");
+      toast.error("Masih ada data yang belum benar. Cek isian yang ditandai.");
       return;
     }
 
@@ -264,8 +261,6 @@ export const OnboardingForm = () => {
           <PersonalInfoStep
             formData={formData}
             errors={errors}
-            focusedField={focusedField}
-            setFocusedField={setFocusedField}
             handleInputChange={handleInputChange}
             handlePhoneChange={handlePhoneChange}
             countryCode={countryCode}
@@ -280,8 +275,6 @@ export const OnboardingForm = () => {
           <IdentityStep
             formData={formData}
             errors={errors}
-            focusedField={focusedField}
-            setFocusedField={setFocusedField}
             handleInputChange={handleInputChange}
           />
         );
@@ -290,8 +283,6 @@ export const OnboardingForm = () => {
           <EmergencyStep
             formData={formData}
             errors={errors}
-            focusedField={focusedField}
-            setFocusedField={setFocusedField}
             handleInputChange={handleInputChange}
           />
         );
@@ -300,8 +291,6 @@ export const OnboardingForm = () => {
           <EducationStep
             formData={formData}
             errors={errors}
-            focusedField={focusedField}
-            setFocusedField={setFocusedField}
             handleInputChange={handleInputChange}
             selectedSkills={selectedSkills}
             toggleSkill={toggleSkill}
@@ -313,94 +302,54 @@ export const OnboardingForm = () => {
     }
   };
 
+  const currentTitle = STEPS.find((s) => s.id === currentStep)?.title;
+  const isLastStep = currentStep === STEPS.length;
+
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-10">
-      <div className="relative px-2">
-        <div className="absolute top-[20px] left-8 right-8 h-[1px] bg-slate-200 overflow-hidden rounded-full">
-            <div 
-              className="h-full bg-gradient-to-r from-accent to-brand transition-all duration-700 ease-in-out shadow-[0_0_10px_rgba(224,47,117,0.3)]"
-              style={{ width: `${((currentStep - 1) / (STEPS.length - 1)) * 100}%` }}
-            ></div>
-        </div>
-        
-        <div className="relative flex justify-between">
-          {STEPS.map((step) => {
-            const Icon = step.icon;
-            const isActive = currentStep === step.id;
-            const isCompleted = currentStep > step.id || (currentStep === STEPS.length && step.id === STEPS.length);
-            
-            return (
-              <div key={step.id} className="flex flex-col items-center group cursor-pointer" onClick={() => step.id < currentStep && setCurrentStep(step.id)}>
-                <div 
-                  className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-500 relative z-10 ${
-                    isCompleted 
-                      ? "bg-brand text-white" 
-                      : isActive 
-                        ? "bg-white text-slate-900 shadow-[0_8px_20px_-4px_rgba(0,0,0,0.1)] border border-slate-100 scale-110" 
-                        : "bg-white text-slate-300 border border-slate-100"
-                  }`}
-                >
-                  {isCompleted ? <CheckCircle2 size={16} /> : <Icon size={16} />}
-                  
-                  {isActive && !isCompleted && (
-                    <div className="absolute -inset-1 bg-slate-100/50 rounded-xl animate-pulse -z-10"></div>
+    <div className="space-y-6">
+      <ol className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {STEPS.map((step) => {
+          const isActive = currentStep === step.id;
+          const isDone = currentStep > step.id;
+          return (
+            <li key={step.id}>
+              <button
+                type="button"
+                onClick={() => isDone && setCurrentStep(step.id)}
+                disabled={!isDone}
+                className={cn(
+                  "flex w-full items-center gap-2 border-t-2 pt-3 text-left text-sm",
+                  isActive ? "border-brand text-brand" : isDone ? "border-brand text-gray-700" : "border-gray-200 text-gray-400",
+                )}
+              >
+                <span
+                  className={cn(
+                    "flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-medium",
+                    isDone ? "bg-brand text-white" : isActive ? "border border-brand" : "border border-gray-300",
                   )}
-                </div>
-                <div className="mt-3 flex flex-col items-center">
-                   <span className={`text-[9px] font-bold uppercase tracking-[0.2em] transition-colors duration-300 ${isActive ? "text-slate-900" : "text-slate-300"}`}>
-                    Step 0{step.id}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+                >
+                  {isDone ? <Check className="h-3 w-3" /> : step.id}
+                </span>
+                <span className="font-medium">{step.title}</span>
+              </button>
+            </li>
+          );
+        })}
+      </ol>
 
-      <form 
-        onSubmit={handleSubmit} 
-        className="relative bg-white/80 backdrop-blur-xl border border-white p-8 sm:p-12 rounded-[32px] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.05)] animate-in fade-in zoom-in-95 duration-700"
-      >
-        <div className="relative z-10">
-          <div className="mb-10 text-center sm:text-left">
-            <h3 className="text-xl font-black text-slate-900 tracking-tight mb-1">
-              {STEPS.find(s => s.id === currentStep)?.title}
-            </h3>
-            <p className="text-slate-400 text-xs font-medium">
-              Mohon lengkapi data berikut dengan benar dan teliti.
-            </p>
-          </div>
-
-          {renderStepContent()}
-
-          <div className="flex flex-col sm:flex-row items-center justify-between mt-12 pt-8 border-t border-slate-100 gap-4">
-            <button
-              type="button"
-              onClick={prevStep}
-              disabled={currentStep === 1 || isLoading}
-              className={`flex items-center gap-2 px-6 py-3 rounded-xl font-black text-[9px] uppercase tracking-[0.2em] transition-all ${
-                currentStep === 1 ? "opacity-0 pointer-events-none" : "bg-slate-50 text-slate-400 hover:bg-slate-100 active:scale-95"
-              }`}
-            >
-              <ArrowLeft size={14} />
+      <form onSubmit={handleSubmit}>
+        <Card>
+          <CardHeader title={currentTitle} description={`Langkah ${currentStep} dari ${STEPS.length}`} />
+          <CardBody>{renderStepContent()}</CardBody>
+          <div className="flex items-center justify-between gap-2 border-t border-gray-200 bg-gray-50 px-5 py-3">
+            <Button variant="secondary" onClick={prevStep} disabled={isLoading} className={currentStep === 1 ? "invisible" : undefined}>
               Kembali
-            </button>
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full sm:w-auto flex items-center justify-center gap-3 px-8 py-3.5 bg-slate-900 text-white rounded-xl font-black text-[9px] uppercase tracking-[0.3em] shadow-xl shadow-slate-900/10 hover:shadow-slate-900/20 hover:-translate-y-0.5 active:scale-[0.98] transition-all disabled:opacity-50"
-            >
-              {isLoading ? (
-                <Loader2 className="animate-spin" size={16} />
-              ) : currentStep === STEPS.length ? (
-                <>Simpan Perubahan <CheckCircle2 size={16} /></>
-              ) : (
-                <>Lanjutkan <ArrowRight size={16} /></>
-              )}
-            </button>
+            </Button>
+            <Button type="submit" loading={isLoading}>
+              {isLastStep ? "Simpan dan mulai" : "Lanjut"}
+            </Button>
           </div>
-        </div>
+        </Card>
       </form>
     </div>
   );

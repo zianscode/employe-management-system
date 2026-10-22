@@ -31,21 +31,15 @@ export default function LayoutProvider({
   const isAuthPage = ["/login", "/auth", "/onboarding", "/change-password"].some((path) => pathname.startsWith(path));
   
   if (isAuthPage) {
-    return (
-      <div className="min-h-screen">
-        {children}
-      </div>
-    );
+    return <div className="min-h-screen">{children}</div>;
   }
-  
+
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50/50 print:block print:h-auto print:overflow-visible print:bg-white">
+    <div className="min-h-screen bg-gray-50 print:bg-white">
       <div className="print:hidden">
         <Sidebar />
       </div>
-      <main className="flex-1 overflow-y-auto print:overflow-visible">
-        {children}
-      </main>
+      <main className="lg:pl-60 print:pl-0">{children}</main>
     </div>
   );
 }

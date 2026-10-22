@@ -1,42 +1,47 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { ProfileData, PasswordData, UserPreferences, ActivityLogEntry, ProfileTabId } from "@/shared/types/profile.types";
+import { ProfileData, PasswordData, ProfileTabId } from "@/shared/types/profile.types";
 import { getProfileAction, updateProfileAction, updatePasswordAction } from "@/server/modules/profile/profile.actions";
+
+const EMPTY_PROFILE: ProfileData = {
+  namaLengkap: "",
+  email: "",
+  nomorTelepon: "",
+  tanggalLahir: "",
+  alamat: "",
+  idKaryawan: "",
+  departemen: "",
+  jabatan: "",
+  tanggalBergabung: "",
+  tempatLahir: "",
+  jenisKelamin: "",
+  nik: "",
+  npwp: "",
+  bankName: "",
+  bankAccount: "",
+  bankHolderName: "",
+  emergencyName: "",
+  emergencyPhone: "",
+  emergencyRelation: "",
+  education: "",
+  skills: "",
+  bio: "",
+  avatar: "",
+};
+
+const EMPTY_PASSWORD: PasswordData = { currentPassword: "", newPassword: "", confirmPassword: "" };
 
 export function useProfile() {
   const [activeTab, setActiveTab] = useState<ProfileTabId>("profil");
   const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [profileData, setProfileData] = useState<ProfileData>(EMPTY_PROFILE);
+  const [passwordData, setPasswordData] = useState<PasswordData>(EMPTY_PASSWORD);
   const { update } = useSession();
-
-  const [profileData, setProfileData] = useState<ProfileData>({
-    namaLengkap: "",
-    email: "",
-    nomorTelepon: "",
-    tanggalLahir: "",
-    alamat: "",
-    idKaryawan: "",
-    departemen: "",
-    jabatan: "",
-    tanggalBergabung: "",
-    tempatLahir: "",
-    jenisKelamin: "",
-    nik: "",
-    npwp: "",
-    bankName: "",
-    bankAccount: "",
-    bankHolderName: "",
-    emergencyName: "",
-    emergencyPhone: "",
-    emergencyRelation: "",
-    education: "",
-    skills: "",
-    bio: "",
-    avatar: "",
-  });
 
   useEffect(() => {
     async function loadProfile() {
@@ -50,55 +55,36 @@ export function useProfile() {
   }, []);
 
   const handleUpdateProfile = async () => {
+    setIsSaving(true);
     const res = await updateProfileAction(profileData);
     if (res.success) {
       await update({
         name: profileData.namaLengkap,
         image: profileData.avatar,
-        picture: profileData.avatar
+        picture: profileData.avatar,
       });
-      toast.success("Profil berhasil diperbarui!");
+      toast.success("Profil disimpan");
     } else {
-      toast.error("Gagal memperbarui profil: " + res.message);
+      toast.error("Gagal menyimpan profil: " + res.message);
     }
+    setIsSaving(false);
   };
 
   const handleUpdatePassword = async () => {
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      toast.error("Konfirmasi password baru tidak cocok!");
+      toast.error("Konfirmasi password baru tidak cocok");
       return;
     }
+    setIsSaving(true);
     const res = await updatePasswordAction(passwordData);
     if (res.success) {
-      toast.success("Password berhasil diperbarui!");
-      setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      toast.success("Password diperbarui");
+      setPasswordData(EMPTY_PASSWORD);
     } else {
       toast.error("Gagal memperbarui password: " + res.message);
     }
+    setIsSaving(false);
   };
-
-  const handleUpdatePreferences = () => {
-    toast.success("Pengaturan preferensi berhasil disimpan!");
-  };
-
-  const [passwordData, setPasswordData] = useState<PasswordData>({
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
-  });
-
-  const [preferences, setPreferences] = useState<UserPreferences>({
-    bahasa: "Bahasa Indonesia",
-    zonaWaktu: "Asia/Jakarta (WIB)",
-    formatTanggal: "DD/MM/YYYY",
-    itemPerHalaman: "10",
-  });
-
-  const activityLogs: ActivityLogEntry[] = [
-    { aktivitas: "Memperbarui Profil", waktu: new Date().toLocaleString(), ipAddress: "182.1.xxx.xxx", device: "Chrome on Windows" },
-    { aktivitas: "Login ke sistem", waktu: new Date(Date.now() - 3600000).toLocaleString(), ipAddress: "182.1.xxx.xxx", device: "Chrome on Windows" },
-    { aktivitas: "Absensi Masuk", waktu: new Date(Date.now() - 86400000).toLocaleString(), ipAddress: "182.1.xxx.xxx", device: "Chrome on Windows" },
-  ];
 
   return {
     activeTab,
@@ -107,10 +93,8 @@ export function useProfile() {
     setProfileData,
     passwordData,
     setPasswordData,
-    preferences,
-    setPreferences,
-    activityLogs,
     loading,
+    isSaving,
     showCurrentPassword,
     setShowCurrentPassword,
     showNewPassword,
@@ -119,6 +103,5 @@ export function useProfile() {
     setShowConfirmPassword,
     handleUpdateProfile,
     handleUpdatePassword,
-    handleUpdatePreferences,
   };
 }

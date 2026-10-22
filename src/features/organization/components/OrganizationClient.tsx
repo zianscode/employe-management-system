@@ -5,8 +5,12 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { DataTable } from "@/shared/components/DataTable";
-import { Modal } from "@/shared/components/Modal";
+import { Modal, ModalActions } from "@/shared/components/Modal";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
+import { PageHeader } from "@/shared/components/ui/Page";
+import { Card, CardHeader } from "@/shared/components/ui/Card";
+import { Button } from "@/shared/components/ui/Button";
+import { Field, Input, Textarea } from "@/shared/components/ui/Form";
 import { DepartmentRow, PositionRow } from "@/shared/types/organization.types";
 import { formatCurrency } from "@/shared/utils/format";
 import {
@@ -33,9 +37,6 @@ interface DeleteTarget {
 }
 
 const KIND_LABEL: Record<Kind, string> = { department: "Divisi", position: "Jabatan" };
-
-const inputClass =
-  "w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-brand/50 outline-none transition-all font-medium";
 
 interface OrganizationClientProps {
   departments: DepartmentRow[];
@@ -92,145 +93,137 @@ export function OrganizationClient({ departments, positions }: OrganizationClien
   };
 
   const actions = (kind: Kind, row: DepartmentRow | PositionRow) => (
-    <div className="flex gap-2">
-      <button onClick={() => openForm(kind, row)} className="p-1.5 bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100" title="Ubah">
-        <Pencil size={16} />
+    <div className="flex justify-end gap-1">
+      <button
+        type="button"
+        onClick={() => openForm(kind, row)}
+        className="rounded-md p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+        title="Ubah"
+      >
+        <Pencil className="h-4 w-4" />
       </button>
       <button
+        type="button"
         onClick={() => setDeleteTarget({ kind, id: row.id, name: row.name })}
-        className="p-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100"
+        className="rounded-md p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600"
         title="Hapus"
       >
-        <Trash2 size={16} />
+        <Trash2 className="h-4 w-4" />
       </button>
     </div>
   );
 
   const section = (kind: Kind, subtitle: string, table: React.ReactNode) => (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
-      <div className="flex items-center justify-between p-6 pb-4">
-        <div>
-          <h2 className="text-lg font-semibold text-gray-800">{KIND_LABEL[kind]}</h2>
-          <p className="text-gray-500 text-sm">{subtitle}</p>
-        </div>
-        <button
-          onClick={() => openForm(kind)}
-          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-brand to-brand-dark text-white rounded-xl text-sm font-bold shadow"
-        >
-          <Plus size={16} />
-          Tambah {KIND_LABEL[kind]}
-        </button>
-      </div>
+    <Card>
+      <CardHeader
+        title={KIND_LABEL[kind]}
+        description={subtitle}
+        action={
+          <Button variant="secondary" size="sm" onClick={() => openForm(kind)}>
+            <Plus className="h-4 w-4" />
+            Tambah
+          </Button>
+        }
+      />
       {table}
-    </div>
+    </Card>
   );
 
-  return (
-    <div className="space-y-4">
-      <div className="bg-gradient-to-r from-accent via-brand to-brand-dark px-8 py-6 rounded-2xl shadow-lg">
-        <h1 className="text-2xl font-bold text-white tracking-tight">Struktur Organisasi</h1>
-        <p className="text-white/80 mt-1 text-sm font-medium">Kelola divisi dan jabatan beserta gaji pokok standarnya</p>
-      </div>
+  const formTitle = form ? `${form.id ? "Ubah" : "Tambah"} ${KIND_LABEL[form.kind].toLowerCase()}` : "";
+  const deleteTitle = deleteTarget ? `Hapus ${KIND_LABEL[deleteTarget.kind].toLowerCase()}` : "";
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+  return (
+    <>
+      <PageHeader title="Organisasi" description="Divisi dan jabatan beserta gaji pokok standarnya" />
+
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
         {section(
           "department",
           `${departments.length} divisi`,
           <DataTable
             data={departments}
+            emptyMessage="Belum ada divisi"
             columns={[
-              { header: "Nama", accessor: "name", className: "font-medium" },
+              { header: "Nama", accessor: "name", className: "font-medium text-gray-900" },
               { header: "Deskripsi", accessor: (r) => r.description || "-" },
-              { header: "Karyawan Aktif", accessor: "employeeCount" },
-              { header: "Aksi", accessor: (r) => actions("department", r) },
+              { header: "Karyawan", accessor: "employeeCount", className: "tabular-nums" },
+              { header: "", accessor: (r) => actions("department", r) },
             ]}
-          />
+          />,
         )}
 
         {section(
           "position",
-          "Gaji pokok standar dipakai saat karyawan baru didaftarkan",
+          "Gaji standar dipakai saat karyawan baru didaftarkan",
           <DataTable
             data={positions}
+            emptyMessage="Belum ada jabatan"
             columns={[
-              { header: "Nama", accessor: "name", className: "font-medium" },
-              { header: "Gaji Pokok Standar", accessor: (r) => formatCurrency(r.salaryBase) },
-              { header: "Karyawan Aktif", accessor: "employeeCount" },
-              { header: "Aksi", accessor: (r) => actions("position", r) },
+              { header: "Nama", accessor: "name", className: "font-medium text-gray-900" },
+              { header: "Gaji standar", accessor: (r) => formatCurrency(r.salaryBase), className: "tabular-nums" },
+              { header: "Karyawan", accessor: "employeeCount", className: "tabular-nums" },
+              { header: "", accessor: (r) => actions("position", r) },
             ]}
-          />
+          />,
         )}
       </div>
 
-      <Modal
-        isOpen={!!form}
-        onClose={() => setForm(null)}
-        title={form ? `${form.id ? "Ubah" : "Tambah"} ${KIND_LABEL[form.kind]}` : ""}
-      >
+      <Modal isOpen={!!form} onClose={() => setForm(null)} title={formTitle}>
         {form && (
           <form onSubmit={handleSave} className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-gray-700 ml-1">Nama {KIND_LABEL[form.kind]}</label>
-              <input
-                required
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                className={inputClass}
-              />
-            </div>
+            <Field label="Nama" htmlFor="org-name" required>
+              <Input id="org-name" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+            </Field>
 
             {form.kind === "department" ? (
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-700 ml-1">Deskripsi</label>
-                <textarea
+              <Field label="Deskripsi" htmlFor="org-description">
+                <Textarea
+                  id="org-description"
                   rows={3}
                   value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  className={`${inputClass} resize-none`}
                 />
-              </div>
+              </Field>
             ) : (
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-700 ml-1">Gaji Pokok Standar (Rp)</label>
-                <input
+              <Field
+                label="Gaji pokok standar (Rp)"
+                htmlFor="org-salary"
+                required
+                hint="Mengubah nilai ini tidak mengubah gaji karyawan yang sudah ada."
+              >
+                <Input
+                  id="org-salary"
                   type="number"
                   min={0}
                   step={1000}
                   required
                   value={form.salaryBase}
                   onChange={(e) => setForm({ ...form, salaryBase: Number(e.target.value) || 0 })}
-                  className={inputClass}
+                  className="tabular-nums"
                 />
-                <p className="text-xs text-gray-500 ml-1">
-                  Mengubah nilai ini tidak mengubah gaji karyawan yang sudah ada.
-                </p>
-              </div>
+              </Field>
             )}
 
-            <div className="flex gap-3 pt-2">
-              <button type="button" onClick={() => setForm(null)} className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-2xl font-bold">
+            <ModalActions>
+              <Button variant="secondary" onClick={() => setForm(null)}>
                 Batal
-              </button>
-              <button
-                type="submit"
-                disabled={isSaving}
-                className="flex-1 py-3 bg-gradient-to-r from-brand to-brand-dark text-white rounded-2xl font-bold disabled:opacity-50"
-              >
+              </Button>
+              <Button type="submit" loading={isSaving}>
                 Simpan
-              </button>
-            </div>
+              </Button>
+            </ModalActions>
           </form>
         )}
       </Modal>
 
       <ConfirmModal
         isOpen={!!deleteTarget}
-        title={`Hapus ${deleteTarget ? KIND_LABEL[deleteTarget.kind] : ""}`}
+        title={deleteTitle}
         message={`Hapus "${deleteTarget?.name}"? Hanya bisa dihapus jika tidak ada karyawan yang memakainya.`}
         isLoading={isSaving}
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}
       />
-    </div>
+    </>
   );
 }

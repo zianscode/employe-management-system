@@ -1,7 +1,5 @@
 import { prisma } from "@/server/db/prisma";
-
-const MAX_FAILED_ATTEMPTS = 5;
-const LOCK_MINUTES = 15;
+import { LOGIN_LOCK_MINUTES, MAX_FAILED_LOGIN_ATTEMPTS } from "@/shared/constants/security";
 
 interface LockableUser {
   id: string;
@@ -15,13 +13,13 @@ export function isLocked(user: LockableUser): boolean {
 
 export async function registerFailedAttempt(user: LockableUser) {
   const attempts = user.failedLoginAttempts + 1;
-  const shouldLock = attempts >= MAX_FAILED_ATTEMPTS;
+  const shouldLock = attempts >= MAX_FAILED_LOGIN_ATTEMPTS;
 
   await prisma.user.update({
     where: { id: user.id },
     data: {
       failedLoginAttempts: shouldLock ? 0 : attempts,
-      lockedUntil: shouldLock ? new Date(Date.now() + LOCK_MINUTES * 60 * 1000) : user.lockedUntil,
+      lockedUntil: shouldLock ? new Date(Date.now() + LOGIN_LOCK_MINUTES * 60 * 1000) : user.lockedUntil,
     },
   });
 }
@@ -34,4 +32,3 @@ export async function clearFailedAttempts(user: LockableUser) {
   });
 }
 
-export const LOGIN_LOCK_MINUTES = LOCK_MINUTES;

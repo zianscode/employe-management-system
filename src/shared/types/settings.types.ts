@@ -1,16 +1,4 @@
-export interface SystemSettings {
-  autoBackup: boolean;
-  dataRetention: boolean;
-  twoFactor: boolean;
-  forcePasswordChange: boolean;
-  apiRateLimit: boolean;
-  newEmployee: boolean;
-  leaveRequest: boolean;
-  monthlyReport: boolean;
-  backupComplete: boolean;
-}
-
-export type SettingsTabId = "general" | "company" | "holidays" | "users" | "security" | "notifications" | "session";
+export type SettingsTabId = "company" | "holidays" | "users" | "security" | "session";
 
 export interface SystemUser {
   id: string;

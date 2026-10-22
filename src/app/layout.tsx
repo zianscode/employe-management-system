@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
-import { Poppins } from "next/font/google"; 
+import { Inter } from "next/font/google";
 import "./globals.css";
 import LayoutProvider from "@/features/layout/components/LayoutProvider";
 import { NextAuthProvider } from "@/shared/providers/NextAuthProvider";
 import { Toaster } from "sonner";
 
-const poppins = Poppins({
-  weight: ["300", "400", "500", "600", "700"], 
+const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-poppins", 
+  variable: "--font-inter",
 });
 
 export const metadata: Metadata = {
@@ -22,11 +21,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${poppins.className} antialiased`}>
+    <html lang="id" className={inter.variable}>
+      <body className="font-sans text-sm">
         <NextAuthProvider>
           <LayoutProvider>{children}</LayoutProvider>
-          <Toaster position="top-right" richColors />
+          <Toaster position="top-right" />
         </NextAuthProvider>
       </body>
     </html>

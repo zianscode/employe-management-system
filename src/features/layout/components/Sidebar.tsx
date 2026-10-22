@@ -1,174 +1,92 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
-import { BiChevronLeft, BiChevronRight } from "react-icons/bi";
-import { FaBars, FaTimes } from "react-icons/fa";
+import { useEffect, useState } from "react";
+import { signOut, useSession } from "next-auth/react";
+import { LogOut, Menu as MenuIcon, X } from "lucide-react";
 import Menu from "./Menu";
 import { ROLES } from "@/shared/constants/roles";
 import { BrandLogo } from "@/shared/components/BrandLogo";
+import { Avatar } from "@/shared/components/ui/Avatar";
+import { cn } from "@/shared/utils/cn";
 
 export const Sidebar = () => {
   const { data: session } = useSession();
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const pathname = usePathname();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  const asPath = usePathname();
+  const user = session?.user;
 
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 1024);
-      if (window.innerWidth >= 1024) {
-        setIsMobileOpen(false);
-      }
-    };
-
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
-
-  const handleToggle = () => {
-    if (isMobile) {
-      setIsMobileOpen(!isMobileOpen);
-    } else {
-      setIsCollapsed(!isCollapsed);
-    }
-  };
-
-  const handleCloseMobile = () => {
-    if (isMobile) {
-      setIsMobileOpen(false);
-    }
-  };
+    setIsMobileOpen(false);
+  }, [pathname]);
 
   return (
     <>
-      {isMobile && (
+      <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-gray-200 bg-white px-4 lg:hidden">
+        <Link href="/dashboard" className="flex items-center gap-2">
+          <BrandLogo size={28} />
+          <span className="text-sm font-semibold text-gray-900">EMS</span>
+        </Link>
         <button
-          onClick={handleToggle}
-          className="fixed top-4 left-4 z-50 flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-accent via-brand to-brand-dark text-white shadow-lg lg:hidden"
+          type="button"
+          onClick={() => setIsMobileOpen(true)}
+          aria-label="Buka menu"
+          className="rounded-md p-2 text-gray-600 hover:bg-gray-100"
         >
-          {isMobileOpen ? <FaTimes size={18} /> : <FaBars size={18} />}
+          <MenuIcon className="h-5 w-5" />
         </button>
-      )}
+      </header>
 
-      {isMobile && isMobileOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
-          onClick={handleCloseMobile}
-        />
-      )}
+      {isMobileOpen && <div className="fixed inset-0 z-40 bg-gray-900/40 lg:hidden" onClick={() => setIsMobileOpen(false)} />}
 
-      <div
-        className={`relative flex-shrink-0 transition-all duration-300 ease-in-out ${
-          isMobile ? "w-0" : isCollapsed ? "w-20" : "w-72"
-        }`}
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 flex w-60 flex-col border-r border-gray-200 bg-white transition-transform lg:translate-x-0",
+          isMobileOpen ? "translate-x-0" : "-translate-x-full",
+        )}
       >
-        <div
-          className={`fixed top-4 left-4 h-[96vh] rounded-2xl bg-white border border-gray-200 shadow-xl transition-all duration-300 ease-in-out z-40 ${
-            isMobile
-              ? `${isMobileOpen ? "translate-x-0" : "-translate-x-full"} w-72`
-              : isCollapsed
-              ? "w-20"
-              : "w-72"
-          }`}
-        >
-          <div className="flex h-full flex-col">
-            <div className="flex items-center justify-between border-b border-gray-100 p-6">
-              <Link
-                href="/dashboard"
-                className={`flex items-center gap-3 text-2xl font-bold text-gray-800 transition-all duration-300 ${
-                  isCollapsed && !isMobile ? "justify-center" : ""
-                }`}
-                onClick={handleCloseMobile}
-              >
-                <BrandLogo size={40} className="h-10 w-10 flex-shrink-0" />
-                {!(isCollapsed && !isMobile) && (
-                  <span className="bg-gradient-to-r from-accent via-brand to-brand-dark bg-clip-text text-transparent font-extrabold">
-                    EMS
-                  </span>
-                )}
-              </Link>
-
-              {!isMobile && (
-                <button
-                  type="button"
-                  onClick={handleToggle}
-                  className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-600 transition-all duration-200 hover:bg-gradient-to-br hover:from-accent hover:via-brand hover:to-brand-dark hover:text-white ${
-                    isCollapsed ? "hidden" : ""
-                  }`}
-                >
-                  <BiChevronLeft size={18} />
-                </button>
-              )}
+        <div className="flex h-14 items-center justify-between border-b border-gray-200 px-4">
+          <Link href="/dashboard" className="flex items-center gap-2.5">
+            <BrandLogo size={28} />
+            <div className="leading-tight">
+              <p className="text-sm font-semibold text-gray-900">EMS</p>
+              <p className="text-xs text-gray-500">Employee Management</p>
             </div>
-
-            <div className="flex-1 overflow-y-auto py-6">
-              <div onClick={handleCloseMobile}>
-                <Menu 
-                  currentPath={asPath} 
-                  isCollapsed={isCollapsed && !isMobile} 
-                  role={session?.user?.role || ROLES.EMPLOYEE} 
-                />
-              </div>
-            </div>
-
-            {!isMobile && isCollapsed && (
-              <div className="flex justify-center p-4">
-                <button
-                  onClick={handleToggle}
-                  className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-100 text-gray-600 hover:bg-gradient-to-br hover:from-accent hover:via-brand hover:to-brand-dark hover:text-white shadow-sm transition-all"
-                >
-                  <BiChevronRight size={24} />
-                </button>
-              </div>
-            )}
-
-            <Link href={"/dashboard/profile"}>
-              <div className={`border-t border-gray-100 ${isCollapsed && !isMobile ? "p-2" : "p-4"}`}>
-                <div
-                  className={`flex items-center rounded-xl bg-gradient-to-r from-gray-50 to-gray-100 transition-all duration-300 ${
-                    isCollapsed && !isMobile ? "justify-center p-2" : "gap-3 p-3"
-                  }`}
-                >
-                  <div className="h-10 w-10 flex-shrink-0 rounded-full bg-gradient-to-br from-accent via-brand to-brand-dark flex items-center justify-center text-white text-sm font-black shadow-md border-2 border-white uppercase tracking-tighter overflow-hidden relative">
-                    {session?.user?.image ? (
-                      <Image 
-                        src={session.user.image} 
-                        alt={session.user.name || "Avatar"} 
-                        fill
-                        className="object-cover"
-                        unoptimized
-                        priority
-                      />
-                    ) : (
-                      <span className="relative z-10">
-                        {session?.user?.name 
-                          ? session.user.name.split(" ").map(n => n[0]).join("").substring(0, 2)
-                          : "SA"}
-                      </span>
-                    )}
-                  </div>
-                  {!(isCollapsed && !isMobile) && (
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-gray-800 truncate">
-                        {session?.user?.name || "Memuat..."}
-                      </p>
-                      <p className="text-xs text-gray-500 truncate">
-                        {session?.user?.email || "..."}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </Link>
-          </div>
+          </Link>
+          <button
+            type="button"
+            onClick={() => setIsMobileOpen(false)}
+            aria-label="Tutup menu"
+            className="rounded-md p-1.5 text-gray-500 hover:bg-gray-100 lg:hidden"
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
-      </div>
+
+        <div className="flex-1 overflow-y-auto px-3 py-4">
+          <Menu currentPath={pathname} role={user?.role || ROLES.EMPLOYEE} />
+        </div>
+
+        <div className="flex items-center gap-3 border-t border-gray-200 p-3">
+          <Link href="/dashboard/profile" className="flex min-w-0 flex-1 items-center gap-3 rounded-md p-1 hover:bg-gray-50">
+            <Avatar name={user?.name} src={user?.image} size="sm" />
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium text-gray-900">{user?.name || "Memuat..."}</p>
+              <p className="truncate text-xs text-gray-500">{user?.email}</p>
+            </div>
+          </Link>
+          <button
+            type="button"
+            onClick={() => signOut({ callbackUrl: "/login" })}
+            aria-label="Keluar"
+            title="Keluar"
+            className="rounded-md p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+          >
+            <LogOut className="h-4 w-4" />
+          </button>
+        </div>
+      </aside>
     </>
   );
 };

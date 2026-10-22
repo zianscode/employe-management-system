@@ -3,9 +3,13 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { Ban, Check, FilePen, X } from "lucide-react";
+import { Ban, Check, Plus, X } from "lucide-react";
 import { DataTable } from "@/shared/components/DataTable";
-import { Modal } from "@/shared/components/Modal";
+import { Modal, ModalActions } from "@/shared/components/Modal";
+import { StatusBadge } from "@/shared/components/StatusBadge";
+import { Card, CardHeader } from "@/shared/components/ui/Card";
+import { Button } from "@/shared/components/ui/Button";
+import { Field, Input, Textarea } from "@/shared/components/ui/Form";
 import { AttendanceCorrectionInput, AttendanceCorrectionRow } from "@/shared/types/attendance.types";
 import { toDateKey } from "@/shared/utils/date";
 import {
@@ -15,16 +19,6 @@ import {
   rejectAttendanceCorrectionAction,
   submitAttendanceCorrectionAction,
 } from "@/server/modules/attendance/attendance-correction.actions";
-
-const STATUS_STYLES: Record<AttendanceCorrectionRow["status"], { label: string; className: string }> = {
-  PENDING: { label: "Menunggu", className: "bg-yellow-100 text-yellow-700" },
-  APPROVED: { label: "Disetujui", className: "bg-green-100 text-green-700" },
-  REJECTED: { label: "Ditolak", className: "bg-red-100 text-red-700" },
-  CANCELLED: { label: "Dibatalkan", className: "bg-gray-100 text-gray-600" },
-};
-
-const inputClass =
-  "w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-brand/50 outline-none transition-all font-medium";
 
 const EMPTY_FORM: AttendanceCorrectionInput = { date: "", checkIn: "", checkOut: "", reason: "" };
 
@@ -89,41 +83,46 @@ export function CorrectionPanel({ onChange }: { onChange: () => void }) {
       header: "Status",
       accessor: (r) => (
         <div className="flex flex-col gap-1">
-          <span className={`w-fit px-3 py-1 rounded-full text-[11px] font-semibold ${STATUS_STYLES[r.status].className}`}>
-            {STATUS_STYLES[r.status].label}
-          </span>
-          {r.reviewedBy && <span className="text-[10px] text-gray-500">oleh {r.reviewedBy}</span>}
-          {r.rejectionReason && <span className="text-[10px] text-red-500">{r.rejectionReason}</span>}
+          <StatusBadge status={r.status} />
+          {r.reviewedBy && <span className="text-xs text-gray-500">oleh {r.reviewedBy}</span>}
+          {r.rejectionReason && <span className="text-xs text-red-600">{r.rejectionReason}</span>}
         </div>
       ),
     },
     {
-      header: "Aksi",
+      header: "",
       accessor: (r) => (
-        <div className="flex gap-2">
+        <div className="flex justify-end gap-1">
           {r.canReview && (
             <>
               <button
+                type="button"
                 onClick={() => run(() => approveAttendanceCorrectionAction(r.id))}
                 disabled={isSubmitting}
-                className="p-1.5 bg-green-50 text-green-600 rounded-lg hover:bg-green-100"
+                className="rounded-md p-1.5 text-gray-400 hover:bg-green-50 hover:text-green-700"
                 title="Setujui"
               >
-                <Check size={18} />
+                <Check className="h-4 w-4" />
               </button>
-              <button onClick={() => setRejecting(r)} className="p-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100" title="Tolak">
-                <X size={18} />
+              <button
+                type="button"
+                onClick={() => setRejecting(r)}
+                className="rounded-md p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600"
+                title="Tolak"
+              >
+                <X className="h-4 w-4" />
               </button>
             </>
           )}
           {r.canCancel && (
             <button
+              type="button"
               onClick={() => run(() => cancelAttendanceCorrectionAction(r.id))}
               disabled={isSubmitting}
-              className="p-1.5 bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100"
+              className="rounded-md p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
               title="Batalkan"
             >
-              <Ban size={18} />
+              <Ban className="h-4 w-4" />
             </button>
           )}
         </div>
@@ -132,103 +131,84 @@ export function CorrectionPanel({ onChange }: { onChange: () => void }) {
   ];
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
-      <div className="flex items-center justify-between p-4 border-b border-gray-100">
-        <div>
-          <h2 className="text-xl font-semibold text-gray-800">Koreksi Absensi</h2>
-          <p className="text-gray-600 text-sm">Pengajuan perbaikan jam masuk/pulang, maksimal 30 hari ke belakang</p>
-        </div>
-        {canSubmit && (
-          <button
-            onClick={() => setForm({ ...EMPTY_FORM, date: toDateKey() })}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-brand to-brand-dark text-white rounded-xl text-sm font-bold shadow"
-          >
-            <FilePen size={16} />
-            Ajukan Koreksi
-          </button>
-        )}
-      </div>
+    <Card>
+      <CardHeader
+        title="Koreksi absensi"
+        description="Perbaikan jam masuk atau pulang, maksimal 30 hari ke belakang"
+        action={
+          canSubmit && (
+            <Button variant="secondary" size="sm" onClick={() => setForm({ ...EMPTY_FORM, date: toDateKey() })}>
+              <Plus className="h-4 w-4" />
+              Ajukan koreksi
+            </Button>
+          )
+        }
+      />
 
       <DataTable columns={columns} data={rows} emptyMessage="Belum ada pengajuan koreksi" />
 
-      <Modal isOpen={!!form} onClose={() => setForm(null)} title="Ajukan Koreksi Absensi">
+      <Modal isOpen={!!form} onClose={() => setForm(null)} title="Ajukan koreksi absensi">
         {form && (
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-gray-700 ml-1">Tanggal</label>
-              <input
+            <Field label="Tanggal" htmlFor="correction-date" required>
+              <Input
+                id="correction-date"
                 type="date"
                 required
                 max={toDateKey()}
                 value={form.date}
                 onChange={(e) => setForm({ ...form, date: e.target.value })}
-                className={inputClass}
               />
-            </div>
+            </Field>
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-700 ml-1">Jam Masuk</label>
-                <input type="time" value={form.checkIn} onChange={(e) => setForm({ ...form, checkIn: e.target.value })} className={inputClass} />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-700 ml-1">Jam Pulang</label>
-                <input type="time" value={form.checkOut} onChange={(e) => setForm({ ...form, checkOut: e.target.value })} className={inputClass} />
-              </div>
+              <Field label="Jam masuk" htmlFor="correction-in">
+                <Input id="correction-in" type="time" value={form.checkIn} onChange={(e) => setForm({ ...form, checkIn: e.target.value })} />
+              </Field>
+              <Field label="Jam pulang" htmlFor="correction-out">
+                <Input id="correction-out" type="time" value={form.checkOut} onChange={(e) => setForm({ ...form, checkOut: e.target.value })} />
+              </Field>
             </div>
-            <p className="text-xs text-gray-500 ml-1">Kosongkan jam yang tidak perlu dikoreksi.</p>
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-gray-700 ml-1">Alasan</label>
-              <textarea
+            <p className="text-xs text-gray-500">Kosongkan jam yang tidak perlu dikoreksi.</p>
+            <Field label="Alasan" htmlFor="correction-reason" required>
+              <Textarea
+                id="correction-reason"
                 required
                 rows={3}
                 value={form.reason}
                 onChange={(e) => setForm({ ...form, reason: e.target.value })}
-                placeholder="Contoh: lupa check-out karena rapat di luar kantor"
-                className={`${inputClass} resize-none`}
+                placeholder="Misal: lupa check-out karena rapat di luar kantor"
               />
-            </div>
-            <div className="flex gap-3 pt-2">
-              <button type="button" onClick={() => setForm(null)} className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-2xl font-bold">
+            </Field>
+            <ModalActions>
+              <Button variant="secondary" onClick={() => setForm(null)}>
                 Batal
-              </button>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="flex-1 py-3 bg-gradient-to-r from-brand to-brand-dark text-white rounded-2xl font-bold disabled:opacity-50"
-              >
+              </Button>
+              <Button type="submit" loading={isSubmitting}>
                 Kirim
-              </button>
-            </div>
+              </Button>
+            </ModalActions>
           </form>
         )}
       </Modal>
 
-      <Modal isOpen={!!rejecting} onClose={() => setRejecting(null)} title="Tolak Koreksi Absensi">
+      <Modal isOpen={!!rejecting} onClose={() => setRejecting(null)} title="Tolak koreksi absensi">
         <div className="space-y-4">
           <p className="text-sm text-gray-600">
-            Tolak koreksi <span className="font-bold">{rejecting?.nama}</span> tanggal {rejecting?.tanggal}?
+            Koreksi dari <span className="font-medium text-gray-900">{rejecting?.nama}</span> untuk tanggal {rejecting?.tanggal}.
           </p>
-          <textarea
-            value={rejectReason}
-            onChange={(e) => setRejectReason(e.target.value)}
-            rows={3}
-            placeholder="Alasan penolakan (wajib)"
-            className={`${inputClass} resize-none`}
-          />
-          <div className="flex gap-3">
-            <button onClick={() => setRejecting(null)} className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-2xl font-bold">
+          <Field label="Alasan penolakan" htmlFor="reject-reason" required>
+            <Textarea id="reject-reason" value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} rows={3} />
+          </Field>
+          <ModalActions>
+            <Button variant="secondary" onClick={() => setRejecting(null)}>
               Batal
-            </button>
-            <button
-              onClick={handleReject}
-              disabled={isSubmitting || !rejectReason.trim()}
-              className="flex-1 py-3 bg-red-600 text-white rounded-2xl font-bold hover:bg-red-700 disabled:opacity-50"
-            >
+            </Button>
+            <Button variant="danger" onClick={handleReject} disabled={!rejectReason.trim()} loading={isSubmitting}>
               Tolak
-            </button>
-          </div>
+            </Button>
+          </ModalActions>
         </div>
       </Modal>
-    </div>
+    </Card>
   );
 }

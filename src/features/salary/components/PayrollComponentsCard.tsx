@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
-import { Plus, Trash2, Wallet } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { PayrollComponentRow } from "@/shared/types/salary.types";
 import { formatCurrency } from "@/shared/utils/format";
@@ -10,13 +10,15 @@ import {
   deletePayrollComponentAction,
   getPayrollComponentsAction,
 } from "@/server/modules/salary/payroll-component.actions";
+import { Card, CardBody, CardHeader } from "@/shared/components/ui/Card";
+import { Input, Select } from "@/shared/components/ui/Form";
+import { Button } from "@/shared/components/ui/Button";
+import { Badge } from "@/shared/components/ui/Badge";
 
 const TYPE_LABEL: Record<PayrollComponentRow["type"], string> = {
   ALLOWANCE: "Tunjangan",
   DEDUCTION: "Potongan",
 };
-
-const inputClass = "px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:border-brand/50 outline-none";
 
 export function PayrollComponentsCard({ employeeId }: { employeeId: string }) {
   const [rows, setRows] = useState<PayrollComponentRow[]>([]);
@@ -56,79 +58,77 @@ export function PayrollComponentsCard({ employeeId }: { employeeId: string }) {
     rows.filter((r) => r.type === type).reduce((sum, r) => sum + r.amount, 0);
 
   return (
-    <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 space-y-6">
-      <div className="flex items-center gap-3">
-        <div className="p-3 rounded-2xl bg-brand/10 text-brand">
-          <Wallet size={22} />
-        </div>
-        <div>
-          <h2 className="text-lg font-black text-gray-900">Komponen Gaji Tetap</h2>
-          <p className="text-sm text-gray-500">
-            Tunjangan ikut menjadi dasar BPJS & PPh 21. Potongan (mis. cicilan koperasi) dipotong dari gaji bersih.
-          </p>
-        </div>
-      </div>
-
-      <div className="divide-y divide-gray-100">
-        {rows.length === 0 && <p className="text-sm text-gray-400 py-2">Belum ada komponen gaji.</p>}
-        {rows.map((row) => (
-          <div key={row.id} className="flex items-center justify-between py-3">
-            <div>
-              <p className="text-sm font-semibold text-gray-800">{row.name}</p>
-              <p className={`text-xs ${row.type === "ALLOWANCE" ? "text-green-600" : "text-red-500"}`}>{TYPE_LABEL[row.type]}</p>
-            </div>
-            <div className="flex items-center gap-4">
-              <span className="text-sm font-bold text-gray-900">{formatCurrency(row.amount)}</span>
-              <button onClick={() => handleDelete(row.id)} className="p-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100" title="Hapus">
-                <Trash2 size={14} />
-              </button>
+    <Card>
+      <CardHeader
+        title="Komponen gaji tetap"
+        description="Tunjangan ikut dihitung ke dasar BPJS dan PPh 21. Potongan dikurangkan dari gaji bersih."
+      />
+      <CardBody className="space-y-4">
+        {rows.length === 0 ? (
+          <p className="text-sm text-gray-500">Belum ada tunjangan atau potongan.</p>
+        ) : (
+          <div className="divide-y divide-gray-100 rounded-md border border-gray-200">
+            {rows.map((row) => (
+              <div key={row.id} className="flex items-center justify-between gap-4 px-4 py-2.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-900">{row.name}</span>
+                  <Badge tone={row.type === "ALLOWANCE" ? "green" : "red"}>{TYPE_LABEL[row.type]}</Badge>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm tabular-nums text-gray-900">{formatCurrency(row.amount)}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(row.id)}
+                    className="rounded-md p-1 text-gray-400 hover:bg-red-50 hover:text-red-600"
+                    title="Hapus"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+            <div className="flex justify-end gap-6 bg-gray-50 px-4 py-2.5 text-sm text-gray-500">
+              <span>
+                Tunjangan <span className="font-medium tabular-nums text-gray-900">{formatCurrency(total("ALLOWANCE"))}</span>
+              </span>
+              <span>
+                Potongan <span className="font-medium tabular-nums text-gray-900">{formatCurrency(total("DEDUCTION"))}</span>
+              </span>
             </div>
           </div>
-        ))}
-      </div>
+        )}
 
-      {rows.length > 0 && (
-        <div className="flex gap-6 text-sm">
-          <span className="text-gray-500">Total tunjangan: <b className="text-gray-900">{formatCurrency(total("ALLOWANCE"))}</b></span>
-          <span className="text-gray-500">Total potongan: <b className="text-gray-900">{formatCurrency(total("DEDUCTION"))}</b></span>
-        </div>
-      )}
-
-      <form onSubmit={handleAdd} className="flex flex-col md:flex-row gap-3">
-        <select
-          value={form.type}
-          onChange={(e) => setForm({ ...form, type: e.target.value as PayrollComponentRow["type"] })}
-          className={inputClass}
-        >
-          <option value="ALLOWANCE">Tunjangan</option>
-          <option value="DEDUCTION">Potongan</option>
-        </select>
-        <input
-          required
-          placeholder="Nama, contoh: Tunjangan Transport"
-          value={form.name}
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
-          className={`${inputClass} flex-1`}
-        />
-        <input
-          type="number"
-          required
-          min={1}
-          step={1000}
-          placeholder="Nominal"
-          value={form.amount || ""}
-          onChange={(e) => setForm({ ...form, amount: Number(e.target.value) || 0 })}
-          className={`${inputClass} md:w-44`}
-        />
-        <button
-          type="submit"
-          disabled={isSaving}
-          className="flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-brand to-brand-dark text-white rounded-xl font-bold disabled:opacity-50"
-        >
-          <Plus size={16} />
-          Tambah
-        </button>
-      </form>
-    </div>
+        <form onSubmit={handleAdd} className="flex flex-col gap-2 sm:flex-row">
+          <Select
+            value={form.type}
+            onChange={(e) => setForm({ ...form, type: e.target.value as PayrollComponentRow["type"] })}
+            className="sm:w-36"
+          >
+            <option value="ALLOWANCE">Tunjangan</option>
+            <option value="DEDUCTION">Potongan</option>
+          </Select>
+          <Input
+            required
+            placeholder="Nama komponen, misal Tunjangan Transport"
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            className="flex-1"
+          />
+          <Input
+            type="number"
+            required
+            min={1}
+            step={1000}
+            placeholder="Nominal"
+            value={form.amount || ""}
+            onChange={(e) => setForm({ ...form, amount: Number(e.target.value) || 0 })}
+            className="tabular-nums sm:w-40"
+          />
+          <Button type="submit" variant="secondary" loading={isSaving}>
+            Tambah
+          </Button>
+        </form>
+      </CardBody>
+    </Card>
   );
 }

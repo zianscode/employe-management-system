@@ -2,11 +2,10 @@
 
 import React from "react";
 import { formatCurrency } from "@/shared/utils/format";
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, Legend
-} from "recharts";
-import { BRAND_COLORS, CHART_COLORS } from "@/shared/constants/theme";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { BRAND_COLORS, CHART_COLORS, CHART_TOOLTIP_STYLE, CHART_AXIS_TICK } from "@/shared/constants/theme";
+import { Card, CardBody, CardHeader } from "@/shared/components/ui/Card";
+import { EmptyState } from "@/shared/components/ui/Feedback";
 
 export interface SalaryData {
   month: string;
@@ -24,93 +23,73 @@ interface DashboardChartsProps {
 }
 
 export default function DashboardCharts({ salaryData, deptData }: DashboardChartsProps) {
-  const COLORS = CHART_COLORS;
+  const isOrganizational = deptData.length > 0;
+  const totalEmployees = deptData.reduce((sum, d) => sum + d.count, 0);
 
   return (
-    <div className={`grid grid-cols-1 ${deptData.length > 0 ? "lg:grid-cols-2" : ""} gap-4`}>
-      <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h3 className="text-xl font-black text-gray-900 tracking-tight">
-              {deptData.length > 0 ? "Tren Pengeluaran Gaji" : "Tren Gaji Anda"}
-            </h3>
-            <p className="text-sm text-gray-500 font-medium">
-              {deptData.length > 0 ? "Total pengeluaran bersih per bulan" : "Riwayat penghasilan bersih bulanan"}
-            </p>
-          </div>
-          <div className="p-3 bg-accent-50 rounded-2xl text-brand">
-            <span className="text-xs font-bold uppercase tracking-widest">Live Data</span>
-          </div>
-        </div>
-        <div className="h-[300px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={salaryData}>
-              <defs>
-                <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={BRAND_COLORS.accent} />
-                  <stop offset="100%" stopColor={BRAND_COLORS.brand} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-              <XAxis 
-                dataKey="month" 
-                axisLine={false} 
-                tickLine={false} 
-                tick={{fill: '#64748b', fontSize: 12, fontWeight: 600}}
-                dy={10}
-              />
-              <YAxis 
-                axisLine={false} 
-                tickLine={false} 
-                tick={{fill: '#64748b', fontSize: 12, fontWeight: 600}}
-                tickFormatter={(value) => `Rp${(value/1000000).toFixed(0)}jt`}
-              />
-              <Tooltip 
-                cursor={{fill: '#f8fafc'}}
-                contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', padding: '15px' }}
-                formatter={(value: number) => [formatCurrency(value), 'Total Gaji']}
-              />
-              <Bar dataKey="total" fill="url(#barGradient)" radius={[10, 10, 0, 0]} barSize={45} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
+    <div className={`grid grid-cols-1 gap-6 ${isOrganizational ? "lg:grid-cols-3" : ""}`}>
+      <Card className={isOrganizational ? "lg:col-span-2" : ""}>
+        <CardHeader
+          title={isOrganizational ? "Pengeluaran gaji" : "Riwayat gaji"}
+          description={isOrganizational ? "Total gaji bersih per bulan" : "Gaji bersih per bulan"}
+        />
+        <CardBody>
+          {salaryData.length === 0 ? (
+            <EmptyState title="Belum ada data gaji" />
+          ) : (
+            <div className="h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={salaryData} margin={{ left: -8 }}>
+                  <CartesianGrid vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={CHART_AXIS_TICK} />
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={CHART_AXIS_TICK}
+                    tickFormatter={(value) => `${(value / 1_000_000).toFixed(0)} jt`}
+                  />
+                  <Tooltip
+                    cursor={{ fill: "#f8fafc" }}
+                    contentStyle={CHART_TOOLTIP_STYLE}
+                    formatter={(value: number) => [formatCurrency(value), "Total"]}
+                  />
+                  <Bar dataKey="total" fill={BRAND_COLORS.brand} radius={[3, 3, 0, 0]} maxBarSize={36} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </CardBody>
+      </Card>
 
-      {deptData.length > 0 && (
-        <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h3 className="text-xl font-black text-gray-900 tracking-tight">Distribusi Karyawan</h3>
-              <p className="text-sm text-gray-500 font-medium">Berdasarkan departemen aktif</p>
+      {isOrganizational && (
+        <Card>
+          <CardHeader title="Karyawan per divisi" description={`${totalEmployees} karyawan`} />
+          <CardBody>
+            <div className="h-44">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={deptData} dataKey="count" nameKey="name" innerRadius={50} outerRadius={80} paddingAngle={1} stroke="none">
+                    {deptData.map((entry, index) => (
+                      <Cell key={entry.name} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
+                </PieChart>
+              </ResponsiveContainer>
             </div>
-            <div className="p-3 bg-brand-50 rounded-2xl text-brand-dark">
-              <span className="text-xs font-bold uppercase tracking-widest">Enterprise</span>
-            </div>
-          </div>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={deptData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={70}
-                  outerRadius={110}
-                  paddingAngle={8}
-                  dataKey="count"
-                >
-                  {deptData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip 
-                   contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }}
-                />
-                <Legend verticalAlign="bottom" height={36}/>
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+            <ul className="mt-4 space-y-2">
+              {deptData.map((dept, index) => (
+                <li key={dept.name} className="flex items-center justify-between text-sm">
+                  <span className="flex items-center gap-2 text-gray-600">
+                    <span className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }} />
+                    {dept.name}
+                  </span>
+                  <span className="font-medium tabular-nums text-gray-900">{dept.count}</span>
+                </li>
+              ))}
+            </ul>
+          </CardBody>
+        </Card>
       )}
     </div>
   );

@@ -1,5 +1,3 @@
-import { User, CreditCard, ShieldAlert, Award } from "lucide-react";
-
 export interface OnboardingFormData {
   phone: string;
   gender: string;
@@ -23,10 +21,10 @@ export interface OnboardingFormData {
 }
 
 export const STEPS = [
-  { id: 1, title: "Personal Info", icon: User },
-  { id: 2, title: "Identity", icon: CreditCard },
-  { id: 3, title: "Emergency", icon: ShieldAlert },
-  { id: 4, title: "Pendidikan Terakhir", icon: Award },
+  { id: 1, title: "Data pribadi" },
+  { id: 2, title: "Identitas dan rekening" },
+  { id: 3, title: "Kontak darurat" },
+  { id: 4, title: "Pendidikan" },
 ];
 
 export const COUNTRY_OPTIONS = [

@@ -1,10 +1,11 @@
 import React from "react";
 import { SettingsClient } from "@/features/settings/components/SettingsClient";
+import { Page } from "@/shared/components/ui/Page";
 
 export default function SettingsPage() {
   return (
-    <div className="py-4 pl-8 pr-6">
+    <Page>
       <SettingsClient />
-    </div>
+    </Page>
   );
 }

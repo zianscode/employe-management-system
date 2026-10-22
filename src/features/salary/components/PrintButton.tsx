@@ -1,15 +1,13 @@
 "use client";
 
 import { Printer } from "lucide-react";
+import { Button } from "@/shared/components/ui/Button";
 
 export function PrintButton() {
   return (
-    <button
-      onClick={() => window.print()}
-      className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-brand to-brand-dark text-white rounded-xl font-bold text-sm shadow print:hidden"
-    >
-      <Printer size={16} />
-      Cetak / Simpan PDF
-    </button>
+    <Button variant="secondary" onClick={() => window.print()} className="print:hidden">
+      <Printer className="h-4 w-4" />
+      Cetak / simpan PDF
+    </Button>
   );
 }

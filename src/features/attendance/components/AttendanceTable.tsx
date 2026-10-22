@@ -6,43 +6,26 @@ import { Attendance } from "@/shared/types/attendance.types";
 interface AttendanceTableProps {
   data: Attendance[];
   isLoading: boolean;
-  selectedDate: string;
 }
 
-export const AttendanceTable: React.FC<AttendanceTableProps> = ({
-  data,
-  isLoading,
-  selectedDate,
-}) => {
+export const AttendanceTable: React.FC<AttendanceTableProps> = ({ data, isLoading }) => {
   const columns = [
-    { header: "NIP", accessor: "nip" as const, className: "font-medium text-gray-900" },
-    { header: "Nama Karyawan", accessor: "nama" as const, className: "font-medium" },
-    { header: "Tanggal", accessor: "tanggal" as const },
-    { header: "Jam Masuk", accessor: "jamMasuk" as const },
-    { header: "Jam Keluar", accessor: "jamKeluar" as const },
-    { header: "Jam Kerja", accessor: "jamKerja" as const },
     {
-      header: "Status",
-      accessor: (item: Attendance) => <StatusBadge status={item.status} />,
+      header: "Karyawan",
+      accessor: (item: Attendance) => (
+        <div>
+          <p className="font-medium text-gray-900">{item.nama}</p>
+          <p className="text-xs tabular-nums text-gray-500">{item.nip}</p>
+        </div>
+      ),
     },
+    { header: "Tanggal", accessor: "tanggal" as const },
+    { header: "Masuk", accessor: "jamMasuk" as const, className: "tabular-nums" },
+    { header: "Pulang", accessor: "jamKeluar" as const, className: "tabular-nums" },
+    { header: "Jam kerja", accessor: "jamKerja" as const, className: "tabular-nums" },
+    { header: "Status", accessor: (item: Attendance) => <StatusBadge status={item.status} /> },
     { header: "Keterangan", accessor: (item: Attendance) => item.keterangan || "-" },
   ];
 
-  return (
-    <div>
-      <div className="p-4 border-b border-gray-100">
-        <h2 className="text-xl font-semibold text-gray-800 mb-1">
-          Data Absensi
-        </h2>
-        <p className="text-gray-600 text-sm">
-          Data kehadiran karyawan untuk tanggal {selectedDate}
-        </p>
-      </div>
-      <DataTable
-        columns={columns}
-        data={data}
-        isLoading={isLoading}
-      />
-    </div>
-  );
+  return <DataTable columns={columns} data={data} isLoading={isLoading} emptyMessage="Tidak ada data absensi" />;
 };

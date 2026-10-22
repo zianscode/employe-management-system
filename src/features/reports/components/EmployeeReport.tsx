@@ -2,6 +2,7 @@ import React from "react";
 import { DataTable } from "@/shared/components/DataTable";
 import { CountItem, EmployeeReportData, EmployeeReportRow } from "@/shared/types/report.types";
 import { downloadCsv, CsvColumn } from "@/shared/utils/csv";
+import { Card, CardBody, CardHeader } from "@/shared/components/ui/Card";
 import { ReportStatCards } from "./ReportStatCards";
 import { ReportSection } from "./ReportSection";
 
@@ -16,7 +17,7 @@ const CSV_COLUMNS: CsvColumn<EmployeeReportRow>[] = [
 ];
 
 const TABLE_COLUMNS: { header: string; accessor: keyof EmployeeReportRow; className?: string }[] = [
-  { header: "Nama", accessor: "nama", className: "font-medium" },
+  { header: "Nama", accessor: "nama", className: "font-medium text-gray-900" },
   { header: "Divisi", accessor: "divisi" },
   { header: "Jabatan", accessor: "jabatan" },
   { header: "Status", accessor: "status" },
@@ -27,23 +28,23 @@ const TABLE_COLUMNS: { header: string; accessor: keyof EmployeeReportRow; classN
 function Breakdown({ title, items }: { title: string; items: CountItem[] }) {
   const max = Math.max(1, ...items.map((i) => i.value));
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-      <h3 className="text-sm font-bold text-gray-700 mb-4">{title}</h3>
-      {items.length === 0 && <p className="text-sm text-gray-400">Tidak ada data</p>}
-      <div className="space-y-3">
+    <Card>
+      <CardHeader title={title} />
+      <CardBody className="space-y-3">
+        {items.length === 0 && <p className="text-sm text-gray-500">Tidak ada data</p>}
         {items.map((item) => (
           <div key={item.label}>
-            <div className="flex justify-between text-sm mb-1">
+            <div className="mb-1 flex justify-between text-sm">
               <span className="text-gray-600">{item.label}</span>
-              <span className="font-bold text-gray-900">{item.value}</span>
+              <span className="font-medium tabular-nums text-gray-900">{item.value}</span>
             </div>
-            <div className="h-2 bg-gray-100 rounded-full">
-              <div className="h-2 bg-brand rounded-full" style={{ width: `${(item.value / max) * 100}%` }} />
+            <div className="h-1.5 rounded-full bg-gray-100">
+              <div className="h-1.5 rounded-full bg-brand" style={{ width: `${(item.value / max) * 100}%` }} />
             </div>
           </div>
         ))}
-      </div>
-    </div>
+      </CardBody>
+    </Card>
   );
 }
 
@@ -55,25 +56,26 @@ interface EmployeeReportProps {
 
 export function EmployeeReport({ data, periodLabel, fileSuffix }: EmployeeReportProps) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <ReportStatCards
         cards={[
-          { label: "Karyawan Aktif", value: data.totals.total, tone: "blue" },
-          { label: "Status Aktif", value: data.totals.aktif, tone: "green" },
-          { label: "Masa Percobaan", value: data.totals.percobaan, tone: "orange" },
-          { label: "Karyawan Baru", value: data.totals.baru, hint: periodLabel, tone: "purple" },
+          { label: "Total karyawan", value: data.totals.total },
+          { label: "Status aktif", value: data.totals.aktif },
+          { label: "Masa percobaan", value: data.totals.percobaan },
+          { label: "Karyawan baru", value: data.totals.baru, hint: periodLabel },
         ]}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <Breakdown title="Per Divisi" items={data.byDepartment} />
-        <Breakdown title="Per Tipe Kerja" items={data.byEmploymentType} />
-        <Breakdown title="Per Status" items={data.byStatus} />
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <Breakdown title="Per divisi" items={data.byDepartment} />
+        <Breakdown title="Per tipe kerja" items={data.byEmploymentType} />
+        <Breakdown title="Per status" items={data.byStatus} />
       </div>
 
       <ReportSection
-        title="Daftar Karyawan"
+        title="Daftar karyawan"
         subtitle="Termasuk catatan karyawan baru dan masa percobaan"
+        flush
         onExport={() => downloadCsv(`laporan-karyawan-${fileSuffix}`, data.rows, CSV_COLUMNS)}
       >
         <DataTable columns={TABLE_COLUMNS} data={data.rows} />

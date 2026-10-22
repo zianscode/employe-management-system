@@ -1,5 +1,9 @@
 # Employee Management System
 
+![Status: Under active development](https://img.shields.io/badge/status-under%20active%20development-orange)
+
+> 🚧 **Status: Under active development.** Features are still being added, and the structure may change over time. Not yet recommended for production use.
+
 Aplikasi HR untuk mengelola data karyawan, absensi, cuti, dan penggajian. Frontend dan backend ada di satu project Next.js.
 
 Stack: Next.js 15 (App Router), React 19, Prisma 7 + PostgreSQL, NextAuth v5, Tailwind CSS 4.

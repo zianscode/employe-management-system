@@ -1,38 +1,22 @@
 import { Employee } from "@/shared/types/employee.types";
-import { Users, UserCheck, UserMinus, Star } from "lucide-react";
+import { StatCard, StatGrid } from "@/shared/components/ui/StatCard";
 
 interface EmployeesStatsProps {
   employees: Employee[];
 }
 
 const EmployeesStats: React.FC<EmployeesStatsProps> = ({ employees }) => {
-  const activeCount = employees.filter(e => e.status === "ACTIVE").length;
-  const probationCount = employees.filter(e => e.status === "PROBATION").length;
-
-  const stats = [
-    { label: "Total Karyawan", value: employees.length.toString(), icon: Users, color: "text-blue-600", bgColor: "bg-blue-50" },
-    { label: "Aktif", value: activeCount.toString(), icon: UserCheck, color: "text-green-600", bgColor: "bg-green-50" },
-    { label: "Masa Percobaan", value: probationCount.toString(), icon: UserMinus, color: "text-orange-600", bgColor: "bg-orange-50" },
-    { label: "Divisi", value: new Set(employees.map(e => e.division)).size.toString(), icon: Star, color: "text-brand", bgColor: "bg-brand-50" },
-  ];
+  const activeCount = employees.filter((e) => e.status === "ACTIVE").length;
+  const probationCount = employees.filter((e) => e.status === "PROBATION").length;
+  const divisionCount = new Set(employees.map((e) => e.division)).size;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      {stats.map((stat, idx) => {
-        const Icon = stat.icon;
-        return (
-          <div key={idx} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all">
-            <div className="flex items-center justify-between mb-4">
-              <div className={`p-3 rounded-xl ${stat.bgColor} ${stat.color}`}>
-                <Icon size={24} />
-              </div>
-            </div>
-            <h3 className="text-gray-500 text-sm font-medium">{stat.label}</h3>
-            <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-          </div>
-        );
-      })}
-    </div>
+    <StatGrid>
+      <StatCard label="Total karyawan" value={employees.length} />
+      <StatCard label="Aktif" value={activeCount} />
+      <StatCard label="Masa percobaan" value={probationCount} />
+      <StatCard label="Divisi" value={divisionCount} />
+    </StatGrid>
   );
 };
 

@@ -6,6 +6,7 @@ import EmployeeForm from "@/features/employees/components/EmployeeForm";
 import { createEmployeeAction } from "@/server/modules/employees/employee.actions";
 import { EmployeeFormData } from "@/shared/types/employee.types";
 import { toast } from "sonner";
+import { Page } from "@/shared/components/ui/Page";
 
 export default function NewEmployeePage() {
   const router = useRouter();
@@ -16,7 +17,7 @@ export default function NewEmployeePage() {
     try {
       const result = await createEmployeeAction(data);
       if (result.success) {
-        toast.success("Karyawan berhasil didaftarkan!", {
+        toast.success("Karyawan ditambahkan", {
           description: `${result.message}. Catat dan berikan kepada karyawan, password ini hanya ditampilkan sekali.`,
           duration: Infinity,
           closeButton: true,
@@ -35,12 +36,12 @@ export default function NewEmployeePage() {
   };
 
   return (
-    <div className="py-4 pl-8 pr-6">
+    <Page className="max-w-4xl">
       <EmployeeForm
-        title="Daftarkan Karyawan Baru"
+        title="Tambah karyawan"
         onSubmit={handleSubmit}
         isSubmitting={isSubmitting}
       />
-    </div>
+    </Page>
   );
 }

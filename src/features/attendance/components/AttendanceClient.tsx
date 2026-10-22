@@ -11,6 +11,7 @@ import { toDateKey } from "@/shared/utils/date";
 import { downloadCsv, CsvColumn } from "@/shared/utils/csv";
 import { Attendance } from "@/shared/types/attendance.types";
 import { ATTENDANCE_STATUS_LABELS } from "@/shared/constants/attendance";
+import { Card } from "@/shared/components/ui/Card";
 import AttendanceHeader from "./AttendanceHeader";
 import AttendanceStats, { StatData } from "./AttendanceStats";
 
@@ -39,37 +40,30 @@ export function AttendanceClient({ stats }: { stats: StatData[] }) {
     refresh,
   } = useAttendance(toDateKey());
 
+  const handleChange = () => {
+    refresh();
+    router.refresh();
+  };
+
   return (
     <>
       <AttendanceHeader onDownload={() => downloadCsv(`absensi-${selectedDate}`, data, CSV_COLUMNS)} />
+      <ClockInCard onChange={handleChange} />
       <AttendanceStats stats={stats} />
 
-      <ClockInCard
-        onChange={() => {
-          refresh();
-          router.refresh();
-        }}
-      />
+      <Card>
+        <AttendanceControls
+          searchQuery={searchQuery}
+          selectedDate={selectedDate}
+          statusFilter={statusFilter}
+          onSearchChange={setSearchQuery}
+          onDateChange={setSelectedDate}
+          onStatusChange={setStatusFilter}
+        />
+        <AttendanceTable data={data} isLoading={isLoading} />
+      </Card>
 
-      <AttendanceControls
-        searchQuery={searchQuery}
-        selectedDate={selectedDate}
-        statusFilter={statusFilter}
-        onSearchChange={setSearchQuery}
-        onDateChange={setSelectedDate}
-        onStatusChange={setStatusFilter}
-      />
-
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 mt-4">
-        <AttendanceTable data={data} isLoading={isLoading} selectedDate={selectedDate} />
-      </div>
-
-      <CorrectionPanel
-        onChange={() => {
-          refresh();
-          router.refresh();
-        }}
-      />
+      <CorrectionPanel onChange={handleChange} />
     </>
   );
 }

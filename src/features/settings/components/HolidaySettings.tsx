@@ -1,14 +1,15 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
-import { CalendarOff, Plus, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { DataTable } from "@/shared/components/DataTable";
 import { HolidayRow } from "@/shared/types/settings.types";
 import { toDateKey } from "@/shared/utils/date";
 import { createHolidayAction, deleteHolidayAction, getHolidaysAction } from "@/server/modules/settings/holiday.actions";
-
-const inputClass = "px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand outline-none";
+import { Card, CardHeader } from "@/shared/components/ui/Card";
+import { Input } from "@/shared/components/ui/Form";
+import { Button } from "@/shared/components/ui/Button";
 
 export function HolidaySettings() {
   const [year, setYear] = useState(() => Number(toDateKey().slice(0, 4)));
@@ -52,73 +53,71 @@ export function HolidaySettings() {
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm space-y-6">
-      <div className="flex items-center space-x-3">
-        <div className="w-10 h-10 bg-gradient-to-br from-accent to-brand rounded-xl flex items-center justify-center">
-          <CalendarOff className="text-white" size={20} />
-        </div>
-        <div>
-          <h3 className="text-xl font-semibold text-gray-900">Hari Libur</h3>
-          <p className="text-gray-500">
-            Tanggal merah & cuti bersama tidak dihitung sebagai hari kerja (absensi, durasi cuti, potongan gaji).
-          </p>
-        </div>
-      </div>
+    <Card>
+      <CardHeader
+        title="Hari libur"
+        description="Tanggal merah dan cuti bersama tidak dihitung sebagai hari kerja"
+        action={
+          <div className="flex items-center gap-2">
+            <label htmlFor="holiday-year" className="text-sm text-gray-500">
+              Tahun
+            </label>
+            <Input
+              id="holiday-year"
+              type="number"
+              value={year}
+              min={2000}
+              max={2100}
+              onChange={(e) => e.target.value && setYear(Number(e.target.value))}
+              className="h-8 w-24"
+            />
+          </div>
+        }
+      />
 
-      <form onSubmit={handleAdd} className="flex flex-col md:flex-row gap-3">
-        <input
+      <form onSubmit={handleAdd} className="flex flex-col gap-2 border-b border-gray-200 p-4 sm:flex-row">
+        <Input
           type="date"
           required
           value={form.date}
           onChange={(e) => setForm({ ...form, date: e.target.value })}
-          className={inputClass}
+          className="sm:w-44"
         />
-        <input
-          type="text"
+        <Input
           required
-          placeholder="Nama hari libur, contoh: Hari Kemerdekaan RI"
+          placeholder="Nama hari libur, misal Hari Kemerdekaan RI"
           value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
-          className={`${inputClass} flex-1`}
+          className="flex-1"
         />
-        <button
-          type="submit"
-          disabled={isSaving}
-          className="flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-brand to-brand-dark text-white rounded-lg font-bold disabled:opacity-50"
-        >
-          <Plus size={16} />
+        <Button type="submit" variant="secondary" loading={isSaving}>
           Tambah
-        </button>
+        </Button>
       </form>
-
-      <div className="flex items-center gap-3">
-        <label className="text-sm font-medium text-gray-700">Tahun</label>
-        <input
-          type="number"
-          value={year}
-          min={2000}
-          max={2100}
-          onChange={(e) => e.target.value && setYear(Number(e.target.value))}
-          className={`${inputClass} w-28 py-2`}
-        />
-      </div>
 
       <DataTable
         data={holidays}
         emptyMessage={`Belum ada hari libur untuk tahun ${year}`}
         columns={[
           { header: "Tanggal", accessor: "date" },
-          { header: "Keterangan", accessor: "name", className: "font-medium" },
+          { header: "Keterangan", accessor: "name", className: "font-medium text-gray-900" },
           {
-            header: "Aksi",
+            header: "",
             accessor: (h: HolidayRow) => (
-              <button onClick={() => handleDelete(h)} className="p-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100" title="Hapus">
-                <Trash2 size={16} />
-              </button>
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => handleDelete(h)}
+                  className="rounded-md p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600"
+                  title="Hapus"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
             ),
           },
         ]}
       />
-    </div>
+    </Card>
   );
 }

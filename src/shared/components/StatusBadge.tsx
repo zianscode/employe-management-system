@@ -1,134 +1,45 @@
 import React from "react";
-import { Clock, UserCheck, UserX, AlertCircle, Users } from "lucide-react";
+import { Badge, type BadgeTone } from "./ui/Badge";
 
-export type StatusType = "Hadir" | "Izin" | "Terlambat" | "Alpha" | "Sakit" | string;
+export type StatusType = string;
+
+const STATUS_CONFIG: Record<string, { tone: BadgeTone; label: string }> = {
+  ACTIVE: { tone: "green", label: "Aktif" },
+  PROBATION: { tone: "yellow", label: "Masa Percobaan" },
+  RESIGNED: { tone: "gray", label: "Resign" },
+  TERMINATED: { tone: "red", label: "Diberhentikan" },
+  PRESENT: { tone: "green", label: "Hadir" },
+  LATE: { tone: "yellow", label: "Terlambat" },
+  ABSENT: { tone: "red", label: "Tidak Hadir" },
+  SICK: { tone: "blue", label: "Sakit" },
+  PERMISSION: { tone: "blue", label: "Izin / Cuti" },
+  EARLY_LEAVE: { tone: "yellow", label: "Pulang Cepat" },
+  NOT_YET: { tone: "gray", label: "Belum Absen" },
+  PENDING: { tone: "yellow", label: "Menunggu" },
+  MANAGER_APPROVED: { tone: "blue", label: "Disetujui Atasan" },
+  HR_APPROVED: { tone: "green", label: "Disetujui HR" },
+  APPROVED: { tone: "green", label: "Disetujui" },
+  REJECTED: { tone: "red", label: "Ditolak" },
+  CANCELLED: { tone: "gray", label: "Dibatalkan" },
+  PAID: { tone: "green", label: "Dibayar" },
+  UNPAID: { tone: "yellow", label: "Belum Dibayar" },
+  Hadir: { tone: "green", label: "Hadir" },
+  Izin: { tone: "blue", label: "Izin / Cuti" },
+  Sakit: { tone: "blue", label: "Sakit" },
+  Terlambat: { tone: "yellow", label: "Terlambat" },
+  Alpha: { tone: "red", label: "Alpha" },
+};
+
+export const STATUS_LABELS: Record<string, string> = Object.fromEntries(
+  Object.entries(STATUS_CONFIG).map(([key, config]) => [key, config.label]),
+);
 
 interface StatusBadgeProps {
   status: StatusType;
   customLabel?: string;
 }
 
-const getStatusConfig = (status: StatusType) => {
-  switch (status) {
-    case "Hadir":
-    case "ACTIVE":
-      return {
-        color: "bg-green-100 text-green-700 border-green-200",
-        icon: <UserCheck className="w-4 h-4" />,
-        label: status === "ACTIVE" ? "Aktif" : "Hadir",
-      };
-    case "Izin":
-    case "PERMISSION":
-      return {
-        color: "bg-blue-100 text-blue-700 border-blue-200",
-        icon: <Clock className="w-4 h-4" />,
-        label: "Izin / Cuti",
-      };
-    case "PRESENT":
-      return {
-        color: "bg-green-100 text-green-700 border-green-200",
-        icon: <UserCheck className="w-4 h-4" />,
-        label: "Hadir",
-      };
-    case "LATE":
-      return {
-        color: "bg-yellow-100 text-yellow-700 border-yellow-200",
-        icon: <AlertCircle className="w-4 h-4" />,
-        label: "Terlambat",
-      };
-    case "ABSENT":
-      return {
-        color: "bg-red-100 text-red-700 border-red-200",
-        icon: <UserX className="w-4 h-4" />,
-        label: "Tidak Hadir",
-      };
-    case "SICK":
-      return {
-        color: "bg-orange-100 text-orange-700 border-orange-200",
-        icon: <AlertCircle className="w-4 h-4" />,
-        label: "Sakit",
-      };
-    case "EARLY_LEAVE":
-      return {
-        color: "bg-orange-100 text-orange-700 border-orange-200",
-        icon: <Clock className="w-4 h-4" />,
-        label: "Pulang Cepat",
-      };
-    case "NOT_YET":
-      return {
-        color: "bg-gray-100 text-gray-600 border-gray-200",
-        icon: <Clock className="w-4 h-4" />,
-        label: "Belum Absen",
-      };
-    case "Terlambat":
-    case "PROBATION":
-      return {
-        color: "bg-yellow-100 text-yellow-700 border-yellow-200",
-        icon: <AlertCircle className="w-4 h-4" />,
-        label: status === "PROBATION" ? "Masa Percobaan" : "Terlambat",
-      };
-    case "Alpha":
-    case "TERMINATED":
-      return {
-        color: "bg-red-100 text-red-700 border-red-200",
-        icon: <UserX className="w-4 h-4" />,
-        label: status === "TERMINATED" ? "Diberhentikan" : "Alpha",
-      };
-    case "Sakit":
-    case "RESIGNED":
-      return {
-        color: "bg-orange-100 text-orange-700 border-orange-200",
-        icon: <AlertCircle className="w-4 h-4" />,
-        label: status === "RESIGNED" ? "Resigned" : "Sakit",
-      };
-    case "PENDING":
-      return {
-        color: "bg-yellow-100 text-yellow-700 border-yellow-200",
-        icon: <Clock className="w-4 h-4" />,
-        label: "Menunggu",
-      };
-    case "MANAGER_APPROVED":
-      return {
-        color: "bg-blue-100 text-blue-700 border-blue-200",
-        icon: <UserCheck className="w-4 h-4" />,
-        label: "Disetujui Manager",
-      };
-    case "HR_APPROVED":
-      return {
-        color: "bg-green-100 text-green-700 border-green-200",
-        icon: <UserCheck className="w-4 h-4" />,
-        label: "Disetujui HR",
-      };
-    case "REJECTED":
-      return {
-        color: "bg-red-100 text-red-700 border-red-200",
-        icon: <UserX className="w-4 h-4" />,
-        label: "Ditolak",
-      };
-    case "CANCELLED":
-      return {
-        color: "bg-gray-100 text-gray-700 border-gray-200",
-        icon: <UserX className="w-4 h-4" />,
-        label: "Dibatalkan",
-      };
-    default:
-      return {
-        color: "bg-gray-100 text-gray-700 border-gray-200",
-        icon: <Users className="w-4 h-4" />,
-        label: status,
-      };
-  }
-};
-
 export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, customLabel }) => {
-  const { color, icon, label } = getStatusConfig(status);
-
-  return (
-    <span
-      className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-semibold border w-fit whitespace-nowrap ${color}`}
-    >
-      {icon}
-      {customLabel || label}
-    </span>
-  );
+  const config = STATUS_CONFIG[status] ?? { tone: "gray" as const, label: status };
+  return <Badge tone={config.tone}>{customLabel || config.label}</Badge>;
 };

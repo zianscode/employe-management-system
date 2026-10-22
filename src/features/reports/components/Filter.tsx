@@ -1,5 +1,5 @@
 import React from "react";
-import { Calendar } from "lucide-react";
+import { Input } from "@/shared/components/ui/Form";
 
 interface FilterProps {
   selectedMonth: string;
@@ -8,14 +8,16 @@ interface FilterProps {
 
 const Filter: React.FC<FilterProps> = ({ selectedMonth, onMonthChange }) => {
   return (
-    <div className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl shadow-sm w-fit">
-      <Calendar size={18} className="text-gray-400" />
-      <span className="text-sm text-gray-500">Periode</span>
-      <input
+    <div className="flex items-center gap-2">
+      <label htmlFor="report-period" className="text-sm text-gray-500">
+        Periode
+      </label>
+      <Input
+        id="report-period"
         type="month"
         value={selectedMonth}
         onChange={(e) => e.target.value && onMonthChange(e.target.value)}
-        className="bg-transparent border-none outline-none text-sm font-medium text-gray-700 cursor-pointer"
+        className="w-44"
       />
     </div>
   );

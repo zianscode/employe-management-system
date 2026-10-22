@@ -2,6 +2,7 @@
   "name": "employee_management_system",
   "version": "0.1.0",
   "private": true,
+  "description": "HR system for managing employees, attendance, leave, and payroll. Built with Next.js 15, Prisma, PostgreSQL, and NextAuth. Under active development.",
   "scripts": {
     "dev": "next dev",
     "dev:turbo": "next dev --turbopack",

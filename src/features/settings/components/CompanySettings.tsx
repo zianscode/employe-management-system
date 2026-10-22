@@ -1,14 +1,14 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Building2, Settings, Save, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { CompanySetting } from "@/shared/types/settings.types";
 import { JKK_RISK_GROUPS } from "@/shared/constants/payroll";
 import { getCompanySettingAction, updateCompanySettingAction } from "@/server/modules/settings/company-setting.actions";
-
-const inputClass =
-  "w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-brand outline-none";
+import { Card, CardBody, CardHeader } from "@/shared/components/ui/Card";
+import { Field, Input, Select } from "@/shared/components/ui/Form";
+import { Button } from "@/shared/components/ui/Button";
+import { Spinner } from "@/shared/components/ui/Feedback";
 
 export const CompanySettings = () => {
   const [form, setForm] = useState<CompanySetting | null>(null);
@@ -22,7 +22,11 @@ export const CompanySettings = () => {
   }, []);
 
   if (!form) {
-    return <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm text-gray-500">Memuat pengaturan...</div>;
+    return (
+      <div className="flex justify-center py-12">
+        <Spinner />
+      </div>
+    );
   }
 
   const set = (key: keyof CompanySetting) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -40,127 +44,127 @@ export const CompanySettings = () => {
   };
 
   return (
-    <form onSubmit={handleSave} className="space-y-4">
-      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-        <div className="flex items-center space-x-3 mb-6">
-          <div className="w-10 h-10 bg-gradient-to-br from-accent to-brand rounded-xl flex items-center justify-center">
-            <Building2 className="text-white" size={20} />
-          </div>
-          <div>
-            <h3 className="text-xl font-semibold text-gray-900">Informasi Perusahaan</h3>
-            <p className="text-gray-500">Data dan identitas perusahaan</p>
-          </div>
-        </div>
+    <form onSubmit={handleSave} className="space-y-6">
+      <Card>
+        <CardHeader title="Identitas perusahaan" description="Ditampilkan di slip gaji" />
+        <CardBody className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field label="Nama perusahaan" htmlFor="companyName" required>
+            <Input id="companyName" required value={form.companyName} onChange={set("companyName")} />
+          </Field>
+          <Field label="Kode perusahaan" htmlFor="companyCode">
+            <Input id="companyCode" value={form.companyCode ?? ""} onChange={set("companyCode")} />
+          </Field>
+          <Field label="NPWP" htmlFor="npwp">
+            <Input id="npwp" value={form.npwp ?? ""} onChange={set("npwp")} />
+          </Field>
+          <Field label="Telepon" htmlFor="phone">
+            <Input id="phone" value={form.phone ?? ""} onChange={set("phone")} />
+          </Field>
+        </CardBody>
+      </Card>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Nama Perusahaan</label>
-            <input type="text" required value={form.companyName} onChange={set("companyName")} className={inputClass} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Kode Perusahaan</label>
-            <input type="text" value={form.companyCode ?? ""} onChange={set("companyCode")} className={inputClass} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">NPWP</label>
-            <input type="text" value={form.npwp ?? ""} onChange={set("npwp")} className={inputClass} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Telepon</label>
-            <input type="text" value={form.phone ?? ""} onChange={set("phone")} className={inputClass} />
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-        <div className="flex items-center space-x-3 mb-6">
-          <div className="w-10 h-10 bg-gradient-to-br from-brand to-brand-dark rounded-xl flex items-center justify-center">
-            <Settings className="text-white" size={20} />
-          </div>
-          <div>
-            <h3 className="text-xl font-semibold text-gray-900">Pengaturan Kerja</h3>
-            <p className="text-gray-500">Dipakai untuk perhitungan absensi, cuti, dan gaji</p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <Card>
+        <CardHeader title="Jam kerja dan cuti" description="Dipakai untuk menghitung absensi, cuti, dan gaji" />
+        <CardBody className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Jam Masuk</label>
-              <input type="time" required value={form.workStartTime} onChange={set("workStartTime")} className={inputClass} />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Jam Pulang</label>
-              <input type="time" required value={form.workEndTime} onChange={set("workEndTime")} className={inputClass} />
-            </div>
+            <Field label="Jam masuk" htmlFor="workStartTime" required>
+              <Input id="workStartTime" type="time" required value={form.workStartTime} onChange={set("workStartTime")} />
+            </Field>
+            <Field label="Jam pulang" htmlFor="workEndTime" required>
+              <Input id="workEndTime" type="time" required value={form.workEndTime} onChange={set("workEndTime")} />
+            </Field>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Toleransi Keterlambatan (menit)</label>
-            <input type="number" min={0} required value={form.lateToleranceMinutes} onChange={set("lateToleranceMinutes")} className={inputClass} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Tarif Lembur per Jam (Rp)</label>
-            <input type="number" min={0} step={1000} required value={form.overtimeRatePerHour} onChange={set("overtimeRatePerHour")} className={inputClass} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Hari Kerja per Bulan</label>
-            <input type="number" min={1} max={31} required value={form.workingDaysPerMonth} onChange={set("workingDaysPerMonth")} className={inputClass} />
-            <p className="text-xs text-gray-400 mt-1">Pembagi potongan gaji harian untuk cuti diluar tanggungan</p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Jatah Cuti Tahunan Default (hari)</label>
-            <input type="number" min={0} required value={form.annualLeaveQuota} onChange={set("annualLeaveQuota")} className={inputClass} />
-            <p className="text-xs text-gray-400 mt-1">Berlaku untuk karyawan yang didaftarkan setelah perubahan ini</p>
-          </div>
-        </div>
-      </div>
+          <Field label="Toleransi terlambat (menit)" htmlFor="lateToleranceMinutes" required>
+            <Input
+              id="lateToleranceMinutes"
+              type="number"
+              min={0}
+              required
+              value={form.lateToleranceMinutes}
+              onChange={set("lateToleranceMinutes")}
+            />
+          </Field>
+          <Field label="Tarif lembur per jam (Rp)" htmlFor="overtimeRatePerHour" required>
+            <Input
+              id="overtimeRatePerHour"
+              type="number"
+              min={0}
+              step={1000}
+              required
+              value={form.overtimeRatePerHour}
+              onChange={set("overtimeRatePerHour")}
+            />
+          </Field>
+          <Field
+            label="Hari kerja per bulan"
+            htmlFor="workingDaysPerMonth"
+            required
+            hint="Pembagi potongan harian untuk cuti di luar tanggungan"
+          >
+            <Input
+              id="workingDaysPerMonth"
+              type="number"
+              min={1}
+              max={31}
+              required
+              value={form.workingDaysPerMonth}
+              onChange={set("workingDaysPerMonth")}
+            />
+          </Field>
+          <Field
+            label="Jatah cuti tahunan (hari)"
+            htmlFor="annualLeaveQuota"
+            required
+            hint="Berlaku untuk karyawan yang didaftarkan setelah perubahan ini"
+          >
+            <Input id="annualLeaveQuota" type="number" min={0} required value={form.annualLeaveQuota} onChange={set("annualLeaveQuota")} />
+          </Field>
+        </CardBody>
+      </Card>
 
-      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-        <div className="flex items-center space-x-3 mb-6">
-          <div className="w-10 h-10 bg-gradient-to-br from-brand-dark to-brand rounded-xl flex items-center justify-center">
-            <ShieldCheck className="text-white" size={20} />
-          </div>
-          <div>
-            <h3 className="text-xl font-semibold text-gray-900">BPJS</h3>
-            <p className="text-gray-500">Dasar perhitungan iuran BPJS Kesehatan & Ketenagakerjaan</p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Kelompok Risiko JKK</label>
-            <select value={form.jkkRateBps} onChange={set("jkkRateBps")} className={inputClass}>
+      <Card>
+        <CardHeader title="BPJS" description="Dasar perhitungan iuran BPJS Kesehatan dan Ketenagakerjaan" />
+        <CardBody className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field label="Kelompok risiko JKK" htmlFor="jkkRateBps">
+            <Select id="jkkRateBps" value={form.jkkRateBps} onChange={set("jkkRateBps")}>
               {JKK_RISK_GROUPS.map((g) => (
-                <option key={g.bps} value={g.bps}>{g.label}</option>
+                <option key={g.bps} value={g.bps}>
+                  {g.label}
+                </option>
               ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Upah Minimum / UMK (Rp)</label>
-            <input type="number" min={0} step={1000} value={form.bpjsMinimumWage} onChange={set("bpjsMinimumWage")} className={inputClass} />
-            <p className="text-xs text-gray-400 mt-1">Batas bawah dasar iuran BPJS. Isi 0 jika tidak dipakai.</p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Batas Upah BPJS Kesehatan (Rp)</label>
-            <input type="number" min={0} step={1000} required value={form.bpjsKesehatanWageCap} onChange={set("bpjsKesehatanWageCap")} className={inputClass} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Batas Upah Jaminan Pensiun (Rp)</label>
-            <input type="number" min={0} step={100} required value={form.jpWageCap} onChange={set("jpWageCap")} className={inputClass} />
-            <p className="text-xs text-gray-400 mt-1">Disesuaikan BPJS Ketenagakerjaan setiap Maret.</p>
-          </div>
-        </div>
-      </div>
+            </Select>
+          </Field>
+          <Field label="Upah minimum / UMK (Rp)" htmlFor="bpjsMinimumWage" hint="Batas bawah dasar iuran. Isi 0 jika tidak dipakai.">
+            <Input
+              id="bpjsMinimumWage"
+              type="number"
+              min={0}
+              step={1000}
+              value={form.bpjsMinimumWage}
+              onChange={set("bpjsMinimumWage")}
+            />
+          </Field>
+          <Field label="Batas upah BPJS Kesehatan (Rp)" htmlFor="bpjsKesehatanWageCap" required>
+            <Input
+              id="bpjsKesehatanWageCap"
+              type="number"
+              min={0}
+              step={1000}
+              required
+              value={form.bpjsKesehatanWageCap}
+              onChange={set("bpjsKesehatanWageCap")}
+            />
+          </Field>
+          <Field label="Batas upah Jaminan Pensiun (Rp)" htmlFor="jpWageCap" required hint="Disesuaikan BPJS Ketenagakerjaan setiap Maret">
+            <Input id="jpWageCap" type="number" min={0} step={100} required value={form.jpWageCap} onChange={set("jpWageCap")} />
+          </Field>
+        </CardBody>
+      </Card>
 
       <div className="flex justify-end">
-        <button
-          type="submit"
-          disabled={isSaving}
-          className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-brand to-brand-dark text-white rounded-xl font-bold shadow-lg disabled:opacity-50"
-        >
-          <Save size={18} />
-          {isSaving ? "Menyimpan..." : "Simpan Pengaturan"}
-        </button>
+        <Button type="submit" loading={isSaving}>
+          Simpan pengaturan
+        </Button>
       </div>
     </form>
   );

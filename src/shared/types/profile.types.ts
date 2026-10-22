@@ -24,24 +24,10 @@ export interface ProfileData {
   avatar?: string;
 }
 
-export type ProfileTabId = "profil" | "keamanan" | "preferensi" | "aktivitas";
+export type ProfileTabId = "profil" | "password";
 
 export interface PasswordData {
   currentPassword: string;
   newPassword: string;
   confirmPassword: string;
-}
-
-export interface UserPreferences {
-  bahasa: string;
-  zonaWaktu: string;
-  formatTanggal: string;
-  itemPerHalaman: string;
-}
-
-export interface ActivityLogEntry {
-  aktivitas: string;
-  waktu: string;
-  ipAddress: string;
-  device: string;
 }

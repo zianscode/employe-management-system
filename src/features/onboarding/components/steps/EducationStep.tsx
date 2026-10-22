@@ -1,179 +1,109 @@
 import React from "react";
-import { Award, MapPin, ArrowRight } from "lucide-react";
-import { FormInput } from "@/features/onboarding/components/FormInput";
 import { OnboardingFormData, SUGGESTED_SKILLS } from "@/features/onboarding/constants";
+import { Field, Input, Select, Textarea } from "@/shared/components/ui/Form";
+import { cn } from "@/shared/utils/cn";
 
 interface EducationStepProps {
   formData: OnboardingFormData;
   errors: Record<string, string>;
-  focusedField: string | null;
-  setFocusedField: (field: string | null) => void;
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
   selectedSkills: string[];
   toggleSkill: (skill: string) => void;
   years: string[];
 }
 
+const EDUCATION_LEVELS = [
+  { value: "SMA/SMK", label: "SMA / SMK" },
+  { value: "D3", label: "Diploma 3 (D3)" },
+  { value: "S1", label: "Sarjana (S1 / D4)" },
+  { value: "S2", label: "Magister (S2)" },
+  { value: "S3", label: "Doktor (S3)" },
+];
+
 export const EducationStep = ({
   formData,
   errors,
-  focusedField,
-  setFocusedField,
   handleInputChange,
   selectedSkills,
   toggleSkill,
-  years
+  years,
 }: EducationStepProps) => {
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-right-4 duration-500">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="p-5 bg-accent-50/60 border border-accent-100/50 rounded-2xl text-slate-700 text-[11px] font-medium leading-relaxed md:col-span-2">
-          <div className="flex gap-3">
-            <Award size={16} className="text-brand shrink-0 animate-pulse" />
-            <span>
-              <strong>Petunjuk Pengisian:</strong> Silakan masukkan data <strong>pendidikan terakhir</strong> yang telah Anda selesaikan, ATAU <strong>pendidikan saat ini yang sedang Anda tempuh</strong> (jika sedang melanjutkan studi / belum lulus).
-            </span>
-          </div>
-        </div>
+    <div className="space-y-5">
+      <p className="text-sm text-gray-500">Isi pendidikan terakhir yang sudah selesai, atau yang sedang ditempuh.</p>
 
-        <div className="space-y-2">
-          <label className={`text-[9px] font-black uppercase tracking-[0.2em] ml-2 transition-colors duration-300 ${errors.eduLevel ? "text-brand" : "text-slate-400"}`}>
-            Jenjang Pendidikan (Terakhir / Sedang Ditempuh)
-          </label>
-          <div className="relative">
-            <select 
-              name="eduLevel" 
-              required 
-              value={formData.eduLevel} 
-              onChange={handleInputChange} 
-              className={`w-full pl-5 pr-10 py-3 bg-white border rounded-xl text-slate-900 text-sm font-medium focus:ring-4 focus:ring-brand/5 outline-none transition-all appearance-none cursor-pointer ${
-                errors.eduLevel ? "border-brand focus:border-brand" : "border-slate-200 focus:border-brand/50"
-              }`}
-            >
-              <option value="">Pilih Jenjang</option>
-              <option value="SMA/SMK">SMA / SMK (Sekolah Menengah)</option>
-              <option value="D3">Diploma 3 (D3)</option>
-              <option value="S1">Sarjana (S1 / Diploma 4)</option>
-              <option value="S2">Magister / Pascasarjana (S2)</option>
-              <option value="S3">Doktor (S3)</option>
-            </select>
-            <ArrowRight className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none rotate-90" size={14} />
-          </div>
-          {errors.eduLevel && (
-            <p className="text-brand text-[10px] font-bold mt-1 ml-2">
-              {errors.eduLevel}
-            </p>
-          )}
-        </div>
-        <FormInput 
-          label="Jurusan / Bidang Studi"
-          name="eduMajor" 
-          icon={Award} 
-          placeholder="Contoh: Teknik Informatika, IPA, IPS, Perhotelan, dll."
-          value={formData.eduMajor}
-          onChange={handleInputChange}
-          onFocus={() => setFocusedField("eduMajor")}
-          onBlur={() => setFocusedField(null)}
-          isFocused={focusedField === "eduMajor"}
-          error={errors.eduMajor}
-        />
-        <div className="md:col-span-2">
-          <FormInput 
-            label="Nama Sekolah / Universitas / Lembaga Pendidikan"
-            name="eduUniv" 
-            icon={MapPin} 
-            placeholder="Contoh: Universitas Indonesia, SMK Negeri 1 Jakarta, dll."
-            value={formData.eduUniv}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <Field label="Jenjang" htmlFor="eduLevel" required error={errors.eduLevel}>
+          <Select id="eduLevel" name="eduLevel" required value={formData.eduLevel} onChange={handleInputChange}>
+            <option value="">Pilih jenjang</option>
+            {EDUCATION_LEVELS.map((level) => (
+              <option key={level.value} value={level.value}>
+                {level.label}
+              </option>
+            ))}
+          </Select>
+        </Field>
+        <Field label="Jurusan" htmlFor="eduMajor" required error={errors.eduMajor}>
+          <Input
+            id="eduMajor"
+            name="eduMajor"
+            required
+            value={formData.eduMajor}
             onChange={handleInputChange}
-            onFocus={() => setFocusedField("eduUniv")}
-            onBlur={() => setFocusedField(null)}
-            isFocused={focusedField === "eduUniv"}
-            error={errors.eduUniv}
+            placeholder="Misal: Teknik Informatika"
           />
-        </div>
-        <div className="space-y-2">
-          <label className={`text-[9px] font-black uppercase tracking-[0.2em] ml-2 transition-colors duration-300 ${errors.eduStartYear ? "text-brand" : "text-slate-400"}`}>
-            Tahun Masuk Pendidikan
-          </label>
-          <div className="relative">
-            <select 
-              name="eduStartYear" 
-              required 
-              value={formData.eduStartYear} 
-              onChange={handleInputChange} 
-              className={`w-full pl-5 pr-10 py-3 bg-white border rounded-xl text-slate-900 text-sm font-medium focus:ring-4 focus:ring-brand/5 outline-none transition-all appearance-none cursor-pointer ${
-                errors.eduStartYear ? "border-brand focus:border-brand" : "border-slate-200 focus:border-brand/50"
-              }`}
-            >
-              <option value="">Pilih Tahun Masuk</option>
-              {years.map(y => <option key={y} value={y}>{y}</option>)}
-            </select>
-            <ArrowRight className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none rotate-90" size={14} />
-          </div>
-          {errors.eduStartYear && (
-            <p className="text-brand text-[10px] font-bold mt-1 ml-2">
-              {errors.eduStartYear}
-            </p>
-          )}
-        </div>
-        <div className="space-y-2">
-          <label className={`text-[9px] font-black uppercase tracking-[0.2em] ml-2 transition-colors duration-300 ${errors.eduEndYear ? "text-brand" : "text-slate-400"}`}>
-            Tahun Lulus / Estimasi Lulus (Pilih estimasi jika sedang ditempuh)
-          </label>
-          <div className="relative">
-            <select 
-              name="eduEndYear" 
-              required 
-              value={formData.eduEndYear} 
-              onChange={handleInputChange} 
-              className={`w-full pl-5 pr-10 py-3 bg-white border rounded-xl text-slate-900 text-sm font-medium focus:ring-4 focus:ring-brand/5 outline-none transition-all appearance-none cursor-pointer ${
-                errors.eduEndYear ? "border-brand focus:border-brand" : "border-slate-200 focus:border-brand/50"
-              }`}
-            >
-              <option value="">Pilih Tahun Lulus / Estimasi</option>
-              {years.map(y => <option key={y} value={y}>{y}</option>)}
-            </select>
-            <ArrowRight className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none rotate-90" size={14} />
-          </div>
-          {errors.eduEndYear && (
-            <p className="text-brand text-[10px] font-bold mt-1 ml-2">
-              {errors.eduEndYear}
-            </p>
-          )}
+        </Field>
+        <Field label="Sekolah / universitas" htmlFor="eduUniv" required error={errors.eduUniv} className="sm:col-span-2">
+          <Input id="eduUniv" name="eduUniv" required value={formData.eduUniv} onChange={handleInputChange} />
+        </Field>
+        <Field label="Tahun masuk" htmlFor="eduStartYear" required error={errors.eduStartYear}>
+          <Select id="eduStartYear" name="eduStartYear" required value={formData.eduStartYear} onChange={handleInputChange}>
+            <option value="">Pilih tahun</option>
+            {years.map((y) => (
+              <option key={y} value={y}>
+                {y}
+              </option>
+            ))}
+          </Select>
+        </Field>
+        <Field label="Tahun lulus" htmlFor="eduEndYear" required error={errors.eduEndYear} hint="Isi perkiraan jika belum lulus">
+          <Select id="eduEndYear" name="eduEndYear" required value={formData.eduEndYear} onChange={handleInputChange}>
+            <option value="">Pilih tahun</option>
+            {years.map((y) => (
+              <option key={y} value={y}>
+                {y}
+              </option>
+            ))}
+          </Select>
+        </Field>
+      </div>
+
+      <div>
+        <p className="mb-2 text-sm font-medium text-gray-700">Keahlian</p>
+        <div className="flex flex-wrap gap-2">
+          {SUGGESTED_SKILLS.map((skill) => {
+            const selected = selectedSkills.includes(skill);
+            return (
+              <button
+                key={skill}
+                type="button"
+                onClick={() => toggleSkill(skill)}
+                aria-pressed={selected}
+                className={cn(
+                  "rounded-md border px-2.5 py-1 text-sm transition-colors",
+                  selected ? "border-brand bg-brand-50 text-brand" : "border-gray-300 text-gray-600 hover:bg-gray-50",
+                )}
+              >
+                {skill}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      <div className="space-y-4">
-        <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Professional Skills</label>
-        <div className="flex flex-wrap gap-2.5">
-          {SUGGESTED_SKILLS.map(skill => (
-            <button
-              key={skill}
-              type="button"
-              onClick={() => toggleSkill(skill)}
-              className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${
-                selectedSkills.includes(skill)
-                  ? "bg-slate-900 text-white border-slate-900 shadow-lg shadow-slate-900/10"
-                  : "bg-white text-slate-400 border-slate-100 hover:border-slate-200 hover:text-slate-600"
-              }`}
-            >
-              {skill}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Biodata Singkat</label>
-        <textarea 
-          name="bio" 
-          value={formData.bio} 
-          onChange={handleInputChange} 
-          rows={4} 
-          placeholder="Tuliskan pengalaman atau motivasi singkat Anda..." 
-          className="w-full px-5 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm font-medium focus:border-brand/50 focus:ring-4 focus:ring-brand/5 outline-none transition-all resize-none"
-        ></textarea>
-      </div>
+      <Field label="Tentang saya" htmlFor="bio" hint="Opsional">
+        <Textarea id="bio" name="bio" rows={3} value={formData.bio} onChange={handleInputChange} />
+      </Field>
     </div>
   );
 };

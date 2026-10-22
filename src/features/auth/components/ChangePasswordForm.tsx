@@ -3,19 +3,18 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
-import { KeyRound, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { updatePasswordAction } from "@/server/modules/profile/profile.actions";
 import { PASSWORD_RULE_TEXT, validatePasswordStrength } from "@/shared/utils/password-policy";
 import { PasswordData } from "@/shared/types/profile.types";
+import { AuthLayout } from "./AuthLayout";
+import { Field, Input } from "@/shared/components/ui/Form";
+import { Button } from "@/shared/components/ui/Button";
 
-const inputClass =
-  "w-full px-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:bg-white focus:border-brand/50 outline-none transition-all font-medium";
-
-const FIELDS: { name: keyof PasswordData; label: string }[] = [
-  { name: "currentPassword", label: "Password Sementara" },
-  { name: "newPassword", label: "Password Baru" },
-  { name: "confirmPassword", label: "Konfirmasi Password Baru" },
+const FIELDS: { name: keyof PasswordData; label: string; hint?: string; autoComplete: string }[] = [
+  { name: "currentPassword", label: "Password sementara", autoComplete: "current-password" },
+  { name: "newPassword", label: "Password baru", hint: PASSWORD_RULE_TEXT, autoComplete: "new-password" },
+  { name: "confirmPassword", label: "Ulangi password baru", autoComplete: "new-password" },
 ];
 
 export function ChangePasswordForm() {
@@ -54,49 +53,33 @@ export function ChangePasswordForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-[32px] shadow-xl border border-gray-100 p-8 space-y-5">
-      <div className="flex items-center gap-3">
-        <div className="p-3 rounded-2xl bg-brand/10 text-brand">
-          <KeyRound size={24} />
-        </div>
-        <div>
-          <h1 className="text-xl font-black text-gray-900">Ganti Password</h1>
-          <p className="text-sm text-gray-500">Demi keamanan, ganti password sementara Anda sebelum melanjutkan.</p>
-        </div>
-      </div>
-
-      {FIELDS.map((field) => (
-        <div key={field.name} className="space-y-2">
-          <label className="text-sm font-bold text-gray-700 ml-1">{field.label}</label>
-          <input
-            type="password"
-            name={field.name}
-            required
-            value={form[field.name]}
-            onChange={handleChange}
-            className={inputClass}
-          />
-        </div>
-      ))}
-
-      <p className="text-xs text-gray-500 ml-1">{PASSWORD_RULE_TEXT}</p>
-
-      <button
-        type="submit"
-        disabled={isLoading}
-        className="w-full py-4 bg-gradient-to-r from-brand to-brand-dark text-white rounded-2xl font-bold shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
-      >
-        {isLoading && <Loader2 className="animate-spin" size={18} />}
-        Simpan Password Baru
-      </button>
-
-      <button
-        type="button"
-        onClick={() => signOut({ callbackUrl: "/login" })}
-        className="w-full text-sm font-bold text-gray-400 hover:text-gray-600"
-      >
-        Keluar
-      </button>
-    </form>
+    <AuthLayout
+      title="Ganti password"
+      description="Akun Anda masih memakai password sementara. Ganti dulu sebelum melanjutkan."
+      footer={
+        <button type="button" onClick={() => signOut({ callbackUrl: "/login" })} className="text-gray-500 hover:text-gray-900">
+          Keluar
+        </button>
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {FIELDS.map((field) => (
+          <Field key={field.name} label={field.label} htmlFor={field.name} hint={field.hint}>
+            <Input
+              id={field.name}
+              type="password"
+              name={field.name}
+              required
+              autoComplete={field.autoComplete}
+              value={form[field.name]}
+              onChange={handleChange}
+            />
+          </Field>
+        ))}
+        <Button type="submit" loading={isLoading} className="w-full">
+          Simpan password
+        </Button>
+      </form>
+    </AuthLayout>
   );
 }

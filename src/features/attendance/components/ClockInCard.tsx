@@ -1,10 +1,12 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
-import { LogIn, LogOut, Clock } from "lucide-react";
+import { LogIn, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { StatusBadge } from "@/shared/components/StatusBadge";
 import { MyTodayAttendance } from "@/shared/types/attendance.types";
+import { Card } from "@/shared/components/ui/Card";
+import { Button } from "@/shared/components/ui/Button";
 import {
   clockInAction,
   clockOutAction,
@@ -47,46 +49,41 @@ export function ClockInCard({ onChange }: ClockInCardProps) {
   const canClockOut = !!today.checkIn && !today.checkOut;
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-      <div className="flex items-center gap-4">
-        <div className="p-3 rounded-xl bg-brand/10 text-brand">
-          <Clock size={24} />
+    <Card className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-medium text-gray-900">Absensi saya hari ini</p>
+          <StatusBadge status={today.status} />
         </div>
-        <div>
-          <p className="text-sm text-gray-500">
-            Absensi Anda hari ini · {today.date} · Jam kerja {today.workStartTime}–{today.workEndTime}
-          </p>
-          <div className="flex items-center gap-3 mt-1">
-            <StatusBadge status={today.status} />
-            <span className="text-sm text-gray-700">
-              Masuk <b>{today.checkIn ?? "-"}</b> · Pulang <b>{today.checkOut ?? "-"}</b>
-            </span>
-          </div>
-        </div>
+        <p className="mt-1 text-sm text-gray-500">
+          {today.date} · jam kerja {today.workStartTime}–{today.workEndTime}
+        </p>
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex items-center gap-6">
+        <dl className="flex gap-6 text-sm">
+          <div>
+            <dt className="text-gray-500">Masuk</dt>
+            <dd className="font-medium tabular-nums text-gray-900">{today.checkIn ?? "-"}</dd>
+          </div>
+          <div>
+            <dt className="text-gray-500">Pulang</dt>
+            <dd className="font-medium tabular-nums text-gray-900">{today.checkOut ?? "-"}</dd>
+          </div>
+        </dl>
         {canClockIn && (
-          <button
-            onClick={() => handle(clockInAction)}
-            disabled={isSubmitting}
-            className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-brand to-brand-dark text-white rounded-xl font-bold text-sm shadow-lg disabled:opacity-50"
-          >
-            <LogIn size={16} />
+          <Button onClick={() => handle(clockInAction)} loading={isSubmitting}>
+            <LogIn className="h-4 w-4" />
             Check-in
-          </button>
+          </Button>
         )}
         {canClockOut && (
-          <button
-            onClick={() => handle(clockOutAction)}
-            disabled={isSubmitting}
-            className="flex items-center gap-2 px-5 py-2.5 bg-white border border-brand text-brand rounded-xl font-bold text-sm disabled:opacity-50"
-          >
-            <LogOut size={16} />
+          <Button variant="secondary" onClick={() => handle(clockOutAction)} loading={isSubmitting}>
+            <LogOut className="h-4 w-4" />
             Check-out
-          </button>
+          </Button>
         )}
       </div>
-    </div>
+    </Card>
   );
 }

@@ -6,6 +6,8 @@ import EmployeeForm from "@/features/employees/components/EmployeeForm";
 import { getEmployeeByIdAction, updateEmployeeAction } from "@/server/modules/employees/employee.actions";
 import { EmployeeFormData } from "@/shared/types/employee.types";
 import { toast } from "sonner";
+import { Page } from "@/shared/components/ui/Page";
+import { Spinner } from "@/shared/components/ui/Feedback";
 
 export default function EditEmployeePage() {
   const router = useRouter();
@@ -53,7 +55,7 @@ export default function EditEmployeePage() {
     try {
       const result = await updateEmployeeAction(id, data);
       if (result.success) {
-        toast.success("Data karyawan diperbarui!");
+        toast.success("Data karyawan disimpan");
         router.push("/dashboard/employees");
         router.refresh();
       } else {
@@ -67,22 +69,24 @@ export default function EditEmployeePage() {
     }
   };
 
-  if (loading) return (
-    <div className="flex items-center justify-center min-h-[400px]">
-      <div className="w-8 h-8 border-4 border-brand border-t-transparent rounded-full animate-spin"></div>
-    </div>
-  );
+  if (loading) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <Spinner />
+      </div>
+    );
+  }
 
   if (!employee) return null;
 
   return (
-    <div className="py-4 pl-8 pr-6">
+    <Page className="max-w-4xl">
       <EmployeeForm
-        title={`Edit Data: ${employee.name}`}
+        title={`Edit ${employee.name}`}
         initialData={employee}
         onSubmit={handleSubmit}
         isSubmitting={isSubmitting}
       />
-    </div>
+    </Page>
   );
 }

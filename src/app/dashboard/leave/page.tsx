@@ -1,6 +1,7 @@
 import React from "react";
 import { LeaveStatData } from "@/features/leave/components/LeaveStats";
 import { LeaveClient } from "@/features/leave/components/LeaveClient";
+import { Page } from "@/shared/components/ui/Page";
 import { getLeaveStatsAction, getMyLeaveBalanceAction } from "@/server/modules/leave/leave.actions";
 
 export default async function LeavePage() {
@@ -9,8 +10,8 @@ export default async function LeavePage() {
   const balance = balanceRes.success ? balanceRes.data ?? null : null;
 
   return (
-    <div className="py-4 pl-8 pr-6">
+    <Page>
       <LeaveClient stats={stats} balance={balance} />
-    </div>
+    </Page>
   );
 }

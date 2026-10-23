@@ -11,6 +11,7 @@ import { Field, Textarea } from "@/shared/components/ui/Form";
 import { DataTable } from "@/shared/components/DataTable";
 import { StatusBadge } from "@/shared/components/StatusBadge";
 import { useLeave } from "@/features/leave/hooks/use-leave";
+import { notifyApprovalsChanged } from "@/features/layout/hooks/use-pending-approvals";
 import { LeaveBalance, LeaveRequest, LeaveRequestInput } from "@/shared/types/leave.types";
 import {
   approveLeaveAction,
@@ -18,17 +19,11 @@ import {
   createLeaveRequestAction,
   rejectLeaveAction,
 } from "@/server/modules/leave/leave.actions";
+import { LEAVE_TYPE_LABELS } from "@/shared/constants/leave";
 import { LeaveForm } from "./LeaveForm";
 import LeaveHeader from "./LeaveHeader";
 import LeaveStats, { LeaveStatData } from "./LeaveStats";
 import LeaveControls from "./LeaveControls";
-
-const LEAVE_TYPE_LABELS: Record<string, string> = {
-  ANNUAL: "Cuti tahunan",
-  SICK: "Sakit",
-  EMERGENCY: "Izin penting",
-  UNPAID: "Di luar tanggungan",
-};
 
 interface LeaveClientProps {
   stats: LeaveStatData[];
@@ -53,6 +48,7 @@ export function LeaveClient({ stats, balance }: LeaveClientProps) {
     const res = await action();
     if (res.success) {
       toast.success(res.message);
+      notifyApprovalsChanged();
       await reloadAll();
     } else {
       toast.error(res.message);
@@ -109,6 +105,7 @@ export function LeaveClient({ stats, balance }: LeaveClientProps) {
       accessor: (item) => (
         <div className="flex max-w-56 flex-col items-start gap-1 whitespace-normal">
           <StatusBadge status={item.status} />
+          {item.nextStep && <span className="text-xs text-gray-600">{item.nextStep}</span>}
           {item.managerApprover && <span className="text-xs text-gray-500">Atasan: {item.managerApprover.name}</span>}
           {item.hrApprover && <span className="text-xs text-gray-500">HR: {item.hrApprover.name}</span>}
           {item.rejectedBy && (

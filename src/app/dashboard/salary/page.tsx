@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Calculator, Search } from "lucide-react";
+import { Calculator, CheckCheck, Search } from "lucide-react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
@@ -11,7 +11,8 @@ import { DataTable } from "@/shared/components/DataTable";
 import { SalaryRecord } from "@/shared/types/salary.types";
 import { isAdminRole } from "@/shared/constants/roles";
 import { formatCurrency } from "@/shared/utils/format";
-import { generatePayrollAction, markSalaryPaidAction } from "@/server/modules/salary/salary.actions";
+import { generatePayrollAction, markPeriodPaidAction, markSalaryPaidAction } from "@/server/modules/salary/salary.actions";
+import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { Page, PageHeader } from "@/shared/components/ui/Page";
 import { Card } from "@/shared/components/ui/Card";
 import { Button } from "@/shared/components/ui/Button";
@@ -24,12 +25,15 @@ type SalaryColumn = {
   className?: string;
 };
 
+type PendingConfirm = { kind: "generate" } | { kind: "payAll" } | { kind: "pay"; id: string; name: string };
+
 const money = (value: number) => <span className="tabular-nums">{formatCurrency(value)}</span>;
 
 export default function SalaryPage() {
   const { data: session } = useSession();
   const isAdmin = isAdminRole(session?.user?.role);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [confirm, setConfirm] = useState<PendingConfirm | null>(null);
 
   const {
     data,
@@ -41,6 +45,7 @@ export default function SalaryPage() {
     selectedMonth,
     setSelectedMonth,
     totalCount,
+    unpaidCount,
     filteredCount,
     refresh,
   } = useSalary();
@@ -62,6 +67,33 @@ export default function SalaryPage() {
       toast.error(res.message);
     }
     setIsProcessing(false);
+    setConfirm(null);
+  };
+
+  const handleConfirm = () => {
+    if (!confirm) return;
+    if (confirm.kind === "generate") run(() => generatePayrollAction(month, year));
+    if (confirm.kind === "payAll") run(() => markPeriodPaidAction(month, year));
+    if (confirm.kind === "pay") run(() => markSalaryPaidAction(confirm.id));
+  };
+
+  const confirmCopy: Record<PendingConfirm["kind"], { title: string; message: string; label: string }> = {
+    generate: {
+      title: `Hitung gaji ${periodLabel}?`,
+      message:
+        "Gaji semua karyawan aktif dihitung dari absensi, cuti, lembur, BPJS, dan PPh 21. Slip yang belum dibayar akan dihitung ulang, slip yang sudah dibayar tidak berubah.",
+      label: "Hitung gaji",
+    },
+    payAll: {
+      title: `Tandai ${unpaidCount} slip sudah dibayar?`,
+      message: `Semua slip ${periodLabel} yang belum dibayar akan ditandai dibayar hari ini. Slip yang sudah dibayar tidak bisa dihitung ulang.`,
+      label: "Tandai dibayar",
+    },
+    pay: {
+      title: "Tandai slip sudah dibayar?",
+      message: `Slip gaji ${confirm?.kind === "pay" ? confirm.name : ""} periode ${periodLabel} akan ditandai dibayar. Setelah itu slip tidak bisa dihitung ulang.`,
+      label: "Tandai dibayar",
+    },
   };
 
   const columns: SalaryColumn[] = [
@@ -96,7 +128,7 @@ export default function SalaryPage() {
       accessor: (item) => (
         <div className="flex items-center justify-end gap-2">
           {isAdmin && item.status === "Pending" && (
-            <Button size="sm" variant="secondary" onClick={() => run(() => markSalaryPaidAction(item.id))} disabled={isProcessing}>
+            <Button size="sm" variant="secondary" onClick={() => setConfirm({ kind: "pay", id: item.id, name: item.name })} disabled={isProcessing}>
               Tandai dibayar
             </Button>
           )}
@@ -115,10 +147,18 @@ export default function SalaryPage() {
         description={isAdmin ? `Perhitungan gaji periode ${periodLabel}` : "Riwayat gaji per periode"}
         actions={
           isAdmin && (
-            <Button onClick={() => run(() => generatePayrollAction(month, year))} loading={isProcessing}>
-              {!isProcessing && <Calculator className="h-4 w-4" />}
-              Hitung gaji {periodLabel}
-            </Button>
+            <>
+              {unpaidCount > 0 && (
+                <Button variant="secondary" onClick={() => setConfirm({ kind: "payAll" })} disabled={isProcessing}>
+                  <CheckCheck className="h-4 w-4" />
+                  Tandai semua dibayar ({unpaidCount})
+                </Button>
+              )}
+              <Button onClick={() => setConfirm({ kind: "generate" })} disabled={isProcessing}>
+                <Calculator className="h-4 w-4" />
+                Hitung gaji {periodLabel}
+              </Button>
+            </>
           )
         }
       />
@@ -161,6 +201,17 @@ export default function SalaryPage() {
           {filteredCount} dari {totalCount} data
         </div>
       </Card>
+
+      <ConfirmModal
+        isOpen={!!confirm}
+        title={confirm ? confirmCopy[confirm.kind].title : ""}
+        message={confirm ? confirmCopy[confirm.kind].message : ""}
+        confirmLabel={confirm ? confirmCopy[confirm.kind].label : ""}
+        variant="info"
+        isLoading={isProcessing}
+        onConfirm={handleConfirm}
+        onCancel={() => setConfirm(null)}
+      />
     </Page>
   );
 }

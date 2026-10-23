@@ -1,12 +1,19 @@
 export type SettingsTabId = "company" | "holidays" | "users" | "security" | "session";
 
-export interface SystemUser {
-  id: string;
+export type AccountState = "ACTIVE" | "INACTIVE" | "LOCKED" | "MUST_CHANGE_PASSWORD";
+
+export interface AccountInfo {
+  userId: string;
+  state: AccountState;
+  lockedUntil: string | null;
+}
+
+export interface SystemUser extends AccountInfo {
   name: string;
   email: string;
   role: string;
-  status: string;
-  lastLogin: string;
+  employeeId: string | null;
+  isSelf: boolean;
 }
 
 export interface CompanySetting {

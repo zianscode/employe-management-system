@@ -2,7 +2,7 @@ import { prisma } from "@/server/db/prisma";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { HolidayRow } from "@/shared/types/settings.types";
-import { dateKeyToDate, dateToDateKey, formatDate } from "@/shared/utils/date";
+import { dateKeyToDate, dateToDateKey, formatDate, toDateKey } from "@/shared/utils/date";
 
 const HolidaySchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Tanggal tidak valid"),
@@ -21,6 +21,15 @@ class HolidayService {
     const holidays = await prisma.holiday.findMany({
       where: { date: { gte: new Date(Date.UTC(year, 0, 1)), lte: new Date(Date.UTC(year, 11, 31)) } },
       orderBy: { date: "asc" },
+    });
+    return holidays.map((h) => ({ id: h.id, dateKey: dateToDateKey(h.date), date: formatDate(h.date), name: h.name }));
+  }
+
+  async upcoming(limit: number): Promise<HolidayRow[]> {
+    const holidays = await prisma.holiday.findMany({
+      where: { date: { gte: dateKeyToDate(toDateKey()) } },
+      orderBy: { date: "asc" },
+      take: limit,
     });
     return holidays.map((h) => ({ id: h.id, dateKey: dateToDateKey(h.date), date: formatDate(h.date), name: h.name }));
   }

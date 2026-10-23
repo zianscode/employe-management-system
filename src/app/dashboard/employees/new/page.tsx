@@ -2,30 +2,33 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import EmployeeForm from "@/features/employees/components/EmployeeForm";
+import { TemporaryPasswordModal } from "@/features/account/components/TemporaryPasswordModal";
 import { createEmployeeAction } from "@/server/modules/employees/employee.actions";
 import { EmployeeFormData } from "@/shared/types/employee.types";
-import { toast } from "sonner";
 import { Page } from "@/shared/components/ui/Page";
+
+interface CreatedEmployee {
+  id: string;
+  name: string;
+  temporaryPassword: string;
+}
 
 export default function NewEmployeePage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [created, setCreated] = useState<CreatedEmployee | null>(null);
 
   const handleSubmit = async (data: EmployeeFormData) => {
     setIsSubmitting(true);
     try {
       const result = await createEmployeeAction(data);
-      if (result.success) {
-        toast.success("Karyawan ditambahkan", {
-          description: `${result.message}. Catat dan berikan kepada karyawan, password ini hanya ditampilkan sekali.`,
-          duration: Infinity,
-          closeButton: true,
-        });
-        router.push("/dashboard/employees");
-        router.refresh();
+      if (result.success && result.data) {
+        toast.success(result.message);
+        setCreated({ id: result.data.id, name: data.name, temporaryPassword: result.data.temporaryPassword });
       } else {
-        toast.error("Gagal mendaftarkan karyawan", { description: result.message });
+        toast.error("Gagal menambah karyawan", { description: result.message });
         setIsSubmitting(false);
       }
     } catch (error) {
@@ -35,12 +38,19 @@ export default function NewEmployeePage() {
     }
   };
 
+  const handleCloseModal = () => {
+    if (!created) return;
+    router.push(`/dashboard/employees/${created.id}`);
+    router.refresh();
+  };
+
   return (
     <Page className="max-w-4xl">
-      <EmployeeForm
-        title="Tambah karyawan"
-        onSubmit={handleSubmit}
-        isSubmitting={isSubmitting}
+      <EmployeeForm title="Tambah karyawan" onSubmit={handleSubmit} isSubmitting={isSubmitting} />
+      <TemporaryPasswordModal
+        password={created?.temporaryPassword ?? null}
+        employeeName={created?.name}
+        onClose={handleCloseModal}
       />
     </Page>
   );

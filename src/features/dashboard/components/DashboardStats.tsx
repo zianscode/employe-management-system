@@ -1,6 +1,5 @@
 import React from "react";
 import { StatCard, StatGrid } from "@/shared/components/ui/StatCard";
-import { formatTime } from "@/shared/utils/date";
 
 export interface PersonalStats {
   attendanceStatus: string;
@@ -31,12 +30,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ data }) => {
   if (data.type === "PERSONAL") {
     const stats = data.stats as PersonalStats;
     return (
-      <StatGrid className="lg:grid-cols-3">
-        <StatCard
-          label="Absensi hari ini"
-          value={stats.attendanceStatus}
-          hint={stats.checkInTime ? `Masuk ${formatTime(new Date(stats.checkInTime))}` : "Belum check-in"}
-        />
+      <StatGrid className="lg:grid-cols-2">
         <StatCard label="Sisa cuti tahunan" value={`${stats.remainingLeave} hari`} />
         <StatCard label="Gaji sudah dibayar" value={`${stats.totalSalaryReceived} bulan`} />
       </StatGrid>

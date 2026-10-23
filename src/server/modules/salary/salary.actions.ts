@@ -40,6 +40,17 @@ export async function markSalaryPaidAction(salaryId: string) {
   }
 }
 
+export async function markPeriodPaidAction(month: number, year: number) {
+  try {
+    await requireRole(ADMIN_ROLES);
+    const count = await payrollService.markPeriodAsPaid(month, year);
+    revalidatePath("/dashboard/salary");
+    return ApiResponse.success(count > 0 ? `${count} slip gaji ditandai sudah dibayar` : "Tidak ada slip yang belum dibayar");
+  } catch (error) {
+    return ApiResponse.fromError(error, "Gagal memperbarui status gaji");
+  }
+}
+
 export async function getSalarySlipAction(salaryId: string) {
   try {
     const user = await requireUser();

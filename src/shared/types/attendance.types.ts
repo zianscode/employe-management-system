@@ -22,6 +22,7 @@ export interface MyTodayAttendance {
   lateInMinutes: number;
   workStartTime: string;
   workEndTime: string;
+  lateToleranceMinutes: number;
   onLeave: boolean;
 }
 

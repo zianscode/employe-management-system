@@ -12,6 +12,7 @@ import { Button } from "@/shared/components/ui/Button";
 import { Field, Input, Textarea } from "@/shared/components/ui/Form";
 import { AttendanceCorrectionInput, AttendanceCorrectionRow } from "@/shared/types/attendance.types";
 import { toDateKey } from "@/shared/utils/date";
+import { notifyApprovalsChanged } from "@/features/layout/hooks/use-pending-approvals";
 import {
   approveAttendanceCorrectionAction,
   cancelAttendanceCorrectionAction,
@@ -46,6 +47,7 @@ export function CorrectionPanel({ onChange }: { onChange: () => void }) {
     const res = await action();
     if (res.success) {
       toast.success(res.message);
+      notifyApprovalsChanged();
       await load();
       onChange();
     } else {

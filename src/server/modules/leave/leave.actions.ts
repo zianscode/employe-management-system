@@ -5,7 +5,7 @@ import { prisma } from "@/server/db/prisma";
 import { requireEmployee, requireRole, requireUser } from "@/server/auth/guard";
 import { ApiResponse } from "@/server/utils/api-response";
 import { ADMIN_ROLES } from "@/shared/constants/roles";
-import { LeaveBalance, LeaveRequest, LeaveRequestInput } from "@/shared/types/leave.types";
+import { LeaveBalance, LeavePreview, LeaveRequest, LeaveRequestInput } from "@/shared/types/leave.types";
 import { leaveService } from "./leave.service";
 
 const refresh = () => {
@@ -37,6 +37,15 @@ export async function getMyLeaveBalanceAction() {
     return ApiResponse.success("Sisa cuti", await leaveService.getBalance(user.employeeId));
   } catch (error) {
     return ApiResponse.fromError<LeaveBalance>(error, "Gagal mengambil sisa cuti");
+  }
+}
+
+export async function getLeavePreviewAction(input: { employeeId?: string; startDate: string; endDate?: string }) {
+  try {
+    const user = await requireUser();
+    return ApiResponse.success("Pratinjau cuti", await leaveService.preview(user, input));
+  } catch (error) {
+    return ApiResponse.fromError<LeavePreview>(error, "Gagal menghitung cuti");
   }
 }
 

@@ -22,6 +22,10 @@ export function formatDate(date: Date): string {
   return date.toLocaleDateString("id-ID", { timeZone: "UTC", day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
+export function formatPeriod(month: number, year: number): string {
+  return new Date(Date.UTC(year, month - 1, 1)).toLocaleDateString("id-ID", { month: "long", year: "numeric", timeZone: "UTC" });
+}
+
 export function formatTime(date: Date): string {
   return new Intl.DateTimeFormat("en-GB", {
     timeZone: APP_TIMEZONE,

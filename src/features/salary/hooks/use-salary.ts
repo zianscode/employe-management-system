@@ -54,6 +54,7 @@ export function useSalary() {
     selectedMonth,
     setSelectedMonth,
     totalCount: salaryData.length,
+    unpaidCount: salaryData.filter((emp) => emp.status === "Pending").length,
     filteredCount: filteredData.length,
     refresh,
   };

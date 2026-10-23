@@ -6,7 +6,8 @@ import { useEffect, useState } from "react";
 import { signOut, useSession } from "next-auth/react";
 import { LogOut, Menu as MenuIcon, X } from "lucide-react";
 import Menu from "./Menu";
-import { ROLES } from "@/shared/constants/roles";
+import { APPROVER_ROLES, ROLES, RoleName } from "@/shared/constants/roles";
+import { usePendingApprovals } from "@/features/layout/hooks/use-pending-approvals";
 import { BrandLogo } from "@/shared/components/BrandLogo";
 import { Avatar } from "@/shared/components/ui/Avatar";
 import { cn } from "@/shared/utils/cn";
@@ -16,6 +17,12 @@ export const Sidebar = () => {
   const pathname = usePathname();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const user = session?.user;
+  const canApprove = APPROVER_ROLES.includes(user?.role as RoleName);
+  const approvals = usePendingApprovals(pathname, canApprove);
+  const badges = {
+    "/dashboard/leave": approvals.leave,
+    "/dashboard/attendance": approvals.attendanceCorrection,
+  };
 
   useEffect(() => {
     setIsMobileOpen(false);
@@ -65,7 +72,7 @@ export const Sidebar = () => {
         </div>
 
         <div className="flex-1 overflow-y-auto px-3 py-4">
-          <Menu currentPath={pathname} role={user?.role || ROLES.EMPLOYEE} />
+          <Menu currentPath={pathname} role={user?.role || ROLES.EMPLOYEE} badges={badges} />
         </div>
 
         <div className="flex items-center gap-3 border-t border-gray-200 p-3">

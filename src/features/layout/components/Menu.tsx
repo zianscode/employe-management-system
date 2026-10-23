@@ -17,9 +17,10 @@ import { canAccessRoute, isAdminRole, ROLES } from "@/shared/constants/roles";
 interface MenuProps {
   currentPath: string;
   role?: string;
+  badges?: Record<string, number>;
 }
 
-export default function Menu({ currentPath, role = ROLES.EMPLOYEE }: MenuProps) {
+export default function Menu({ currentPath, role = ROLES.EMPLOYEE, badges = {} }: MenuProps) {
   const isAdmin = isAdminRole(role);
   const isActive = (href: string) => (href === "/dashboard" ? currentPath === href : currentPath.startsWith(href));
 
@@ -50,7 +51,7 @@ export default function Menu({ currentPath, role = ROLES.EMPLOYEE }: MenuProps) 
           <p className="mb-1 px-3 text-xs font-medium text-gray-400">{section.title}</p>
           <div className="space-y-0.5">
             {section.items.map((item) => (
-              <MenuItem key={item.href} {...item} isActive={isActive(item.href)} />
+              <MenuItem key={item.href} {...item} isActive={isActive(item.href)} badge={badges[item.href]} />
             ))}
           </div>
         </div>

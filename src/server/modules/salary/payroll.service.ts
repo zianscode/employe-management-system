@@ -5,7 +5,7 @@ import { companySettingService } from "@/server/modules/settings/company-setting
 import { holidayService } from "@/server/modules/settings/holiday.service";
 import { isAdminRole } from "@/shared/constants/roles";
 import { SalaryRecord, SalarySlip, SlipLine } from "@/shared/types/salary.types";
-import { countWorkingDays, monthRange } from "@/shared/utils/date";
+import { countWorkingDays, monthRange, formatPeriod } from "@/shared/utils/date";
 import { PTKP_LABELS } from "@/shared/constants/payroll";
 import { annualPph21, calculateBpjs, monthlyTerPph21 } from "./payroll.rules";
 
@@ -22,8 +22,7 @@ function assertPeriod(month: number, year: number) {
   if (!Number.isInteger(year) || year < 2000 || year > 2100) throw new Error("Tahun tidak valid");
 }
 
-const periodLabel = (month: number, year: number) =>
-  new Date(Date.UTC(year, month - 1, 1)).toLocaleDateString("id-ID", { month: "long", year: "numeric", timeZone: "UTC" });
+const periodLabel = formatPeriod;
 
 const employeeBpjs = (s: { bpjsKesEmployee: number; jhtEmployee: number; jpEmployee: number }) =>
   s.bpjsKesEmployee + s.jhtEmployee + s.jpEmployee;
@@ -246,6 +245,14 @@ class PayrollService {
     if (!salary) throw new Error("Slip gaji tidak ditemukan");
     if (salary.isPaid) throw new Error("Slip gaji sudah dibayar");
     return prisma.salary.update({ where: { id: salaryId }, data: { isPaid: true, paidAt: new Date() } });
+  }
+
+  async markPeriodAsPaid(month: number, year: number) {
+    const result = await prisma.salary.updateMany({
+      where: { periodMonth: month, periodYear: year, isPaid: false },
+      data: { isPaid: true, paidAt: new Date() },
+    });
+    return result.count;
   }
 }
 

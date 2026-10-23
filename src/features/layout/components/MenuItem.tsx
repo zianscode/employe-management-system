@@ -7,9 +7,10 @@ interface MenuItemProps {
   label: string;
   icon: React.ElementType;
   isActive: boolean;
+  badge?: number;
 }
 
-export const MenuItem = ({ href, label, icon: Icon, isActive }: MenuItemProps) => {
+export const MenuItem = ({ href, label, icon: Icon, isActive, badge }: MenuItemProps) => {
   return (
     <Link
       href={href}
@@ -20,7 +21,15 @@ export const MenuItem = ({ href, label, icon: Icon, isActive }: MenuItemProps) =
       )}
     >
       <Icon className={cn("h-[18px] w-[18px] shrink-0", isActive ? "text-brand" : "text-gray-400")} />
-      {label}
+      <span className="flex-1">{label}</span>
+      {!!badge && (
+        <span
+          className="min-w-5 rounded-full bg-red-600 px-1.5 text-center text-xs font-medium leading-5 text-white"
+          aria-label={`${badge} menunggu persetujuan`}
+        >
+          {badge > 99 ? "99+" : badge}
+        </span>
+      )}
     </Link>
   );
 };

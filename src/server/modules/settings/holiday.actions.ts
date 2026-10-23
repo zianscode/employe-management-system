@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireRole } from "@/server/auth/guard";
+import { requireRole, requireUser } from "@/server/auth/guard";
 import { ApiResponse } from "@/server/utils/api-response";
 import { ADMIN_ROLES } from "@/shared/constants/roles";
 import { HolidayRow } from "@/shared/types/settings.types";
@@ -11,6 +11,15 @@ export async function getHolidaysAction(year: number) {
   try {
     await requireRole(ADMIN_ROLES);
     return ApiResponse.success("Hari libur", await holidayService.list(year));
+  } catch (error) {
+    return ApiResponse.fromError<HolidayRow[]>(error, "Gagal mengambil hari libur");
+  }
+}
+
+export async function getUpcomingHolidaysAction(limit = 5) {
+  try {
+    await requireUser();
+    return ApiResponse.success("Hari libur mendatang", await holidayService.upcoming(Math.min(Math.max(limit, 1), 20)));
   } catch (error) {
     return ApiResponse.fromError<HolidayRow[]>(error, "Gagal mengambil hari libur");
   }

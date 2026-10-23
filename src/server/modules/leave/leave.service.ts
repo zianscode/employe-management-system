@@ -4,13 +4,14 @@ import { CurrentUser } from "@/server/auth/guard";
 import { employeeScopeFor } from "@/server/auth/scope";
 import { holidayService } from "@/server/modules/settings/holiday.service";
 import { ROLES, isAdminRole } from "@/shared/constants/roles";
-import { LeaveBalance, LeaveRequest, LeaveRequestInput } from "@/shared/types/leave.types";
+import { LeaveBalance, LeavePreview, LeaveRequest, LeaveRequestInput } from "@/shared/types/leave.types";
+import { describeLeaveNextStep } from "@/shared/utils/leave";
 import { countWorkingDays, dateKeyToDate, formatDate, toDateKey } from "@/shared/utils/date";
 
 const OPEN_STATUSES: LeaveStatus[] = [LeaveStatus.PENDING, LeaveStatus.MANAGER_APPROVED];
 
 const leaveInclude = {
-  employee: { select: { id: true, name: true, nip: true, managerId: true } },
+  employee: { select: { id: true, name: true, nip: true, managerId: true, manager: { select: { name: true } } } },
   managerApprover: { select: { name: true } },
   hrApprover: { select: { name: true } },
   rejectedBy: { select: { name: true } },
@@ -56,6 +57,7 @@ class LeaveService {
       hrApprover: approver(req.hrApprover?.name, req.hrApprovedAt),
       rejectedBy: approver(req.rejectedBy?.name, req.rejectedAt),
       rejectionReason: req.rejectionReason,
+      nextStep: describeLeaveNextStep(req.status, req.employee.manager?.name),
       canApprove: canDecide,
       canReject: canDecide,
       canCancel: this.canCancel(req, user),
@@ -92,6 +94,35 @@ class LeaveService {
     return { year, quota, used, remaining: Math.max(0, quota - used) };
   }
 
+  async preview(user: CurrentUser, input: { employeeId?: string; startDate: string; endDate?: string }): Promise<LeavePreview> {
+    const employeeId = isAdminRole(user.role) && input.employeeId ? input.employeeId : user.employeeId;
+    if (!employeeId) throw new Error("Profil karyawan tidak ditemukan");
+
+    const start = dateKeyToDate(input.startDate);
+    if (isNaN(start.getTime())) throw new Error("Tanggal tidak valid");
+    const end = input.endDate ? dateKeyToDate(input.endDate) : null;
+    const year = start.getUTCFullYear();
+
+    const [{ quota, used }, reserved, workingDays, employee] = await Promise.all([
+      this.getBalance(employeeId, year),
+      this.sumAnnualDays(employeeId, year, OPEN_STATUSES),
+      end && !isNaN(end.getTime()) && end >= start
+        ? holidayService.keysBetween(start, end).then((holidays) => countWorkingDays(start, end, holidays))
+        : Promise.resolve(null),
+      prisma.employee.findUnique({ where: { id: employeeId }, select: { manager: { select: { name: true } } } }),
+    ]);
+
+    return {
+      year,
+      quota,
+      used,
+      pending: reserved,
+      available: Math.max(0, quota - used - reserved),
+      workingDays,
+      managerName: employee?.manager?.name ?? null,
+    };
+  }
+
   async list(user: CurrentUser) {
     const requests = await prisma.leaveRequest.findMany({
       where: this.scopeFor(user),
@@ -99,6 +130,21 @@ class LeaveService {
       orderBy: { createdAt: "desc" },
     });
     return requests.map((r) => this.toDto(r, user));
+  }
+
+  async countAwaitingDecision(user: CurrentUser) {
+    if (!user.employeeId) return 0;
+    const notOwn = user.role === ROLES.SUPER_ADMIN ? {} : { employeeId: { not: user.employeeId } };
+
+    if (isAdminRole(user.role)) {
+      return prisma.leaveRequest.count({ where: { status: { in: OPEN_STATUSES }, ...notOwn } });
+    }
+    if (user.role === ROLES.MANAGER) {
+      return prisma.leaveRequest.count({
+        where: { status: LeaveStatus.PENDING, employee: { managerId: user.employeeId }, ...notOwn },
+      });
+    }
+    return 0;
   }
 
   async getStats(user: CurrentUser) {

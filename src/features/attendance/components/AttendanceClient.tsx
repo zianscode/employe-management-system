@@ -14,6 +14,8 @@ import { ATTENDANCE_STATUS_LABELS } from "@/shared/constants/attendance";
 import { Card } from "@/shared/components/ui/Card";
 import AttendanceHeader from "./AttendanceHeader";
 import AttendanceStats, { StatData } from "./AttendanceStats";
+import { UpcomingHolidaysCard } from "./UpcomingHolidaysCard";
+import { HolidayRow } from "@/shared/types/settings.types";
 
 const CSV_COLUMNS: CsvColumn<Attendance>[] = [
   { header: "NIP", value: (r) => r.nip },
@@ -26,7 +28,7 @@ const CSV_COLUMNS: CsvColumn<Attendance>[] = [
   { header: "Keterangan", value: (r) => r.keterangan },
 ];
 
-export function AttendanceClient({ stats }: { stats: StatData[] }) {
+export function AttendanceClient({ stats, holidays }: { stats: StatData[]; holidays: HolidayRow[] }) {
   const router = useRouter();
   const {
     data,
@@ -63,7 +65,12 @@ export function AttendanceClient({ stats }: { stats: StatData[] }) {
         <AttendanceTable data={data} isLoading={isLoading} />
       </Card>
 
-      <CorrectionPanel onChange={handleChange} />
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div id="koreksi" className="scroll-mt-6 lg:col-span-2">
+          <CorrectionPanel onChange={handleChange} />
+        </div>
+        <UpcomingHolidaysCard holidays={holidays} />
+      </div>
     </>
   );
 }

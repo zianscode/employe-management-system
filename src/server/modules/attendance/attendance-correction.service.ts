@@ -59,6 +59,21 @@ class AttendanceCorrectionService {
     return correction;
   }
 
+  async countAwaitingReview(user: CurrentUser) {
+    if (!user.employeeId) return 0;
+    const notOwn = user.role === ROLES.SUPER_ADMIN ? {} : { employeeId: { not: user.employeeId } };
+
+    if (isAdminRole(user.role)) {
+      return prisma.attendanceCorrection.count({ where: { status: CorrectionStatus.PENDING, ...notOwn } });
+    }
+    if (user.role === ROLES.MANAGER) {
+      return prisma.attendanceCorrection.count({
+        where: { status: CorrectionStatus.PENDING, employee: { managerId: user.employeeId }, ...notOwn },
+      });
+    }
+    return 0;
+  }
+
   async list(user: CurrentUser): Promise<AttendanceCorrectionRow[]> {
     const corrections = await prisma.attendanceCorrection.findMany({
       where: { employee: employeeScopeFor(user) },

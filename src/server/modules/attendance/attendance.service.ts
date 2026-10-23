@@ -99,6 +99,7 @@ class AttendanceService {
       lateInMinutes: record?.lateInMinutes ?? 0,
       workStartTime: setting.workStartTime,
       workEndTime: setting.workEndTime,
+      lateToleranceMinutes: setting.lateToleranceMinutes,
       onLeave: leaves.length > 0,
     };
   }

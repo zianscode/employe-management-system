@@ -20,6 +20,7 @@ export interface LeaveRequest {
   hrApprover: LeaveApprover | null;
   rejectedBy: LeaveApprover | null;
   rejectionReason: string | null;
+  nextStep: string | null;
   canApprove: boolean;
   canReject: boolean;
   canCancel: boolean;
@@ -38,4 +39,14 @@ export interface LeaveBalance {
   quota: number;
   used: number;
   remaining: number;
+}
+
+export interface LeavePreview {
+  year: number;
+  quota: number;
+  used: number;
+  pending: number;
+  available: number;
+  workingDays: number | null;
+  managerName: string | null;
 }

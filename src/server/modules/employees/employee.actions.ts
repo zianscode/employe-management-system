@@ -8,7 +8,10 @@ import { ADMIN_ROLES } from "@/shared/constants/roles";
 import { Employee, EmployeeFormData, OrgOption } from "@/shared/types/employee.types";
 import { dateToDateKey } from "@/shared/utils/date";
 import { getProbationDaysLeft } from "@/shared/utils/employee";
+import { accountService } from "@/server/modules/account/account.service";
 import { employeeService, EmployeeFilters } from "./employee.service";
+import { employeeHistoryService } from "./employee-history.service";
+import { EmployeeHistory } from "@/shared/types/history.types";
 
 export async function getRolesAction() {
   try {
@@ -63,9 +66,19 @@ export async function getEmployeeByIdAction(id: string) {
       position: position?.name || "-",
       roleId: user?.roleId || "",
       managerName: manager?.name || null,
+      account: user ? accountService.toInfo(user, emp.status) : null,
     });
   } catch (error) {
     return ApiResponse.fromError(error, "Karyawan tidak ditemukan");
+  }
+}
+
+export async function getEmployeeHistoryAction(id: string) {
+  try {
+    await requireRole(ADMIN_ROLES);
+    return ApiResponse.success("Riwayat karyawan", await employeeHistoryService.forEmployee(id));
+  } catch (error) {
+    return ApiResponse.fromError<EmployeeHistory>(error, "Gagal mengambil riwayat karyawan");
   }
 }
 
@@ -75,7 +88,7 @@ export async function createEmployeeAction(data: EmployeeFormData) {
     const { employee, temporaryPassword } = await employeeService.registerEmployee(data);
     revalidatePath("/dashboard/employees");
     return ApiResponse.success(
-      `Karyawan berhasil dibuat. Password sementara: ${temporaryPassword} (wajib diganti saat login pertama)`,
+      "Karyawan berhasil ditambahkan",
       { id: employee.id, temporaryPassword }
     );
   } catch (error) {

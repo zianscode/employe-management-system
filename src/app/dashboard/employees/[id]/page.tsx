@@ -2,7 +2,8 @@ import React from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Pencil } from "lucide-react";
-import { getEmployeeByIdAction } from "@/server/modules/employees/employee.actions";
+import { getEmployeeByIdAction, getEmployeeHistoryAction } from "@/server/modules/employees/employee.actions";
+import { EmployeeHistory } from "@/features/employees/components/EmployeeHistory";
 import { StatusBadge } from "@/shared/components/StatusBadge";
 import { formatCurrency } from "@/shared/utils/format";
 import { getProbationDaysLeft } from "@/shared/utils/employee";
@@ -13,6 +14,8 @@ import { Avatar } from "@/shared/components/ui/Avatar";
 import { Badge } from "@/shared/components/ui/Badge";
 import { DescriptionList } from "@/shared/components/ui/DescriptionList";
 import { buttonClass } from "@/shared/components/ui/Button";
+import { AccountCard } from "@/features/account/components/AccountCard";
+import { AccountInfo } from "@/shared/types/settings.types";
 
 interface FullEmployeeDetails {
   id: string;
@@ -43,6 +46,8 @@ interface FullEmployeeDetails {
   emergencyRelation?: string;
   education?: string;
   skills?: string;
+  account: AccountInfo | null;
+  managerName: string | null;
 }
 
 const EMPLOYMENT_TYPE_LABELS: Record<string, string> = {
@@ -65,7 +70,8 @@ interface PageProps {
 
 export default async function EmployeeDetailPage({ params }: PageProps) {
   const { id } = await params;
-  const res = await getEmployeeByIdAction(id);
+  const [res, historyRes] = await Promise.all([getEmployeeByIdAction(id), getEmployeeHistoryAction(id)]);
+  const history = historyRes.success ? historyRes.data : undefined;
 
   if (!res.success || !res.data) {
     notFound();
@@ -119,6 +125,7 @@ export default async function EmployeeDetailPage({ params }: PageProps) {
                   { label: "Email kantor", value: employee.email },
                   { label: "Tipe kerja", value: EMPLOYMENT_TYPE_LABELS[employee.employmentType] ?? employee.employmentType },
                   { label: "Tanggal bergabung", value: formatLongDate(employee.joinDate) },
+                  { label: "Atasan langsung", value: employee.managerName ?? "Tidak ada (cuti langsung ke HR)" },
                   { label: "Jatah cuti tahunan", value: `${employee.leaveQuota} hari` },
                   { label: "Gaji pokok", value: <span className="tabular-nums">{formatCurrency(employee.salaryBase || 0)}</span> },
                 ]}
@@ -144,10 +151,14 @@ export default async function EmployeeDetailPage({ params }: PageProps) {
             </CardBody>
           </Card>
 
+          {history && <EmployeeHistory history={history} />}
+
           <PayrollComponentsCard employeeId={employee.id} />
         </div>
 
         <div className="space-y-6">
+          <AccountCard account={employee.account} employeeName={employee.name} />
+
           <Card>
             <CardHeader title="Rekening dan pajak" />
             <CardBody>

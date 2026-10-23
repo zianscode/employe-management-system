@@ -336,3 +336,18 @@ model CompanySetting {
 
   updatedAt DateTime @updatedAt
 }
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  actorUserId String?
+  actorName   String
+  action      String
+  entity      String
+  entityId    String?
+  targetName  String?
+  detail      String?
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([entity, entityId])
+}

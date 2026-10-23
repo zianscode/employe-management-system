@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { requireEmployee, requireUser } from "@/server/auth/guard";
 import { ApiResponse } from "@/server/utils/api-response";
+import { notificationService, notifyLater } from "@/server/modules/notification/notification.service";
+import { auditService } from "@/server/modules/audit/audit.service";
 import { AttendanceCorrectionInput, AttendanceCorrectionRow } from "@/shared/types/attendance.types";
 import { attendanceCorrectionService } from "./attendance-correction.service";
 
@@ -34,7 +36,10 @@ export async function submitAttendanceCorrectionAction(input: AttendanceCorrecti
 export async function approveAttendanceCorrectionAction(id: string) {
   try {
     const user = await requireEmployee();
-    await attendanceCorrectionService.approve(id, user);
+    await auditService.track(user, { action: "CORRECTION_APPROVED", entity: "ATTENDANCE_CORRECTION", entityId: id }, () =>
+      attendanceCorrectionService.approve(id, user),
+    );
+    notifyLater(() => notificationService.correctionDecided(id));
     refresh();
     return ApiResponse.success("Koreksi disetujui, data absensi diperbarui");
   } catch (error) {
@@ -45,7 +50,12 @@ export async function approveAttendanceCorrectionAction(id: string) {
 export async function rejectAttendanceCorrectionAction(id: string, reason: string) {
   try {
     const user = await requireEmployee();
-    await attendanceCorrectionService.reject(id, user, reason);
+    await auditService.track(
+      user,
+      { action: "CORRECTION_REJECTED", entity: "ATTENDANCE_CORRECTION", entityId: id, detail: reason },
+      () => attendanceCorrectionService.reject(id, user, reason),
+    );
+    notifyLater(() => notificationService.correctionDecided(id));
     refresh();
     return ApiResponse.success("Koreksi ditolak");
   } catch (error) {

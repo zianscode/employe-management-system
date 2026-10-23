@@ -4,9 +4,11 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/server/db/prisma";
 import { requireEmployee, requireRole, requireUser } from "@/server/auth/guard";
 import { ApiResponse } from "@/server/utils/api-response";
+import { notificationService, notifyLater } from "@/server/modules/notification/notification.service";
 import { ADMIN_ROLES } from "@/shared/constants/roles";
 import { LeaveBalance, LeavePreview, LeaveRequest, LeaveRequestInput } from "@/shared/types/leave.types";
 import { leaveService } from "./leave.service";
+import { auditService } from "@/server/modules/audit/audit.service";
 
 const refresh = () => {
   revalidatePath("/dashboard/leave");
@@ -66,7 +68,8 @@ export async function getEmployeesForLeaveAction() {
 export async function createLeaveRequestAction(input: LeaveRequestInput) {
   try {
     const user = await requireUser();
-    await leaveService.request(user, input);
+    const created = await leaveService.request(user, input);
+    notifyLater(() => notificationService.leaveSubmitted(created.id));
     refresh();
     return ApiResponse.success("Pengajuan cuti berhasil dikirim");
   } catch (error) {
@@ -77,7 +80,10 @@ export async function createLeaveRequestAction(input: LeaveRequestInput) {
 export async function approveLeaveAction(id: string) {
   try {
     const user = await requireEmployee();
-    const result = await leaveService.approve(id, user);
+    const result = await auditService.track(user, { action: "LEAVE_APPROVED", entity: "LEAVE", entityId: id }, () =>
+      leaveService.approve(id, user),
+    );
+    notifyLater(() => notificationService.leaveDecided(id));
     refresh();
     return ApiResponse.success(
       result.status === "MANAGER_APPROVED" ? "Disetujui atasan, menunggu persetujuan HR" : "Cuti disetujui"
@@ -90,7 +96,10 @@ export async function approveLeaveAction(id: string) {
 export async function rejectLeaveAction(id: string, reason: string) {
   try {
     const user = await requireEmployee();
-    await leaveService.reject(id, user, reason);
+    await auditService.track(user, { action: "LEAVE_REJECTED", entity: "LEAVE", entityId: id, detail: reason }, () =>
+      leaveService.reject(id, user, reason),
+    );
+    notifyLater(() => notificationService.leaveDecided(id));
     refresh();
     return ApiResponse.success("Pengajuan cuti ditolak");
   } catch (error) {

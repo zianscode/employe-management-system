@@ -8,6 +8,7 @@ import { CompanySettings } from "./CompanySettings";
 import { HolidaySettings } from "./HolidaySettings";
 import { UserManagement } from "./UserManagement";
 import { SystemSecurity } from "./SystemSecurity";
+import { AuditLogTable } from "./AuditLogTable";
 import { SettingsTabId } from "@/shared/types/settings.types";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { PageHeader } from "@/shared/components/ui/Page";
@@ -20,6 +21,7 @@ const ALL_TABS: { id: SettingsTabId; label: string; adminOnly: boolean }[] = [
   { id: "holidays", label: "Hari libur", adminOnly: true },
   { id: "users", label: "Pengguna", adminOnly: true },
   { id: "security", label: "Keamanan", adminOnly: true },
+  { id: "activity", label: "Riwayat aktivitas", adminOnly: true },
   { id: "session", label: "Sesi", adminOnly: false },
 ];
 
@@ -42,6 +44,7 @@ export function SettingsClient() {
       {currentTab === "holidays" && <HolidaySettings />}
       {currentTab === "users" && <UserManagement users={users} onRefresh={refreshUsers} />}
       {currentTab === "security" && <SystemSecurity />}
+      {currentTab === "activity" && <AuditLogTable />}
       {currentTab === "session" && (
         <Card className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
           <div>

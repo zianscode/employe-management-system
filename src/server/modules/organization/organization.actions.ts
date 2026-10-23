@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireRole } from "@/server/auth/guard";
 import { ApiResponse } from "@/server/utils/api-response";
+import { auditService } from "@/server/modules/audit/audit.service";
 import { ADMIN_ROLES } from "@/shared/constants/roles";
 import { OrgOption } from "@/shared/types/employee.types";
 import { DepartmentRow, PositionRow } from "@/shared/types/organization.types";
@@ -35,8 +36,10 @@ export async function getOrganizationAction() {
 
 export async function saveDepartmentAction(input: DepartmentInput, id?: string) {
   try {
-    await requireRole(ADMIN_ROLES);
-    await organizationService.saveDepartment(input, id);
+    const current = await requireRole(ADMIN_ROLES);
+    await auditService.track(current, { action: "DEPARTMENT_SAVED", entity: "DEPARTMENT", entityId: id, targetName: input.name }, () =>
+      organizationService.saveDepartment(input, id),
+    );
     revalidatePath(ORGANIZATION_PATH);
     return ApiResponse.success(id ? "Divisi diperbarui" : "Divisi ditambahkan");
   } catch (error) {
@@ -46,8 +49,10 @@ export async function saveDepartmentAction(input: DepartmentInput, id?: string) 
 
 export async function deleteDepartmentAction(id: string) {
   try {
-    await requireRole(ADMIN_ROLES);
-    await organizationService.deleteDepartment(id);
+    const current = await requireRole(ADMIN_ROLES);
+    await auditService.track(current, { action: "DEPARTMENT_DELETED", entity: "DEPARTMENT", entityId: id }, () =>
+      organizationService.deleteDepartment(id),
+    );
     revalidatePath(ORGANIZATION_PATH);
     return ApiResponse.success("Divisi dihapus");
   } catch (error) {
@@ -57,8 +62,18 @@ export async function deleteDepartmentAction(id: string) {
 
 export async function savePositionAction(input: PositionInput, id?: string) {
   try {
-    await requireRole(ADMIN_ROLES);
-    await organizationService.savePosition(input, id);
+    const current = await requireRole(ADMIN_ROLES);
+    await auditService.track(
+      current,
+      {
+        action: "POSITION_SAVED",
+        entity: "POSITION",
+        entityId: id,
+        targetName: input.name,
+        detail: `Gaji standar Rp${input.salaryBase.toLocaleString("id-ID")}`,
+      },
+      () => organizationService.savePosition(input, id),
+    );
     revalidatePath(ORGANIZATION_PATH);
     return ApiResponse.success(id ? "Jabatan diperbarui" : "Jabatan ditambahkan");
   } catch (error) {
@@ -68,8 +83,10 @@ export async function savePositionAction(input: PositionInput, id?: string) {
 
 export async function deletePositionAction(id: string) {
   try {
-    await requireRole(ADMIN_ROLES);
-    await organizationService.deletePosition(id);
+    const current = await requireRole(ADMIN_ROLES);
+    await auditService.track(current, { action: "POSITION_DELETED", entity: "POSITION", entityId: id }, () =>
+      organizationService.deletePosition(id),
+    );
     revalidatePath(ORGANIZATION_PATH);
     return ApiResponse.success("Jabatan dihapus");
   } catch (error) {

@@ -9,6 +9,7 @@ import { Employee, EmployeeFormData, OrgOption } from "@/shared/types/employee.t
 import { dateToDateKey } from "@/shared/utils/date";
 import { getProbationDaysLeft } from "@/shared/utils/employee";
 import { accountService } from "@/server/modules/account/account.service";
+import { auditService } from "@/server/modules/audit/audit.service";
 import { employeeService, EmployeeFilters } from "./employee.service";
 import { employeeHistoryService } from "./employee-history.service";
 import { EmployeeHistory } from "@/shared/types/history.types";
@@ -84,8 +85,12 @@ export async function getEmployeeHistoryAction(id: string) {
 
 export async function createEmployeeAction(data: EmployeeFormData) {
   try {
-    await requireRole(ADMIN_ROLES);
-    const { employee, temporaryPassword } = await employeeService.registerEmployee(data);
+    const current = await requireRole(ADMIN_ROLES);
+    const { employee, temporaryPassword } = await auditService.track(
+      current,
+      { action: "EMPLOYEE_CREATED", entity: "EMPLOYEE", targetName: data.name },
+      () => employeeService.registerEmployee(data),
+    );
     revalidatePath("/dashboard/employees");
     return ApiResponse.success(
       "Karyawan berhasil ditambahkan",
@@ -98,8 +103,10 @@ export async function createEmployeeAction(data: EmployeeFormData) {
 
 export async function updateEmployeeAction(id: string, data: EmployeeFormData) {
   try {
-    await requireRole(ADMIN_ROLES);
-    await employeeService.updateEmployee(id, data);
+    const current = await requireRole(ADMIN_ROLES);
+    await auditService.track(current, { action: "EMPLOYEE_UPDATED", entity: "EMPLOYEE", entityId: id }, () =>
+      employeeService.updateEmployee(id, data),
+    );
     revalidatePath("/dashboard/employees");
     return ApiResponse.success("Data karyawan berhasil diperbarui");
   } catch (error) {
@@ -109,8 +116,10 @@ export async function updateEmployeeAction(id: string, data: EmployeeFormData) {
 
 export async function promoteEmployeeAction(id: string) {
   try {
-    await requireRole(ADMIN_ROLES);
-    await employeeService.updateEmployee(id, { status: "ACTIVE" });
+    const current = await requireRole(ADMIN_ROLES);
+    await auditService.track(current, { action: "EMPLOYEE_PROMOTED", entity: "EMPLOYEE", entityId: id }, () =>
+      employeeService.updateEmployee(id, { status: "ACTIVE" }),
+    );
     revalidatePath("/dashboard/employees");
     return ApiResponse.success("Karyawan berhasil dipromosikan menjadi aktif");
   } catch (error) {
@@ -121,7 +130,9 @@ export async function promoteEmployeeAction(id: string) {
 export async function deleteEmployeeAction(id: string) {
   try {
     const current = await requireRole(ADMIN_ROLES);
-    await employeeService.removeEmployee(id, current.userId);
+    await auditService.track(current, { action: "EMPLOYEE_DELETED", entity: "EMPLOYEE", entityId: id }, () =>
+      employeeService.removeEmployee(id, current.userId),
+    );
     revalidatePath("/dashboard/employees");
     return ApiResponse.success("Karyawan berhasil dihapus");
   } catch (error) {

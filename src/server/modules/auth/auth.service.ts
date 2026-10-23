@@ -7,14 +7,22 @@ import { RESET_PASSWORD_SUBJECT, resetPasswordEmail } from "./reset-password.ema
 
 const RESET_TOKEN_VALID_HOURS = 1;
 const RESET_TOKEN_BYTES = 32;
+const MAX_RESET_REQUESTS_PER_HOUR = 3;
+const ONE_HOUR_MS = 60 * 60 * 1000;
 
 class AuthService {
   async requestPasswordReset(email: string) {
     const user = await prisma.user.findUnique({ where: { email: normalizeEmail(email) } });
     if (!user) return;
 
+    const hourAgo = new Date(Date.now() - ONE_HOUR_MS);
+    const recentRequests = await prisma.passwordResetToken.count({ where: { userId: user.id, createdAt: { gte: hourAgo } } });
+    if (recentRequests >= MAX_RESET_REQUESTS_PER_HOUR) return;
+
+    await prisma.passwordResetToken.deleteMany({ where: { userId: user.id, expires: { lt: new Date() } } });
+
     const token = crypto.randomBytes(RESET_TOKEN_BYTES).toString("hex");
-    const expires = new Date(Date.now() + RESET_TOKEN_VALID_HOURS * 60 * 60 * 1000);
+    const expires = new Date(Date.now() + RESET_TOKEN_VALID_HOURS * ONE_HOUR_MS);
     await prisma.passwordResetToken.create({ data: { token, expires, userId: user.id } });
 
     const baseUrl = process.env.AUTH_URL || "http://localhost:3000";

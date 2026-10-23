@@ -1,4 +1,4 @@
-export type SettingsTabId = "company" | "holidays" | "users" | "security" | "session";
+export type SettingsTabId = "company" | "holidays" | "users" | "security" | "activity" | "session";
 
 export type AccountState = "ACTIVE" | "INACTIVE" | "LOCKED" | "MUST_CHANGE_PASSWORD";
 

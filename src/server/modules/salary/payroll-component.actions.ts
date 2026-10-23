@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireRole } from "@/server/auth/guard";
 import { ApiResponse } from "@/server/utils/api-response";
+import { auditService } from "@/server/modules/audit/audit.service";
 import { ADMIN_ROLES } from "@/shared/constants/roles";
 import { PayrollComponentRow } from "@/shared/types/salary.types";
 import { PayrollComponentInput, payrollComponentService } from "./payroll-component.service";
@@ -18,8 +19,12 @@ export async function getPayrollComponentsAction(employeeId: string) {
 
 export async function addPayrollComponentAction(employeeId: string, input: PayrollComponentInput) {
   try {
-    await requireRole(ADMIN_ROLES);
-    await payrollComponentService.create(employeeId, input);
+    const current = await requireRole(ADMIN_ROLES);
+    await auditService.track(
+      current,
+      { action: "PAYROLL_COMPONENT_ADDED", entity: "EMPLOYEE", entityId: employeeId, detail: `${input.name}: Rp${input.amount.toLocaleString("id-ID")}` },
+      () => payrollComponentService.create(employeeId, input),
+    );
     revalidatePath(`/dashboard/employees/${employeeId}`);
     return ApiResponse.success("Komponen gaji ditambahkan");
   } catch (error) {
@@ -29,8 +34,10 @@ export async function addPayrollComponentAction(employeeId: string, input: Payro
 
 export async function deletePayrollComponentAction(id: string) {
   try {
-    await requireRole(ADMIN_ROLES);
-    await payrollComponentService.remove(id);
+    const current = await requireRole(ADMIN_ROLES);
+    await auditService.track(current, { action: "PAYROLL_COMPONENT_DELETED", entity: "PAYROLL_COMPONENT", entityId: id }, () =>
+      payrollComponentService.remove(id),
+    );
     return ApiResponse.success("Komponen gaji dihapus");
   } catch (error) {
     return ApiResponse.fromError(error, "Gagal menghapus komponen gaji");

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireRole } from "@/server/auth/guard";
 import { ApiResponse } from "@/server/utils/api-response";
+import { auditService } from "@/server/modules/audit/audit.service";
 import { ADMIN_ROLES } from "@/shared/constants/roles";
 import { CompanySetting } from "@/shared/types/settings.types";
 import { companySettingService, CompanySettingInput } from "./company-setting.service";
@@ -36,8 +37,10 @@ export async function getCompanySettingAction() {
 
 export async function updateCompanySettingAction(input: CompanySettingInput) {
   try {
-    await requireRole(ADMIN_ROLES);
-    await companySettingService.update(input);
+    const current = await requireRole(ADMIN_ROLES);
+    await auditService.track(current, { action: "COMPANY_SETTING_UPDATED", entity: "COMPANY_SETTING" }, () =>
+      companySettingService.update(input),
+    );
     revalidatePath("/dashboard", "layout");
     return ApiResponse.success("Pengaturan perusahaan disimpan");
   } catch (error) {

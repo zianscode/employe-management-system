@@ -10,17 +10,13 @@ Stack: Next.js 15 (App Router), React 19, Prisma 7 + PostgreSQL, NextAuth v5, Ta
 
 ## Instalasi
 
-Siapkan database PostgreSQL kosong, lalu buat file `.env` di root project:
+Siapkan database PostgreSQL kosong, lalu salin `.env.example` menjadi `.env` dan isi nilainya:
 
-```env
-DATABASE_URL="postgresql://user:password@localhost:5432/ems"
-AUTH_SECRET="isi-dengan-string-acak"
-AUTH_URL="http://localhost:3000"
-SMTP_EMAIL="email@gmail.com"
-SMTP_PASSWORD="app-password-gmail"
+```bash
+cp .env.example .env
 ```
 
-`AUTH_SECRET` bisa dibuat dengan `npx auth secret`. SMTP hanya dipakai untuk email reset password.
+`AUTH_SECRET` bisa dibuat dengan `npx auth secret`. SMTP (Gmail) dipakai untuk email reset password dan notifikasi.
 
 ```bash
 npm install
@@ -36,6 +32,12 @@ Buka http://localhost:3000 dan login pakai akun admin dari seed:
 - Password: `admin123`
 
 Setelah login pertama akan diminta ganti password.
+
+Test aturan bisnis (PPh 21, BPJS, absensi, hari kerja, password):
+
+```bash
+npm test
+```
 
 ## Struktur folder
 
@@ -142,9 +144,23 @@ Slip gaji bisa dicetak atau disimpan sebagai PDF. Karyawan hanya bisa lihat slip
 
 ### Organisasi dan laporan
 
-Menu Organization untuk mengelola divisi dan jabatan. Mengubah gaji standar jabatan tidak mengubah gaji karyawan yang sudah ada.
+Menu Organisasi untuk mengelola divisi dan jabatan. Mengubah gaji standar jabatan tidak mengubah gaji karyawan yang sudah ada.
 
-Menu Reports berisi laporan bulanan absensi, gaji, karyawan, dan cuti, semuanya bisa diekspor ke CSV. Laporan gaji hanya untuk HR/Admin, manager hanya melihat timnya.
+Menu Laporan berisi laporan bulanan absensi, gaji, karyawan, dan cuti, semuanya bisa diekspor ke CSV. Laporan gaji hanya untuk HR/Admin, manager hanya melihat timnya.
+
+### Riwayat aktivitas dan notifikasi
+
+Perubahan penting dicatat di Pengaturan > Riwayat aktivitas: data karyawan, reset password, persetujuan cuti dan koreksi absensi, hitung gaji, slip dibayar, komponen gaji, hari libur, organisasi, dan pengaturan perusahaan.
+
+Kalau SMTP diisi, sistem mengirim email ke:
+
+- atasan (atau HR kalau tidak ada atasan) saat ada pengajuan cuti baru,
+- HR saat cuti sudah disetujui atasan,
+- karyawan saat cuti atau koreksi absensinya disetujui/ditolak, dan saat gajinya dibayar.
+
+Email dikirim di belakang layar, jadi kalau SMTP bermasalah aksinya tetap berhasil.
+
+Permintaan lupa password dibatasi 3 kali per jam per akun.
 
 ## Belum dikerjakan
 

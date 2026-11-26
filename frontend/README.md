@@ -28,4 +28,4 @@ Tipe kontrak Go disimpan di `src/lib/api/schema.ts`. Untuk menyegarkan tipe sete
 npm.cmd exec --yes --package openapi-typescript@7.13.0 --package typescript@5.9.3 -- openapi-typescript ../backend/api/openapi.yaml -o src/lib/api/schema.ts
 ```
 
-Gunakan `npm` sebagai pengganti `npm.cmd` di shell yang menyediakannya. [Deployment dan cutover](../docs/migration/phase-5.md) · [Cakupan pengujian dan audit](../docs/final-audit.md)
+Gunakan `npm` sebagai pengganti `npm.cmd` di shell yang menyediakannya. [Deployment dan rollback](../README.md#deployment-dan-rollback)

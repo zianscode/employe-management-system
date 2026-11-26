@@ -26,7 +26,7 @@ Pilih satu pemilik migrasi per database. Jalankan perintah dari `backend/` denga
 
 - **Database kosong** dapat dibuat dengan `go run ./cmd/migrate up`. Goose membangun skema aplikasi dari baseline enam migrasi Prisma dan menerapkan perubahan aditif. Riwayat untuk database baru ini dikelola Goose.
 - **Database Prisma yang belum diadopsi** memerlukan `go run ./cmd/migrate baseline` sekali sebelum `up`. Cadangkan database dan avatar. Perintah memeriksa enam migrasi Prisma yang selesai dan sidik jari katalog PostgreSQL. Jika cocok, transaksi mencatat versi `0` dan `1` pada tabel metadata Goose. Gunakan salinan terisolasi untuk rehearsal. Pada database yang sudah diadopsi, jalankan `up` untuk menerapkan migrasi yang tertunda. Phase 3 menambahkan `EMSNotificationOutbox` pada versi `3`.
-- **Status** dapat diperiksa dengan `go run ./cmd/migrate status`. Baseline SQL bersifat forward-only. Gunakan artefak aplikasi sebelumnya dengan skema kompatibel untuk rollback. [Runbook cutover dan rollback](../docs/migration/phase-5.md#runbook-cutover-dan-rollback)
+- **Status** dapat diperiksa dengan `go run ./cmd/migrate status`. Baseline SQL bersifat forward-only. Gunakan artefak aplikasi sebelumnya dengan skema kompatibel untuk rollback.
 
 ## Build dan tes
 
@@ -47,7 +47,7 @@ Suite berikut dilewati bila variabel DSN terkait kosong. Buat tiga database disp
 
 Migrasi versi `4` menambahkan indeks periode `Salary_period_idx`. Enam migrasi SQL sebelum Goose dan metadata dialek disimpan di `migrations/legacy/` untuk riwayat dan restore. [Arsip SQL](migrations/legacy/README.md)
 
-Suite Go juga memeriksa 43 vektor payroll dengan nilai referensi dari kalkulator lama, termasuk nominal, metode PPh 21, dan snapshot tunjangan serta potongan. Worker email berjalan jika `SMTP_EMAIL` dan `SMTP_PASSWORD` dikonfigurasi. [Cakupan pengujian dan audit](../docs/final-audit.md)
+Suite Go juga memeriksa 43 vektor payroll dengan nilai referensi dari kalkulator lama, termasuk nominal, metode PPh 21, dan snapshot tunjangan serta potongan. Worker email berjalan jika `SMTP_EMAIL` dan `SMTP_PASSWORD` dikonfigurasi.
 
 ## Admin pertama
 
@@ -66,4 +66,4 @@ try {
 
 Bootstrap membutuhkan tabel pengguna dan karyawan kosong. Administrator berperan `SUPER_ADMIN`, wajib mengganti password sementara, dan menyelesaikan onboarding. Database dengan akun yang sudah ada memakai kredensial sebelumnya.
 
-[Konfigurasi, backup, deployment, cutover, dan rollback](../docs/migration/phase-5.md)
+[Deployment, backup, dan rollback](../README.md#deployment-dan-rollback)

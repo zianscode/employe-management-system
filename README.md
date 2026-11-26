@@ -1,6 +1,6 @@
 # Employee Management System
 
-Aplikasi HR untuk mengelola akun dan data karyawan, organisasi, absensi dan koreksi, cuti dan kuota, penggajian dan slip, laporan CSV, audit, serta notifikasi. Migrasi backend ke Go selesai. Lihat hasil pengujian dan syarat rilis publik di [audit akhir](docs/final-audit.md).
+Aplikasi HR untuk mengelola akun dan data karyawan, organisasi, absensi dan koreksi, cuti dan kuota, penggajian dan slip, laporan CSV, audit, serta notifikasi.
 
 ## Arsitektur
 
@@ -22,7 +22,6 @@ backend/
   internal/platform/     HTTP, PostgreSQL, migrasi, SMTP, dan kalender kerja
   api/openapi.yaml       Kontrak REST
   migrations/            SQL Goose dan arsip SQL historis di legacy/
-docs/                    Audit, migrasi, deployment, dan rollback
 ```
 
 Browser berkomunikasi dengan Next.js pada satu origin. Proxy Next.js meneruskan cookie `ems_session`, header yang diizinkan, dan body ke Go. Server Components membaca Go melalui alamat internal yang sama. Go menentukan akses berdasarkan sesi, role, dan cakupan data. `MANAGER` bekerja dengan data sendiri dan bawahan langsung sesuai endpoint. `EMPLOYEE` mengakses data sendiri. Akses HR dan admin juga mengikuti aturan per operasi. [Kontrak OpenAPI](backend/api/openapi.yaml)
@@ -83,7 +82,7 @@ Pilih alur migrasi berdasarkan keadaan database.
 | --- | --- |
 | Database kosong baru | `go run ./cmd/migrate up`, lalu `go run ./cmd/migrate status`. Versi 1–4 akan terdaftar sebagai `applied`. |
 | Database sudah dikelola Goose | `go run ./cmd/migrate status`, lalu `go run ./cmd/migrate up` untuk versi yang tertunda. |
-| Database lama dengan ledger Prisma | Cadangkan PostgreSQL dan avatar. Uji `go run ./cmd/migrate baseline` pada salinan terisolasi, verifikasi hasil, lalu `go run ./cmd/migrate up`. [Runbook adopsi dan rollback](docs/migration/phase-5.md) |
+| Database lama dengan ledger Prisma | Cadangkan PostgreSQL dan avatar. Uji `go run ./cmd/migrate baseline` pada salinan terisolasi sebelum mengadopsi database sasaran. Setelah adopsi berhasil, jalankan `go run ./cmd/migrate up`. [Panduan migrasi backend](backend/README.md#migrasi-database) |
 
 Untuk database baru yang tabel pengguna dan karyawannya masih kosong, buat akun `SUPER_ADMIN` sekali. Password sementara mengikuti kebijakan minimal 8 karakter dengan huruf dan angka. Login pertama mewajibkan ganti password dan onboarding. Database dengan akun yang sudah ada memakai kredensial sebelumnya.
 
@@ -148,8 +147,16 @@ go build -o $emsApi ./cmd/api
 if ($LASTEXITCODE -eq 0) { & $emsApi }
 ```
 
-Di Terminal B jalankan `npm.cmd run build`, lalu `npm.cmd start -- --hostname 127.0.0.1 --port 3000`. Untuk deployment, gunakan TLS ingress, koneksi privat ke Go dan PostgreSQL, role migrasi terpisah, dan volume avatar persisten. [Frontend](frontend/README.md) · [Backend dan setup database tes](backend/README.md) · [Deployment, backup, dan rollback](docs/migration/phase-5.md)
+Di Terminal B jalankan `npm.cmd run build`, lalu `npm.cmd start -- --hostname 127.0.0.1 --port 3000`. [Frontend](frontend/README.md) · [Backend dan setup database tes](backend/README.md)
+
+## Deployment dan rollback
+
+Gunakan TLS pada ingress, koneksi privat ke Go dan PostgreSQL, serta volume privat persisten untuk `AVATAR_DIR`. Samakan `APP_ORIGIN` dengan origin HTTPS browser dan atur `EMS_BACKEND_URL` pada proses Next.js. Jalankan migrasi secara terpisah dengan role migrasi. Role aplikasi perlu akses baca ke `goose_db_version` untuk readiness.
+
+1. Sebelum deployment, simpan artefak rilis sebelumnya, cadangkan PostgreSQL dengan `pg_dump -Fc`, dan salin volume avatar. Uji pemulihan pada database terisolasi dan cocokkan data serta hash avatar.
+2. Hentikan sementara operasi tulis saat pergantian versi. Periksa status Goose, terapkan migrasi yang diperlukan, lalu periksa `/readyz` pada Go. Uji login, akses slip historis, avatar, dan CSV lewat Next.js sebelum membuka trafik. Verifikasi SMTP jika reset password dan notifikasi email diaktifkan.
+3. Jika perlu rollback, hentikan operasi tulis dan kembalikan artefak aplikasi yang kompatibel dengan skema aktif. Gunakan database dan volume yang sama, lalu ulangi pemeriksaan sebelum membuka trafik.
 
 ## Batas fitur
 
-THR dan bonus, karyawan harian, pajak karyawan yang berhenti di tengah tahun, serta perlakuan PPh 21 DTP belum tercakup. Riwayat migrasi dan hasil paritas payroll tersedia di [dokumentasi migrasi](docs/migration/phase-4.md#verifikasi).
+THR dan bonus, karyawan harian, pajak karyawan yang berhenti di tengah tahun, serta perlakuan PPh 21 DTP belum tercakup.

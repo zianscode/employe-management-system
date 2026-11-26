@@ -45,6 +45,41 @@ yarn-error.log*
 .env*
 !.env.example
 
+# local AI agent instructions and configuration
+AGENTS.md
+AGENTS.override.md
+CLAUDE.md
+CLAUDE.local.md
+GEMINI.md
+.agents/
+.codex/
+.claude/
+.cursor/
+.cursorrules
+.gemini/
+.windsurf/
+.windsurfrules
+.mcp.json
+/.github/copilot-instructions.md
+/.github/agents/
+/.github/instructions/
+/.github/prompts/
+
+# local planning and AI notes
+.planning/
+/planning/
+/docs/ai/
+/docs/internal/ai/
+/docs/planning/
+/docs/migration/planning/
+/docs/migration/roadmap/
+/docs/migration/[Pp]lan.md
+/docs/migration/PLAN.md
+/docs/migration/[Rr]oadmap.md
+/docs/migration/ROADMAP.md
+**/migration-roadmap.md
+**/MIGRATION_ROADMAP.md
+
 # vercel
 .vercel
 

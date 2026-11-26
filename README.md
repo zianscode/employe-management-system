@@ -1,170 +1,155 @@
 # Employee Management System
 
-![Status: Under active development](https://img.shields.io/badge/status-under%20active%20development-orange)
+Aplikasi HR untuk mengelola akun dan data karyawan, organisasi, absensi dan koreksi, cuti dan kuota, penggajian dan slip, laporan CSV, audit, serta notifikasi. Migrasi backend ke Go selesai. Lihat hasil pengujian dan syarat rilis publik di [audit akhir](docs/final-audit.md).
 
-> 🚧 **Status: Under active development.** Features are still being added, and the structure may change over time. Not yet recommended for production use.
+## Arsitektur
 
-Aplikasi HR untuk mengelola data karyawan, absensi, cuti, dan penggajian. Frontend dan backend ada di satu project Next.js.
-
-Stack: Next.js 15 (App Router), React 19, Prisma 7 + PostgreSQL, NextAuth v5, Tailwind CSS 4.
-
-## Instalasi
-
-Siapkan database PostgreSQL kosong, lalu salin `.env.example` menjadi `.env` dan isi nilainya:
-
-```bash
-cp .env.example .env
-```
-
-`AUTH_SECRET` bisa dibuat dengan `npx auth secret`. SMTP (Gmail) dipakai untuk email reset password dan notifikasi.
-
-```bash
-npm install
-npx prisma migrate deploy
-npx prisma generate
-npx prisma db seed
-npm run dev
-```
-
-Buka http://localhost:3000 dan login pakai akun admin dari seed:
-
-- Email: `budisantoso@gmail.com`
-- Password: `admin123`
-
-Setelah login pertama akan diminta ganti password.
-
-Test aturan bisnis (PPh 21, BPJS, absensi, hari kerja, password):
-
-```bash
-npm test
-```
-
-## Struktur folder
-
-```
-prisma/          schema, migrasi, seed
-public/
-  brand/         logo
-  images/seed/   gambar untuk data seed
-  uploads/       file upload user (tidak masuk git)
-src/
-  app/           halaman, layout, API route
-  server/        kode yang hanya jalan di server
-    auth/        NextAuth, guard role, lockout login
-    db/          Prisma client
-    utils/
-    modules/     per modul: *.actions.ts, *.service.ts, *.repository.ts
-  features/      komponen dan hook per modul
-  shared/        types, constants, utils, komponen umum
-  middleware.ts
-```
-
-Komponen di `features/` memanggil backend lewat `*.actions.ts` (server actions). Logika bisnis ada di `*.service.ts`. Repository hanya dipakai kalau query-nya banyak, contohnya modul employees.
-
-Beberapa aturan yang dipegang:
-
-- `features/` tidak import `server/db`, service, atau repository langsung.
-- `server/` tidak import dari `features/`.
-- Tipe yang dipakai kedua sisi taruh di `shared/types/`.
-- Import pakai alias `@/`, kecuali file di folder yang sama.
-
-Penamaan file: komponen `PascalCase.tsx`, hook `use-xxx.ts`, backend `<modul>.<peran>.ts` (misal `leave.service.ts`), tipe `<modul>.types.ts`, sisanya kebab-case.
-
-## Database
-
-Lihat `prisma/schema.prisma`. Ringkasnya:
-
-- Akun: `User`, `Role`, `PasswordResetToken`
-- Karyawan: `Employee`, `Department`, `Position`
-- Absensi: `Attendance`, `AttendanceCorrection`, `Holiday`
-- Cuti: `LeaveRequest`
-- Gaji: `Salary`, `PayrollComponent`
-- Pengaturan: `CompanySetting`
-
-Nominal uang disimpan sebagai `Int` (rupiah). Kolom tanggal disimpan jam 00:00 UTC, sedangkan "hari ini" dan jam absen dihitung dengan zona `Asia/Jakarta` (lihat `src/shared/utils/date.ts`).
-
-## Role
-
-| Role | Akses |
+| Folder | Stack dan tanggung jawab |
 | --- | --- |
-| `SUPER_ADMIN` | semua data |
-| `HR` | semua data |
-| `MANAGER` | data sendiri dan bawahan langsung |
-| `EMPLOYEE` | data sendiri |
+| `frontend/` | Node.js 24, Next.js 15 App Router, React 19, TypeScript, Tailwind CSS 4, shadcn/ui. Merender halaman, membaca API dari Server Components, dan meneruskan request browser melalui route `/api/v1/*`. |
+| `backend/` | Go 1.27.4, Gin, GORM, Goose, PostgreSQL 18, dan REST dengan OpenAPI. Modular monolith per fitur untuk autentikasi, otorisasi, validasi, aturan bisnis, penyimpanan, dan worker notifikasi. |
 
-Pengecekan role dilakukan di server untuk setiap action, jadi tidak cukup hanya menyembunyikan menu.
+```text
+frontend/
+  src/app/                Halaman, layout, dan proxy REST
+  src/features/           Komponen dan hook per fitur
+  src/lib/api/             Sesi, klien REST, transport, dan tipe OpenAPI
+  src/shared/             shadcn/ui, komponen, tipe, dan utilitas bersama
+  scripts/                Pemeriksaan sumber runtime dan jejak build
+backend/
+  cmd/{api,migrate,bootstrap}/  Proses API dan perintah operasional
+  internal/modules/      Modul bisnis dan worker notifikasi
+  internal/platform/     HTTP, PostgreSQL, migrasi, SMTP, dan kalender kerja
+  api/openapi.yaml       Kontrak REST
+  migrations/            SQL Goose dan arsip SQL historis di legacy/
+docs/                    Audit, migrasi, deployment, dan rollback
+```
 
-## Cara kerja fitur
+Browser berkomunikasi dengan Next.js pada satu origin. Proxy Next.js meneruskan cookie `ems_session`, header yang diizinkan, dan body ke Go. Server Components membaca Go melalui alamat internal yang sama. Go menentukan akses berdasarkan sesi, role, dan cakupan data. `MANAGER` bekerja dengan data sendiri dan bawahan langsung sesuai endpoint. `EMPLOYEE` mengakses data sendiri. Akses HR dan admin juga mengikuti aturan per operasi. [Kontrak OpenAPI](backend/api/openapi.yaml)
 
-### Akun
+Tanggal operasional memakai zona `Asia/Jakarta`. Payroll menyimpan nominal dalam rupiah utuh dan mempertahankan slip yang sudah dibayar. [Aturan payroll](backend/internal/modules/payroll/rules.go)
 
-Tidak ada halaman register. Akun dibuat HR/Admin dari menu Karyawan dan mendapat password sementara yang hanya tampil sekali. Saat login pertama user harus ganti password, lalu mengisi onboarding, baru bisa masuk dashboard.
+## Jalankan dari awal di Windows
 
-Password minimal 8 karakter dan harus ada huruf dan angka. Setelah 5 kali salah login, akun dikunci 15 menit.
+Gunakan Windows PowerShell 5.1 atau PowerShell 7. Pasang Node.js 24 dengan npm, Go 1.27.4, dan PostgreSQL 18 dengan layanan aktif. Pastikan folder `bin` PostgreSQL tersedia di `PATH` atau gunakan path lengkap ke `psql.exe`. Setiap terminal di bawah dimulai dari root repository.
 
-### Karyawan
+```powershell
+node --version
+npm.cmd --version
+go version
+psql --version
+```
 
-Jabatan, divisi, tipe kerja, dan gaji diisi HR. Kalau gaji pokok dikosongkan, nilainya diambil dari gaji standar jabatan.
+### 1. Siapkan PostgreSQL lokal
 
-Karyawan yang sudah punya data absensi, cuti, atau gaji tidak bisa dihapus. Ubah statusnya ke `RESIGNED` atau `TERMINATED`, nanti dia otomatis tidak bisa login.
+Untuk instalasi baru, buka `psql` menggunakan akun administrator PostgreSQL yang dibuat saat instalasi. Sesuaikan host dan port di semua perintah jika diperlukan.
 
-### Absensi
+```powershell
+psql -h 127.0.0.1 -p 5432 -U postgres -d postgres -W
+```
 
-Check-in dan check-out sekali sehari. Telat kalau lewat jam masuk + toleransi, lembur kalau pulang lewat jam pulang. Kalau di hari kerja tidak ada absen: tercatat Izin/Sakit jika ada cuti yang disetujui, Tidak Hadir jika harinya sudah lewat.
+Jalankan di prompt `psql`, lalu pilih password untuk akun aplikasi saat diminta.
 
-Akhir pekan dan hari libur (diatur di Settings > Hari Libur) tidak dihitung hari kerja, baik untuk absensi, durasi cuti, maupun potongan gaji.
+```sql
+CREATE ROLE ems_dev LOGIN;
+\password ems_dev
+CREATE DATABASE ems_dev OWNER ems_dev;
+\q
+```
 
-Karyawan bisa mengajukan koreksi jam masuk/pulang untuk 30 hari terakhir. Yang menyetujui atasan langsung atau HR/Admin.
+Jika memakai database EMS yang sudah berisi data, gunakan nama database dan akun yang ada. Untuk latihan migrasi, gunakan salinan yang dipulihkan dari backup. [Referensi psql](https://www.postgresql.org/docs/18/app-psql.html)
 
-### Cuti
+### 2. Terminal A · Konfigurasi dan jalankan Go
 
-Alurnya `PENDING` > `MANAGER_APPROVED` (atasan) > `HR_APPROVED` (HR/Admin). HR/Admin bisa langsung approve sampai final. Penolakan wajib diberi alasan, dan pengaju bisa membatalkan selama belum final.
+```powershell
+Set-Location backend
+go mod download
 
-Durasi cuti dihitung dalam hari kerja. Sisa cuti tahunan = `leaveQuota` dikurangi cuti tahunan yang disetujui di tahun yang sama.
+$pgSecurePassword = Read-Host 'Password PostgreSQL ems_dev' -AsSecureString
+$pgPassword = [System.Net.NetworkCredential]::new('', $pgSecurePassword).Password
+$pgPasswordEncoded = [Uri]::EscapeDataString($pgPassword)
+$env:DATABASE_URL = "postgresql://ems_dev:${pgPasswordEncoded}@127.0.0.1:5432/ems_dev"
+Remove-Variable pgSecurePassword, pgPassword, pgPasswordEncoded
+$env:HTTP_ADDR = '127.0.0.1:8080'
+$env:APP_ORIGIN = 'http://127.0.0.1:3000'
+$env:AVATAR_DIR = Join-Path (Get-Location) 'uploads/avatars'
+```
 
-### Gaji
+Backend membaca variabel proses. [`backend/.env.example`](backend/.env.example) berisi referensi nama dan format. Set kedua variabel `SMTP_EMAIL` dan `SMTP_PASSWORD` untuk reset password dan pengiriman email notifikasi. Biarkan `TRUSTED_PROXY_CIDRS` kosong pada setup loopback ini.
 
-HR/Admin klik "Hitung Gaji" per periode, semua karyawan aktif dihitung sekaligus. Slip yang sudah ditandai dibayar tidak akan dihitung ulang.
+Pilih alur migrasi berdasarkan keadaan database.
 
-Gaji bersih = gaji pokok + tunjangan tetap + lembur - potongan cuti di luar tanggungan - potongan tetap - BPJS karyawan - PPh 21. Tunjangan dan potongan tetap diatur per karyawan di halaman detail karyawan.
+| Keadaan PostgreSQL | Perintah dari `backend/` |
+| --- | --- |
+| Database kosong baru | `go run ./cmd/migrate up`, lalu `go run ./cmd/migrate status`. Versi 1–4 akan terdaftar sebagai `applied`. |
+| Database sudah dikelola Goose | `go run ./cmd/migrate status`, lalu `go run ./cmd/migrate up` untuk versi yang tertunda. |
+| Database lama dengan ledger Prisma | Cadangkan PostgreSQL dan avatar. Uji `go run ./cmd/migrate baseline` pada salinan terisolasi, verifikasi hasil, lalu `go run ./cmd/migrate up`. [Runbook adopsi dan rollback](docs/migration/phase-5.md) |
 
-Tarif BPJS:
+Untuk database baru yang tabel pengguna dan karyawannya masih kosong, buat akun `SUPER_ADMIN` sekali. Password sementara mengikuti kebijakan minimal 8 karakter dengan huruf dan angka. Login pertama mewajibkan ganti password dan onboarding. Database dengan akun yang sudah ada memakai kredensial sebelumnya.
 
-| Program | Perusahaan | Karyawan | Batas dasar |
-| --- | --- | --- | --- |
-| Kesehatan | 4% | 1% | Rp12.000.000 |
-| JHT | 3,7% | 2% | - |
-| JP | 2% | 1% | Rp11.086.300 (bisa diubah di Settings) |
-| JKK | 0,24% - 1,74% | - | - |
-| JKM | 0,3% | - | - |
+```powershell
+$adminSecurePassword = Read-Host 'Password sementara admin EMS' -AsSecureString
+$env:BOOTSTRAP_ADMIN_PASSWORD = [System.Net.NetworkCredential]::new('', $adminSecurePassword).Password
+Remove-Variable adminSecurePassword
+try {
+  go run ./cmd/bootstrap -email 'admin@example.com' -name 'Admin EMS'
+} finally {
+  Remove-Item Env:BOOTSTRAP_ADMIN_PASSWORD
+}
+```
 
-PPh 21 mengikuti PP 58/2023 dan PMK 168/2023. Januari sampai November pakai TER kategori A/B/C sesuai status PTKP. Desember dihitung ulang setahun pakai tarif Pasal 17, lalu dikurangi pajak yang sudah dipotong sebelumnya. Rumusnya ada di `src/server/modules/salary/payroll.rules.ts`.
+Setelah migrasi dan bootstrap berhasil, biarkan proses ini berjalan di Terminal A.
 
-Slip gaji bisa dicetak atau disimpan sebagai PDF. Karyawan hanya bisa lihat slip miliknya.
+```powershell
+go run ./cmd/api
+```
 
-### Organisasi dan laporan
+### 3. Terminal B · Konfigurasi dan jalankan Next.js
 
-Menu Organisasi untuk mengelola divisi dan jabatan. Mengubah gaji standar jabatan tidak mengubah gaji karyawan yang sudah ada.
+```powershell
+Set-Location frontend
+if (-not (Test-Path -LiteralPath .env.local)) {
+  Copy-Item -LiteralPath .env.example -Destination .env.local
+}
+npm.cmd ci
+npm.cmd run dev -- --hostname 127.0.0.1 --port 3000
+```
 
-Menu Laporan berisi laporan bulanan absensi, gaji, karyawan, dan cuti, semuanya bisa diekspor ke CSV. Laporan gaji hanya untuk HR/Admin, manager hanya melihat timnya.
+Pastikan `frontend/.env.local` berisi `EMS_BACKEND_URL="http://127.0.0.1:8080"`. Variabel proses dengan nama yang sama memiliki prioritas. Gunakan `npm` sebagai pengganti `npm.cmd` pada shell yang menyediakannya. [Urutan pemuatan environment Next.js](https://nextjs.org/docs/15/app/guides/environment-variables)
 
-### Riwayat aktivitas dan notifikasi
+Dengan kedua terminal aktif, buka [http://127.0.0.1:3000](http://127.0.0.1:3000) dan login. Browser harus memakai origin yang sama persis dengan `APP_ORIGIN`, termasuk host dan port. Tekan Ctrl+C pada masing-masing terminal untuk menghentikan kedua proses.
 
-Perubahan penting dicatat di Pengaturan > Riwayat aktivitas: data karyawan, reset password, persetujuan cuti dan koreksi absensi, hitung gaji, slip dibayar, komponen gaji, hari libur, organisasi, dan pengaturan perusahaan.
+### 4. Cek koneksi lokal
 
-Kalau SMTP diisi, sistem mengirim email ke:
+Jalankan dari terminal ketiga sementara kedua server aktif.
 
-- atasan (atau HR kalau tidak ada atasan) saat ada pengajuan cuti baru,
-- HR saat cuti sudah disetujui atasan,
-- karyawan saat cuti atau koreksi absensinya disetujui/ditolak, dan saat gajinya dibayar.
+```powershell
+Invoke-RestMethod http://127.0.0.1:8080/healthz
+Invoke-RestMethod http://127.0.0.1:8080/readyz
+(Invoke-WebRequest http://127.0.0.1:3000/login).StatusCode
+```
 
-Email dikirim di belakang layar, jadi kalau SMTP bermasalah aksinya tetap berhasil.
+- `503` pada readiness berarti PostgreSQL belum bisa diakses atau versi skema yang diperlukan belum diterapkan. Periksa `DATABASE_URL` pada Terminal A dan jalankan `go run ./cmd/migrate status`.
+- `502 BACKEND_UNAVAILABLE` pada Next.js perlu pengecekan `EMS_BACKEND_URL` dan proses Go. Mulai ulang Next.js setelah memperbarui environment.
+- `403` saat login atau mutasi dapat muncul jika origin browser berbeda dari `APP_ORIGIN`. Gunakan host dan port yang sama sebelum menelusuri izin role.
 
-Permintaan lupa password dibatasi 3 kali per jam per akun.
+## Pengujian dan build produksi
 
-## Belum dikerjakan
+| Folder | Perintah |
+| --- | --- |
+| `frontend/` | `npm.cmd test`, `npm.cmd run lint`, `npm.cmd run build`, `npm.cmd run typecheck`, lalu `npm.cmd run check:runtime -- --build`. Build membuat tipe Next.js dan manifest yang dipakai pemeriksaan berikutnya. Build standar memakai font yang diambil dari Google Fonts. |
+| `backend/` | `go test -count=1 ./...`, `go vet ./...`, `go build ./...`. Siapkan database disposable dan variabel tes untuk mengaktifkan suite integrasi PostgreSQL. |
 
-- Perhitungan pajak untuk karyawan yang resign di tengah tahun
-- PPh 21 DTP (PMK 105/2025)
-- THR dan bonus
-- Karyawan tidak tetap / harian
+Untuk menjalankan build produksi secara lokal, gunakan environment Terminal A yang sama.
+
+```powershell
+$emsApi = Join-Path $env:TEMP 'ems-api.exe'
+go build -o $emsApi ./cmd/api
+if ($LASTEXITCODE -eq 0) { & $emsApi }
+```
+
+Di Terminal B jalankan `npm.cmd run build`, lalu `npm.cmd start -- --hostname 127.0.0.1 --port 3000`. Untuk deployment, gunakan TLS ingress, koneksi privat ke Go dan PostgreSQL, role migrasi terpisah, dan volume avatar persisten. [Frontend](frontend/README.md) · [Backend dan setup database tes](backend/README.md) · [Deployment, backup, dan rollback](docs/migration/phase-5.md)
+
+## Batas fitur
+
+THR dan bonus, karyawan harian, pajak karyawan yang berhenti di tengah tahun, serta perlakuan PPh 21 DTP belum tercakup. Riwayat migrasi dan hasil paritas payroll tersedia di [dokumentasi migrasi](docs/migration/phase-4.md#verifikasi).

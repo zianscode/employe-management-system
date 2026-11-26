@@ -1,0 +1,5291 @@
+openapi: 3.1.0
+info:
+  title: Employee Management System API
+  version: 0.5.0
+  description: >-
+    Employee Management System REST API for identity, HR master data, attendance, leave, audit, payroll, dashboards
+    and reports. CSV downloads use the same data and authorization as the corresponding views.
+paths:
+  /healthz:
+    get:
+      operationId: getHealth
+      summary: Check that the HTTP process is alive
+      responses:
+        '200':
+          $ref: '#/components/responses/Healthy'
+  /readyz:
+    get:
+      operationId: getReadiness
+      summary: Check PostgreSQL connectivity and applied Goose migrations
+      responses:
+        '200':
+          $ref: '#/components/responses/Healthy'
+        '503':
+          description: PostgreSQL is unavailable or a required Goose migration is pending
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /openapi.yaml:
+    get:
+      operationId: getOpenAPI
+      summary: Get this OpenAPI document
+      responses:
+        '200':
+          description: OpenAPI YAML
+          content:
+            application/yaml:
+              schema:
+                type: string
+  /api/v1/auth/login:
+    post:
+      operationId: login
+      security: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: 'null'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: Origin
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Must match APP_ORIGIN.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Login'
+  /api/v1/auth/session:
+    get:
+      operationId: getSession
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/Session'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+  /api/v1/auth/logout:
+    post:
+      operationId: logout
+      security: []
+      responses:
+        '204':
+          description: Session revoked
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: Origin
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Must match APP_ORIGIN.
+  /api/v1/auth/password/forgot:
+    post:
+      operationId: forgotPassword
+      security: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: 'null'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: Origin
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Must match APP_ORIGIN.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailInput'
+  /api/v1/auth/password/reset/validate:
+    post:
+      operationId: validateReset
+      security: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/EmailInput'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: Origin
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Must match APP_ORIGIN.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenInput'
+  /api/v1/auth/password/reset:
+    post:
+      operationId: resetPassword
+      security: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: 'null'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: Origin
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Must match APP_ORIGIN.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordReset'
+  /api/v1/auth/password/change:
+    post:
+      operationId: changePassword
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: 'null'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: Origin
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Must match APP_ORIGIN.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordChange'
+  /api/v1/roles:
+    get:
+      operationId: listRoles
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Option'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+  /api/v1/users:
+    get:
+      operationId: listUsers
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SystemUser'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+  /api/v1/users/{id}/reset-password:
+    post:
+      operationId: resetUserPassword
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/TemporaryPassword'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: Origin
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Must match APP_ORIGIN.
+  /api/v1/users/{id}/unlock:
+    post:
+      operationId: unlockUser
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: 'null'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: Origin
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Must match APP_ORIGIN.
+  /api/v1/organization:
+    get:
+      operationId: getOrganization
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/Organization'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+  /api/v1/organization/form-options:
+    get:
+      operationId: getOrganizationOptions
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/OrganizationOptions'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+  /api/v1/departments:
+    post:
+      operationId: createDepartment
+      security:
+        - sessionCookie: []
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: 'null'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: Origin
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Must match APP_ORIGIN.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DepartmentInput'
+  /api/v1/departments/{id}:
+    patch:
+      operationId: updateDepartment
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: 'null'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: Origin
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Must match APP_ORIGIN.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DepartmentInput'
+    delete:
+      operationId: deleteDepartment
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: 'null'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: Origin
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Must match APP_ORIGIN.
+  /api/v1/positions:
+    post:
+      operationId: createPosition
+      security:
+        - sessionCookie: []
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: 'null'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: Origin
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Must match APP_ORIGIN.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PositionInput'
+  /api/v1/positions/{id}:
+    patch:
+      operationId: updatePosition
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: 'null'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: Origin
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Must match APP_ORIGIN.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PositionInput'
+    delete:
+      operationId: deletePosition
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: 'null'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: Origin
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Must match APP_ORIGIN.
+  /api/v1/company-settings:
+    get:
+      operationId: getCompanySettings
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/CompanySettings'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+    patch:
+      operationId: updateCompanySettings
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: 'null'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: Origin
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Must match APP_ORIGIN.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompanySettingsInput'
+  /api/v1/holidays:
+    get:
+      operationId: listHolidays
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Holiday'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: year
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 9998
+          required: true
+    post:
+      operationId: createHoliday
+      security:
+        - sessionCookie: []
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: 'null'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: Origin
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Must match APP_ORIGIN.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HolidayInput'
+  /api/v1/holidays/upcoming:
+    get:
+      operationId: getUpcomingHolidays
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Holiday'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 5
+          required: false
+  /api/v1/holidays/{id}:
+    delete:
+      operationId: deleteHoliday
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: 'null'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: Origin
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Must match APP_ORIGIN.
+  /api/v1/employees:
+    get:
+      operationId: listEmployees
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EmployeeListItem'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: departmentId
+          in: query
+          schema:
+            type: string
+          required: false
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum:
+              - ACTIVE
+              - PROBATION
+              - RESIGNED
+              - TERMINATED
+          required: false
+    post:
+      operationId: createEmployee
+      security:
+        - sessionCookie: []
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    additionalProperties: false
+                    properties:
+                      id:
+                        type: string
+                      temporaryPassword:
+                        type: string
+                    required:
+                      - id
+                      - temporaryPassword
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: Origin
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Must match APP_ORIGIN.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmployeeInput'
+  /api/v1/employees/{id}:
+    get:
+      operationId: getEmployee
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/EmployeeDetail'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+    patch:
+      operationId: updateEmployee
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: 'null'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: Origin
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Must match APP_ORIGIN.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmployeePatch'
+    delete:
+      operationId: deleteEmployee
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: 'null'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: Origin
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Must match APP_ORIGIN.
+  /api/v1/employees/{id}/history:
+    get:
+      operationId: getEmployeeHistory
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/EmployeeHistory'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+  /api/v1/employees/{id}/role:
+    patch:
+      operationId: updateEmployeeRole
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: 'null'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: Origin
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Must match APP_ORIGIN.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                roleId:
+                  type: string
+              required:
+                - roleId
+  /api/v1/employees/{id}/activate:
+    post:
+      operationId: activateEmployee
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: 'null'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: Origin
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Must match APP_ORIGIN.
+  /api/v1/me:
+    get:
+      operationId: getProfile
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/Profile'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+    patch:
+      operationId: updateProfile
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: 'null'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: Origin
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Must match APP_ORIGIN.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileInput'
+  /api/v1/me/onboarding:
+    post:
+      operationId: completeOnboarding
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    additionalProperties: false
+                    properties:
+                      avatar:
+                        anyOf:
+                          - type: string
+                          - type: 'null'
+                    required:
+                      - avatar
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: Origin
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Must match APP_ORIGIN.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Onboarding'
+  /api/v1/avatars/{file}:
+    get:
+      operationId: getAvatar
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Success
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: file
+          in: path
+          required: true
+          schema:
+            type: string
+  /api/v1/attendance/check-in:
+    post:
+      operationId: checkIn
+      summary: Check in for the current Jakarta date
+      description: Requires an active EMS session. Data follows the current role and employee scope.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: 'null'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: Origin
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Must match APP_ORIGIN.
+      security:
+        - sessionCookie: []
+  /api/v1/attendance/check-out:
+    post:
+      operationId: checkOut
+      summary: Check out for the current Jakarta date
+      description: Requires an active EMS session. Data follows the current role and employee scope.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: 'null'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: Origin
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Must match APP_ORIGIN.
+      security:
+        - sessionCookie: []
+  /api/v1/attendance/me/today:
+    get:
+      operationId: getMyAttendanceToday
+      summary: Read own attendance and schedule for today
+      description: Requires an active EMS session. Data follows the current role and employee scope.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/MyTodayAttendance'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+        - sessionCookie: []
+  /api/v1/attendance/daily:
+    get:
+      operationId: getDailyAttendance
+      summary: Read the scoped daily register
+      description: Requires an active EMS session. Data follows the current role and employee scope.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DailyAttendance'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          description: Business date in Asia/Jakarta.
+      security:
+        - sessionCookie: []
+  /api/v1/attendance/stats:
+    get:
+      operationId: getAttendanceStats
+      summary: Read attendance totals for today
+      description: Requires an active EMS session. Data follows the current role and employee scope.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/WorkStat'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+        - sessionCookie: []
+  /api/v1/attendance/monthly:
+    get:
+      operationId: getMonthlyAttendance
+      summary: Read the scoped monthly attendance summary
+      description: Requires an active EMS session. Data follows the current role and employee scope.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/MonthlyAttendance'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: month
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+        - name: year
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 9998
+      security:
+        - sessionCookie: []
+  /api/v1/attendance-corrections:
+    get:
+      operationId: listAttendanceCorrections
+      summary: List attendance corrections
+      description: Requires an active EMS session. Data follows the current role and employee scope.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AttendanceCorrection'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+        - sessionCookie: []
+    post:
+      operationId: submitAttendanceCorrection
+      summary: Submit an attendance correction for own record
+      description: Requires an active EMS session. Data follows the current role and employee scope.
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: 'null'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: Origin
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Must match APP_ORIGIN.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttendanceCorrectionInput'
+      security:
+        - sessionCookie: []
+  /api/v1/leave-requests:
+    get:
+      operationId: listLeaveRequests
+      summary: List visible leave requests
+      description: Requires an active EMS session. Data follows the current role and employee scope.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LeaveRequest'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+        - sessionCookie: []
+    post:
+      operationId: submitLeaveRequest
+      summary: Submit a leave request and reserve annual quota
+      description: Requires an active EMS session. Data follows the current role and employee scope.
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: 'null'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: Origin
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Must match APP_ORIGIN.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LeaveRequestInput'
+      security:
+        - sessionCookie: []
+  /api/v1/attendance-corrections/{id}/approve:
+    post:
+      operationId: approveAttendanceCorrection
+      summary: Approve an attendance correction
+      description: Requires authority to review this employee and the current approval stage.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: 'null'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: Origin
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Must match APP_ORIGIN.
+      security:
+        - sessionCookie: []
+  /api/v1/attendance-corrections/{id}/reject:
+    post:
+      operationId: rejectAttendanceCorrection
+      summary: Reject an attendance correction
+      description: Requires authority to review this employee and the current approval stage.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: 'null'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: Origin
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Must match APP_ORIGIN.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkDecisionReason'
+      security:
+        - sessionCookie: []
+  /api/v1/attendance-corrections/{id}/cancel:
+    post:
+      operationId: cancelAttendanceCorrection
+      summary: Cancel an attendance correction
+      description: Only the requesting employee may cancel an open request.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: 'null'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: Origin
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Must match APP_ORIGIN.
+      security:
+        - sessionCookie: []
+  /api/v1/leave-requests/{id}/approve:
+    post:
+      operationId: approveLeaveRequest
+      summary: Approve a leave request
+      description: Requires authority to review this employee and the current approval stage.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: 'null'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: Origin
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Must match APP_ORIGIN.
+      security:
+        - sessionCookie: []
+  /api/v1/leave-requests/{id}/reject:
+    post:
+      operationId: rejectLeaveRequest
+      summary: Reject a leave request
+      description: Requires authority to review this employee and the current approval stage.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: 'null'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: Origin
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Must match APP_ORIGIN.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkDecisionReason'
+      security:
+        - sessionCookie: []
+  /api/v1/leave-requests/{id}/cancel:
+    post:
+      operationId: cancelLeaveRequest
+      summary: Cancel a leave request
+      description: Only the requesting employee may cancel an open request.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: 'null'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: Origin
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Must match APP_ORIGIN.
+      security:
+        - sessionCookie: []
+  /api/v1/leave-requests/stats:
+    get:
+      operationId: getLeaveStats
+      summary: Read leave counts within scope
+      description: Requires an active EMS session. Data follows the current role and employee scope.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/WorkStat'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+        - sessionCookie: []
+  /api/v1/leave-requests/me/balance:
+    get:
+      operationId: getMyLeaveBalance
+      summary: Read own approved annual leave usage for the current Jakarta year
+      description: Requires an active EMS session. Data follows the current role and employee scope.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/LeaveBalance'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+        - sessionCookie: []
+  /api/v1/leave-requests/preview:
+    post:
+      operationId: previewLeaveRequest
+      summary: Count working days and check remaining annual quota
+      description: Requires an active EMS session. Data follows the current role and employee scope.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/LeavePreview'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: Origin
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Must match APP_ORIGIN.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LeavePreviewInput'
+      security:
+        - sessionCookie: []
+  /api/v1/leave-requests/employee-options:
+    get:
+      operationId: getLeaveEmployeeOptions
+      summary: List employees eligible to request leave
+      description: Requires an active HR or Super Admin session.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LeaveEmployeeOption'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+        - sessionCookie: []
+  /api/v1/audit-logs:
+    get:
+      operationId: listAuditLogs
+      summary: Read the latest 100 audit entries
+      description: Requires an active HR or Super Admin session.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AuditRow'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+        - sessionCookie: []
+  /api/v1/dashboard/pending-approvals:
+    get:
+      operationId: getPendingApprovals
+      summary: Count requests the current employee can review
+      description: Requires an active EMS session. Data follows the current role and employee scope.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/PendingApprovals'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      security:
+        - sessionCookie: []
+  /api/v1/salaries:
+    get:
+      operationId: listSalaries
+      summary: List payroll for a period
+      description: Requires an active session. Salary visibility is restricted to the owner, HR and Super Admin.
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SalaryListItem'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: month
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+        - name: year
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 2000
+            maximum: 2100
+  /api/v1/salaries/{id}/slip:
+    get:
+      operationId: getSalarySlip
+      summary: Get a payslip and its historical amounts
+      description: Requires an active session. Salary visibility is restricted to the owner, HR and Super Admin.
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/SalarySlip'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+  /api/v1/salaries/{id}/mark-paid:
+    post:
+      operationId: markSalaryPaid
+      summary: Mark one outstanding slip paid
+      description: Requires an active HR or Super Admin session.
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: 'null'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: Origin
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Must match APP_ORIGIN.
+  /api/v1/payroll-periods/{year}/{month}/generate:
+    post:
+      operationId: generatePayroll
+      summary: Calculate payroll and preserve paid slips
+      description: Requires an active HR or Super Admin session.
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/PayrollGeneration'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: month
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+        - name: year
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 2000
+            maximum: 2100
+        - name: Origin
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Must match APP_ORIGIN.
+  /api/v1/payroll-periods/{year}/{month}/mark-paid:
+    post:
+      operationId: markPayrollPeriodPaid
+      summary: Mark outstanding slips in a period paid
+      description: Requires an active HR or Super Admin session.
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/PayrollPayment'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: month
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+        - name: year
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 2000
+            maximum: 2100
+        - name: Origin
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Must match APP_ORIGIN.
+  /api/v1/employees/{id}/payroll-components:
+    get:
+      operationId: listPayrollComponents
+      summary: Read fixed allowances and deductions
+      description: Requires an active HR or Super Admin session.
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PayrollComponent'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+    post:
+      operationId: createPayrollComponent
+      summary: Add a fixed allowance or deduction
+      description: Requires an active HR or Super Admin session.
+      security:
+        - sessionCookie: []
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: 'null'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: Origin
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Must match APP_ORIGIN.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayrollComponentInput'
+  /api/v1/payroll-components/{id}:
+    delete:
+      operationId: deletePayrollComponent
+      summary: Delete a component without updating slip snapshots
+      description: Requires an active HR or Super Admin session.
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: 'null'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: Origin
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Must match APP_ORIGIN.
+  /api/v1/dashboard/stats:
+    get:
+      operationId: getDashboardStats
+      summary: Read personal or organizational counters
+      description: Requires an active EMS session.
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/DashboardStats'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+  /api/v1/dashboard/me:
+    get:
+      operationId: getDashboardOverview
+      summary: Get the actor's latest leave and salary
+      description: Requires an active EMS session.
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    anyOf:
+                      - $ref: '#/components/schemas/DashboardOverview'
+                      - type: 'null'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+  /api/v1/reports/salary-trend:
+    get:
+      operationId: getSalaryTrend
+      summary: Read net salary trend for the last six recorded periods
+      description: Requires an active session. Salary visibility is restricted to the owner, HR and Super Admin.
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SalaryTrendItem'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+  /api/v1/reports/department-distribution:
+    get:
+      operationId: getDepartmentDistribution
+      summary: Read company active headcount by department
+      description: Requires an active Manager, HR or Super Admin session. Individual report rows follow actor scope.
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DepartmentDistributionItem'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+  /api/v1/reports/attendance:
+    get:
+      operationId: getAttendanceReport
+      summary: Read the monthly attendance report
+      description: Requires an active Manager, HR or Super Admin session. Individual report rows follow actor scope.
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/AttendanceReport'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: month
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+        - name: year
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 9998
+  /api/v1/reports/attendance.csv:
+    get:
+      operationId: exportAttendanceReport
+      summary: Download the monthly attendance report as CSV
+      description: Requires an active Manager, HR or Super Admin session. Individual report rows follow actor scope.
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: UTF-8 CSV attachment with BOM and semicolon delimiter.
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: month
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+        - name: year
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 9998
+  /api/v1/reports/salary:
+    get:
+      operationId: getSalaryReport
+      summary: Read the monthly salary report
+      description: Requires an active HR or Super Admin session.
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/SalaryReport'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: month
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+        - name: year
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 9998
+  /api/v1/reports/salary.csv:
+    get:
+      operationId: exportSalaryReport
+      summary: Download the monthly salary report as CSV
+      description: Requires an active HR or Super Admin session.
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: UTF-8 CSV attachment with BOM and semicolon delimiter.
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: month
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+        - name: year
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 9998
+  /api/v1/reports/employees:
+    get:
+      operationId: getEmployeeReport
+      summary: Read the monthly employees report
+      description: Requires an active Manager, HR or Super Admin session. Individual report rows follow actor scope.
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/EmployeeReport'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: month
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+        - name: year
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 9998
+  /api/v1/reports/employees.csv:
+    get:
+      operationId: exportEmployeeReport
+      summary: Download the monthly employees report as CSV
+      description: Requires an active Manager, HR or Super Admin session. Individual report rows follow actor scope.
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: UTF-8 CSV attachment with BOM and semicolon delimiter.
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: month
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+        - name: year
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 9998
+  /api/v1/reports/leave:
+    get:
+      operationId: getLeaveReport
+      summary: Read the monthly leave report
+      description: Requires an active Manager, HR or Super Admin session. Individual report rows follow actor scope.
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  success:
+                    const: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/LeaveReport'
+                required:
+                  - success
+                  - message
+                  - data
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: month
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+        - name: year
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 9998
+  /api/v1/reports/leave.csv:
+    get:
+      operationId: exportLeaveReport
+      summary: Download the monthly leave report as CSV
+      description: Requires an active Manager, HR or Super Admin session. Individual report rows follow actor scope.
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: UTF-8 CSV attachment with BOM and semicolon delimiter.
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: month
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+        - name: year
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 9998
+  /api/v1/employees.csv:
+    get:
+      operationId: exportEmployeeDirectory
+      summary: Download the filtered employee directory
+      description: Requires an active HR or Super Admin session.
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: UTF-8 CSV attachment with BOM and semicolon delimiter.
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: division
+          in: query
+          required: false
+          schema:
+            type: string
+  /api/v1/attendance/daily.csv:
+    get:
+      operationId: exportDailyAttendance
+      summary: Download the filtered daily attendance register
+      description: Requires an active EMS session.
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: UTF-8 CSV attachment with BOM and semicolon delimiter.
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+        default:
+          $ref: '#/components/responses/Problem'
+      parameters:
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+components:
+  responses:
+    Healthy:
+      description: Probe succeeded
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Health'
+    Problem:
+      description: Request failed
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+  schemas:
+    Health:
+      type: object
+      additionalProperties: false
+      required:
+        - status
+      properties:
+        status:
+          const: ok
+    Problem:
+      type: object
+      required:
+        - type
+        - title
+        - status
+        - code
+        - requestId
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+        code:
+          type: string
+        requestId:
+          type: string
+        detail:
+          type: string
+    SessionUser:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        name:
+          anyOf:
+            - type: string
+            - type: 'null'
+        role:
+          type: string
+          enum:
+            - SUPER_ADMIN
+            - HR
+            - MANAGER
+            - EMPLOYEE
+        employeeId:
+          anyOf:
+            - type: string
+            - type: 'null'
+        image:
+          anyOf:
+            - type: string
+            - type: 'null'
+        isProfileComplete:
+          type: boolean
+        mustChangePassword:
+          type: boolean
+      required:
+        - id
+        - email
+        - name
+        - role
+        - employeeId
+        - image
+        - isProfileComplete
+        - mustChangePassword
+    Session:
+      type: object
+      additionalProperties: false
+      properties:
+        user:
+          $ref: '#/components/schemas/SessionUser'
+        expires:
+          type: string
+          format: date-time
+      required:
+        - user
+        - expires
+    Login:
+      type: object
+      additionalProperties: false
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+      required:
+        - email
+        - password
+    EmailInput:
+      type: object
+      additionalProperties: false
+      properties:
+        email:
+          type: string
+          format: email
+      required:
+        - email
+    TokenInput:
+      type: object
+      additionalProperties: false
+      properties:
+        token:
+          type: string
+          pattern: ^[0-9a-f]{64}$
+      required:
+        - token
+    PasswordReset:
+      type: object
+      additionalProperties: false
+      properties:
+        token:
+          type: string
+        newPassword:
+          type: string
+          format: password
+      required:
+        - token
+        - newPassword
+    PasswordChange:
+      type: object
+      additionalProperties: false
+      properties:
+        currentPassword:
+          type: string
+          format: password
+        newPassword:
+          type: string
+          format: password
+        confirmPassword:
+          type: string
+          format: password
+      required:
+        - currentPassword
+        - newPassword
+        - confirmPassword
+    AccountInfo:
+      type: object
+      additionalProperties: false
+      properties:
+        userId:
+          type: string
+        state:
+          type: string
+          enum:
+            - ACTIVE
+            - INACTIVE
+            - LOCKED
+            - MUST_CHANGE_PASSWORD
+        lockedUntil:
+          anyOf:
+            - type: string
+            - type: 'null'
+      required:
+        - userId
+        - state
+        - lockedUntil
+    SystemUser:
+      type: object
+      additionalProperties: false
+      properties:
+        userId:
+          type: string
+        state:
+          type: string
+          enum:
+            - ACTIVE
+            - INACTIVE
+            - LOCKED
+            - MUST_CHANGE_PASSWORD
+        lockedUntil:
+          anyOf:
+            - type: string
+            - type: 'null'
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum:
+            - SUPER_ADMIN
+            - HR
+            - MANAGER
+            - EMPLOYEE
+        employeeId:
+          anyOf:
+            - type: string
+            - type: 'null'
+        isSelf:
+          type: boolean
+      required:
+        - userId
+        - state
+        - lockedUntil
+        - name
+        - email
+        - role
+        - employeeId
+        - isSelf
+    Option:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+      required:
+        - id
+        - name
+    OrganizationOptions:
+      type: object
+      additionalProperties: false
+      properties:
+        departments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Option'
+        positions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Option'
+        managers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Option'
+      required:
+        - departments
+        - positions
+        - managers
+    DepartmentInput:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+        description:
+          anyOf:
+            - type: string
+            - type: 'null'
+      required:
+        - name
+    PositionInput:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+        salaryBase:
+          type: integer
+      required:
+        - name
+        - salaryBase
+    Department:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          anyOf:
+            - type: string
+            - type: 'null'
+        employeeCount:
+          type: integer
+      required:
+        - id
+        - name
+        - description
+        - employeeCount
+    Position:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        salaryBase:
+          type: integer
+        employeeCount:
+          type: integer
+      required:
+        - id
+        - name
+        - salaryBase
+        - employeeCount
+    Organization:
+      type: object
+      additionalProperties: false
+      properties:
+        departments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Department'
+        positions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Position'
+      required:
+        - departments
+        - positions
+    CompanySettingsInput:
+      type: object
+      additionalProperties: false
+      properties:
+        companyName:
+          type: string
+        companyCode:
+          anyOf:
+            - type: string
+            - type: 'null'
+        npwp:
+          anyOf:
+            - type: string
+            - type: 'null'
+        phone:
+          anyOf:
+            - type: string
+            - type: 'null'
+        workStartTime:
+          type: string
+        workEndTime:
+          type: string
+        lateToleranceMinutes:
+          type: integer
+        overtimeRatePerHour:
+          type: integer
+        workingDaysPerMonth:
+          type: integer
+        annualLeaveQuota:
+          type: integer
+        bpjsKesehatanWageCap:
+          type: integer
+        jpWageCap:
+          type: integer
+        jkkRateBps:
+          type: integer
+        bpjsMinimumWage:
+          type: integer
+      required:
+        - companyName
+        - workStartTime
+        - workEndTime
+        - lateToleranceMinutes
+        - overtimeRatePerHour
+        - workingDaysPerMonth
+        - annualLeaveQuota
+        - bpjsKesehatanWageCap
+        - jpWageCap
+        - jkkRateBps
+        - bpjsMinimumWage
+    CompanySettings:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+        companyName:
+          type: string
+        companyCode:
+          anyOf:
+            - type: string
+            - type: 'null'
+        npwp:
+          anyOf:
+            - type: string
+            - type: 'null'
+        phone:
+          anyOf:
+            - type: string
+            - type: 'null'
+        workStartTime:
+          type: string
+        workEndTime:
+          type: string
+        lateToleranceMinutes:
+          type: integer
+        overtimeRatePerHour:
+          type: integer
+        workingDaysPerMonth:
+          type: integer
+        annualLeaveQuota:
+          type: integer
+        bpjsKesehatanWageCap:
+          type: integer
+        jpWageCap:
+          type: integer
+        jkkRateBps:
+          type: integer
+        bpjsMinimumWage:
+          type: integer
+      required:
+        - id
+        - companyName
+        - companyCode
+        - npwp
+        - phone
+        - workStartTime
+        - workEndTime
+        - lateToleranceMinutes
+        - overtimeRatePerHour
+        - workingDaysPerMonth
+        - annualLeaveQuota
+        - bpjsKesehatanWageCap
+        - jpWageCap
+        - jkkRateBps
+        - bpjsMinimumWage
+    HolidayInput:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+        date:
+          type: string
+          format: date
+      required:
+        - name
+        - date
+    Holiday:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        dateKey:
+          type: string
+          format: date
+        date:
+          type: string
+      required:
+        - id
+        - name
+        - dateKey
+        - date
+    EmployeeInput:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        nip:
+          type: string
+        gender:
+          type: string
+        birthDate:
+          type: string
+        joinDate:
+          type: string
+        departmentId:
+          type: string
+        positionId:
+          type: string
+        customPosition:
+          type: string
+        roleId:
+          type: string
+        avatar:
+          type: string
+        status:
+          type: string
+          enum:
+            - ACTIVE
+            - PROBATION
+            - RESIGNED
+            - TERMINATED
+        employmentType:
+          type: string
+          enum:
+            - FULL_TIME
+            - PART_TIME
+            - CONTRACT
+            - INTERNSHIP
+            - REMOTE
+            - FREELANCE
+        managerId:
+          anyOf:
+            - type: string
+            - type: 'null'
+        salaryBase:
+          type: number
+        ptkpStatus:
+          type: string
+          enum:
+            - TK0
+            - TK1
+            - TK2
+            - TK3
+            - K0
+            - K1
+            - K2
+            - K3
+        bpjsKesehatan:
+          type: boolean
+        bpjsKetenagakerjaan:
+          type: boolean
+      required:
+        - name
+        - email
+        - nip
+        - roleId
+        - status
+        - employmentType
+    EmployeePatch:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        nip:
+          type: string
+        gender:
+          type: string
+        birthDate:
+          type: string
+        joinDate:
+          type: string
+        departmentId:
+          type: string
+        positionId:
+          type: string
+        customPosition:
+          type: string
+        roleId:
+          type: string
+        avatar:
+          type: string
+        status:
+          type: string
+          enum:
+            - ACTIVE
+            - PROBATION
+            - RESIGNED
+            - TERMINATED
+        employmentType:
+          type: string
+          enum:
+            - FULL_TIME
+            - PART_TIME
+            - CONTRACT
+            - INTERNSHIP
+            - REMOTE
+            - FREELANCE
+        managerId:
+          anyOf:
+            - type: string
+            - type: 'null'
+        salaryBase:
+          type: number
+        ptkpStatus:
+          type: string
+          enum:
+            - TK0
+            - TK1
+            - TK2
+            - TK3
+            - K0
+            - K1
+            - K2
+            - K3
+        bpjsKesehatan:
+          type: boolean
+        bpjsKetenagakerjaan:
+          type: boolean
+      required: []
+    EmployeeListItem:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        nip:
+          type: string
+        division:
+          type: string
+        position:
+          type: string
+        joinDate:
+          type: string
+        avatar:
+          type: string
+        status:
+          type: string
+          enum:
+            - ACTIVE
+            - PROBATION
+            - RESIGNED
+            - TERMINATED
+        probationDaysLeft:
+          anyOf:
+            - type: integer
+            - type: 'null'
+      required:
+        - id
+        - name
+        - email
+        - nip
+        - division
+        - position
+        - joinDate
+        - avatar
+        - status
+        - probationDaysLeft
+    EmployeeDetail:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        nip:
+          type: string
+        gender:
+          anyOf:
+            - type: string
+            - type: 'null'
+        birthDate:
+          type: string
+        joinDate:
+          type: string
+        departmentId:
+          anyOf:
+            - type: string
+            - type: 'null'
+        positionId:
+          anyOf:
+            - type: string
+            - type: 'null'
+        roleId:
+          type: string
+        avatar:
+          anyOf:
+            - type: string
+            - type: 'null'
+        status:
+          type: string
+          enum:
+            - ACTIVE
+            - PROBATION
+            - RESIGNED
+            - TERMINATED
+        employmentType:
+          type: string
+          enum:
+            - FULL_TIME
+            - PART_TIME
+            - CONTRACT
+            - INTERNSHIP
+            - REMOTE
+            - FREELANCE
+        managerId:
+          anyOf:
+            - type: string
+            - type: 'null'
+        salaryBase:
+          type: number
+        ptkpStatus:
+          type: string
+          enum:
+            - TK0
+            - TK1
+            - TK2
+            - TK3
+            - K0
+            - K1
+            - K2
+            - K3
+        bpjsKesehatan:
+          type: boolean
+        bpjsKetenagakerjaan:
+          type: boolean
+        phone:
+          anyOf:
+            - type: string
+            - type: 'null'
+        address:
+          anyOf:
+            - type: string
+            - type: 'null'
+        placeOfBirth:
+          anyOf:
+            - type: string
+            - type: 'null'
+        identityNumber:
+          anyOf:
+            - type: string
+            - type: 'null'
+        bio:
+          anyOf:
+            - type: string
+            - type: 'null'
+        bankName:
+          anyOf:
+            - type: string
+            - type: 'null'
+        bankAccount:
+          anyOf:
+            - type: string
+            - type: 'null'
+        bankHolderName:
+          anyOf:
+            - type: string
+            - type: 'null'
+        npwpNumber:
+          anyOf:
+            - type: string
+            - type: 'null'
+        emergencyName:
+          anyOf:
+            - type: string
+            - type: 'null'
+        emergencyPhone:
+          anyOf:
+            - type: string
+            - type: 'null'
+        emergencyRelation:
+          anyOf:
+            - type: string
+            - type: 'null'
+        education:
+          anyOf:
+            - type: string
+            - type: 'null'
+        skills:
+          anyOf:
+            - type: string
+            - type: 'null'
+        id:
+          type: string
+        division:
+          type: string
+        position:
+          type: string
+        managerName:
+          anyOf:
+            - type: string
+            - type: 'null'
+        leaveQuota:
+          type: integer
+        account:
+          anyOf:
+            - $ref: '#/components/schemas/AccountInfo'
+            - type: 'null'
+      required:
+        - name
+        - email
+        - nip
+        - gender
+        - birthDate
+        - joinDate
+        - departmentId
+        - positionId
+        - roleId
+        - avatar
+        - status
+        - employmentType
+        - managerId
+        - salaryBase
+        - ptkpStatus
+        - bpjsKesehatan
+        - bpjsKetenagakerjaan
+        - phone
+        - address
+        - placeOfBirth
+        - identityNumber
+        - bio
+        - bankName
+        - bankAccount
+        - bankHolderName
+        - npwpNumber
+        - emergencyName
+        - emergencyPhone
+        - emergencyRelation
+        - education
+        - skills
+        - id
+        - division
+        - position
+        - managerName
+        - leaveQuota
+        - account
+    EmployeeHistory:
+      type: object
+      additionalProperties: false
+      properties:
+        attendance:
+          type: object
+          additionalProperties: false
+          properties:
+            periodLabel:
+              type: string
+            present:
+              type: integer
+            late:
+              type: integer
+            earlyLeave:
+              type: integer
+            lateMinutes:
+              type: integer
+            overtimeHours:
+              type: number
+            leaveDays:
+              type: integer
+          required:
+            - periodLabel
+            - present
+            - late
+            - earlyLeave
+            - lateMinutes
+            - overtimeHours
+            - leaveDays
+        leaves:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              id:
+                type: string
+              type:
+                type: string
+              startDate:
+                type: string
+              endDate:
+                type: string
+              duration:
+                type: integer
+              status:
+                type: string
+              nextStep:
+                anyOf:
+                  - type: string
+                  - type: 'null'
+            required:
+              - id
+              - type
+              - startDate
+              - endDate
+              - duration
+              - status
+              - nextStep
+        salaries:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              id:
+                type: string
+              periodLabel:
+                type: string
+              totalNet:
+                type: integer
+              isPaid:
+                type: boolean
+            required:
+              - id
+              - periodLabel
+              - totalNet
+              - isPaid
+      required:
+        - attendance
+        - leaves
+        - salaries
+    ProfileInput:
+      type: object
+      additionalProperties: false
+      properties:
+        bankName:
+          type: string
+        bankAccount:
+          type: string
+        bankHolderName:
+          type: string
+        emergencyName:
+          type: string
+        emergencyPhone:
+          type: string
+        emergencyRelation:
+          type: string
+        education:
+          type: string
+        skills:
+          type: string
+        bio:
+          type: string
+        avatar:
+          type: string
+        namaLengkap:
+          type: string
+        email:
+          type: string
+        nomorTelepon:
+          type: string
+        tanggalLahir:
+          type: string
+        alamat:
+          type: string
+        tempatLahir:
+          type: string
+        jenisKelamin:
+          type: string
+        nik:
+          type: string
+        npwp:
+          type: string
+      required:
+        - namaLengkap
+        - email
+    Profile:
+      type: object
+      additionalProperties: false
+      properties:
+        bankName:
+          type: string
+        bankAccount:
+          type: string
+        bankHolderName:
+          type: string
+        emergencyName:
+          type: string
+        emergencyPhone:
+          type: string
+        emergencyRelation:
+          type: string
+        education:
+          type: string
+        skills:
+          type: string
+        bio:
+          type: string
+        avatar:
+          type: string
+        namaLengkap:
+          type: string
+        email:
+          type: string
+        nomorTelepon:
+          type: string
+        tanggalLahir:
+          type: string
+        alamat:
+          type: string
+        tempatLahir:
+          type: string
+        jenisKelamin:
+          type: string
+        nik:
+          type: string
+        npwp:
+          type: string
+        idKaryawan:
+          type: string
+        departemen:
+          type: string
+        jabatan:
+          type: string
+        tanggalBergabung:
+          type: string
+      required:
+        - bankName
+        - bankAccount
+        - bankHolderName
+        - emergencyName
+        - emergencyPhone
+        - emergencyRelation
+        - education
+        - skills
+        - bio
+        - avatar
+        - namaLengkap
+        - email
+        - nomorTelepon
+        - tanggalLahir
+        - alamat
+        - tempatLahir
+        - jenisKelamin
+        - nik
+        - npwp
+        - idKaryawan
+        - departemen
+        - jabatan
+        - tanggalBergabung
+    Onboarding:
+      type: object
+      additionalProperties: false
+      properties:
+        bankName:
+          type: string
+        bankAccount:
+          type: string
+        bankHolderName:
+          type: string
+        emergencyName:
+          type: string
+        emergencyPhone:
+          type: string
+        emergencyRelation:
+          type: string
+        education:
+          type: string
+        skills:
+          type: string
+        bio:
+          type: string
+        avatar:
+          type: string
+        phone:
+          type: string
+        address:
+          type: string
+        gender:
+          type: string
+        placeOfBirth:
+          type: string
+        identityNumber:
+          type: string
+        npwpNumber:
+          type: string
+        birthDate:
+          type: string
+          format: date
+      required:
+        - phone
+        - address
+        - gender
+        - placeOfBirth
+        - identityNumber
+        - birthDate
+        - bankName
+        - bankAccount
+        - bankHolderName
+        - emergencyName
+        - emergencyPhone
+        - emergencyRelation
+    TemporaryPassword:
+      type: object
+      additionalProperties: false
+      properties:
+        temporaryPassword:
+          type: string
+      required:
+        - temporaryPassword
+    WorkStat:
+      type: object
+      additionalProperties: false
+      properties:
+        label:
+          type: string
+        value:
+          type: string
+        change:
+          type: string
+        type:
+          type: string
+          enum:
+            - neutral
+            - success
+            - warning
+            - danger
+      required:
+        - label
+        - value
+        - change
+        - type
+    DailyAttendance:
+      type: object
+      additionalProperties: false
+      properties:
+        employeeId:
+          type: string
+          minLength: 1
+        nip:
+          type: string
+        nama:
+          type: string
+        tanggal:
+          type: string
+        jamMasuk:
+          type: string
+        jamKeluar:
+          type: string
+        jamKerja:
+          type: string
+        status:
+          type: string
+          enum:
+            - PRESENT
+            - LATE
+            - EARLY_LEAVE
+            - ABSENT
+            - PERMISSION
+            - SICK
+            - NOT_YET
+        keterangan:
+          type: string
+      required:
+        - employeeId
+        - nip
+        - nama
+        - tanggal
+        - jamMasuk
+        - jamKeluar
+        - jamKerja
+        - status
+        - keterangan
+    MyTodayAttendance:
+      type: object
+      additionalProperties: false
+      properties:
+        date:
+          type: string
+        checkIn:
+          anyOf:
+            - type: string
+              pattern: ^([01][0-9]|2[0-3]):[0-5][0-9]$
+            - type: 'null'
+        checkOut:
+          anyOf:
+            - type: string
+              pattern: ^([01][0-9]|2[0-3]):[0-5][0-9]$
+            - type: 'null'
+        status:
+          type: string
+          enum:
+            - PRESENT
+            - LATE
+            - EARLY_LEAVE
+            - ABSENT
+            - PERMISSION
+            - SICK
+            - NOT_YET
+        lateInMinutes:
+          type: integer
+          minimum: 0
+        workStartTime:
+          type: string
+          pattern: ^([01][0-9]|2[0-3]):[0-5][0-9]$
+        workEndTime:
+          type: string
+          pattern: ^([01][0-9]|2[0-3]):[0-5][0-9]$
+        lateToleranceMinutes:
+          type: integer
+          minimum: 0
+        onLeave:
+          type: boolean
+      required:
+        - date
+        - checkIn
+        - checkOut
+        - status
+        - lateInMinutes
+        - workStartTime
+        - workEndTime
+        - lateToleranceMinutes
+        - onLeave
+    AttendanceTotals:
+      type: object
+      additionalProperties: false
+      properties:
+        hadir:
+          type: integer
+          minimum: 0
+        terlambat:
+          type: integer
+          minimum: 0
+        izin:
+          type: integer
+          minimum: 0
+        sakit:
+          type: integer
+          minimum: 0
+        alpha:
+          type: integer
+          minimum: 0
+      required:
+        - hadir
+        - terlambat
+        - izin
+        - sakit
+        - alpha
+    MonthlyAttendanceRow:
+      type: object
+      additionalProperties: false
+      properties:
+        employeeId:
+          type: string
+          minLength: 1
+        nip:
+          type: string
+        nama:
+          type: string
+        divisi:
+          type: string
+        hadir:
+          type: integer
+          minimum: 0
+        terlambat:
+          type: integer
+          minimum: 0
+        izin:
+          type: integer
+          minimum: 0
+        sakit:
+          type: integer
+          minimum: 0
+        alpha:
+          type: integer
+          minimum: 0
+        menitTerlambat:
+          type: integer
+          minimum: 0
+        jamLembur:
+          type: number
+      required:
+        - employeeId
+        - nip
+        - nama
+        - divisi
+        - hadir
+        - terlambat
+        - izin
+        - sakit
+        - alpha
+        - menitTerlambat
+        - jamLembur
+    MonthlyAttendance:
+      type: object
+      additionalProperties: false
+      properties:
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/MonthlyAttendanceRow'
+        totals:
+          $ref: '#/components/schemas/AttendanceTotals'
+        attendanceRate:
+          type: number
+      required:
+        - rows
+        - totals
+        - attendanceRate
+    AttendanceCorrection:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          minLength: 1
+        employeeId:
+          type: string
+          minLength: 1
+        nip:
+          type: string
+        nama:
+          type: string
+        tanggal:
+          type: string
+        jamMasuk:
+          type: string
+        jamKeluar:
+          type: string
+        reason:
+          type: string
+        status:
+          type: string
+          enum:
+            - PENDING
+            - APPROVED
+            - REJECTED
+            - CANCELLED
+        reviewedBy:
+          anyOf:
+            - type: string
+            - type: 'null'
+        rejectionReason:
+          anyOf:
+            - type: string
+            - type: 'null'
+        canReview:
+          type: boolean
+        canCancel:
+          type: boolean
+      required:
+        - id
+        - employeeId
+        - nip
+        - nama
+        - tanggal
+        - jamMasuk
+        - jamKeluar
+        - reason
+        - status
+        - reviewedBy
+        - rejectionReason
+        - canReview
+        - canCancel
+    AttendanceCorrectionInput:
+      type: object
+      additionalProperties: false
+      properties:
+        date:
+          type: string
+          format: date
+        checkIn:
+          type: string
+          pattern: ^([01][0-9]|2[0-3]):[0-5][0-9]$
+        checkOut:
+          type: string
+          pattern: ^([01][0-9]|2[0-3]):[0-5][0-9]$
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 2000
+      required:
+        - date
+        - reason
+      anyOf:
+        - required:
+            - checkIn
+        - required:
+            - checkOut
+    WorkDecisionReason:
+      type: object
+      additionalProperties: false
+      properties:
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 2000
+      required:
+        - reason
+    LeaveApprover:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+        at:
+          anyOf:
+            - type: string
+              format: date-time
+            - type: 'null'
+      required:
+        - name
+        - at
+    LeaveRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          minLength: 1
+        employeeId:
+          type: string
+          minLength: 1
+        nip:
+          type: string
+        nama:
+          type: string
+        tipeCuti:
+          type: string
+          enum:
+            - ANNUAL
+            - SICK
+            - EMERGENCY
+            - UNPAID
+        tanggalMulai:
+          type: string
+        tanggalSelesai:
+          type: string
+        durasi:
+          type: integer
+          minimum: 0
+        status:
+          type: string
+          enum:
+            - PENDING
+            - MANAGER_APPROVED
+            - HR_APPROVED
+            - REJECTED
+            - CANCELLED
+        reason:
+          type: string
+        managerApprover:
+          anyOf:
+            - $ref: '#/components/schemas/LeaveApprover'
+            - type: 'null'
+        hrApprover:
+          anyOf:
+            - $ref: '#/components/schemas/LeaveApprover'
+            - type: 'null'
+        rejectedBy:
+          anyOf:
+            - $ref: '#/components/schemas/LeaveApprover'
+            - type: 'null'
+        rejectionReason:
+          anyOf:
+            - type: string
+            - type: 'null'
+        nextStep:
+          anyOf:
+            - type: string
+            - type: 'null'
+        canApprove:
+          type: boolean
+        canReject:
+          type: boolean
+        canCancel:
+          type: boolean
+      required:
+        - id
+        - employeeId
+        - nip
+        - nama
+        - tipeCuti
+        - tanggalMulai
+        - tanggalSelesai
+        - durasi
+        - status
+        - reason
+        - managerApprover
+        - hrApprover
+        - rejectedBy
+        - rejectionReason
+        - nextStep
+        - canApprove
+        - canReject
+        - canCancel
+    LeaveRequestInput:
+      type: object
+      additionalProperties: false
+      properties:
+        employeeId:
+          type: string
+          minLength: 1
+        type:
+          type: string
+          enum:
+            - ANNUAL
+            - SICK
+            - EMERGENCY
+            - UNPAID
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 2000
+      required:
+        - type
+        - startDate
+        - endDate
+        - reason
+    LeavePreviewInput:
+      type: object
+      additionalProperties: false
+      properties:
+        employeeId:
+          type: string
+          minLength: 1
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+      required:
+        - startDate
+    LeaveBalance:
+      type: object
+      additionalProperties: false
+      properties:
+        year:
+          type: integer
+          minimum: 0
+        quota:
+          type: integer
+          minimum: 0
+        used:
+          type: integer
+          minimum: 0
+        remaining:
+          type: integer
+          minimum: 0
+      required:
+        - year
+        - quota
+        - used
+        - remaining
+    LeavePreview:
+      type: object
+      additionalProperties: false
+      properties:
+        year:
+          type: integer
+          minimum: 0
+        quota:
+          type: integer
+          minimum: 0
+        used:
+          type: integer
+          minimum: 0
+        pending:
+          type: integer
+          minimum: 0
+        available:
+          type: integer
+          minimum: 0
+        workingDays:
+          anyOf:
+            - type: integer
+              minimum: 0
+            - type: 'null'
+        managerName:
+          anyOf:
+            - type: string
+            - type: 'null'
+      required:
+        - year
+        - quota
+        - used
+        - pending
+        - available
+        - workingDays
+        - managerName
+    LeaveEmployeeOption:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          minLength: 1
+        name:
+          type: string
+        nip:
+          type: string
+      required:
+        - id
+        - name
+        - nip
+    AuditRow:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          minLength: 1
+        at:
+          type: string
+        actorName:
+          type: string
+        actionLabel:
+          type: string
+        area:
+          type: string
+        targetName:
+          anyOf:
+            - type: string
+            - type: 'null'
+        detail:
+          anyOf:
+            - type: string
+            - type: 'null'
+      required:
+        - id
+        - at
+        - actorName
+        - actionLabel
+        - area
+        - targetName
+        - detail
+    PendingApprovals:
+      type: object
+      additionalProperties: false
+      properties:
+        leave:
+          type: integer
+          minimum: 0
+        attendanceCorrection:
+          type: integer
+          minimum: 0
+      required:
+        - leave
+        - attendanceCorrection
+    SalaryListItem:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          minLength: 1
+        nip:
+          type: string
+        name:
+          type: string
+        position:
+          type: string
+        basicSalary:
+          type: integer
+        allowance:
+          type: integer
+        overtimePay:
+          type: integer
+        bpjsEmployee:
+          type: integer
+        pph21:
+          type: integer
+        deduction:
+          type: integer
+        totalSalary:
+          type: integer
+        status:
+          type: string
+          enum:
+            - Pending
+            - Dibayar
+        period:
+          type: string
+      required:
+        - id
+        - nip
+        - name
+        - position
+        - basicSalary
+        - allowance
+        - overtimePay
+        - bpjsEmployee
+        - pph21
+        - deduction
+        - totalSalary
+        - status
+        - period
+    SalarySlip:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          minLength: 1
+        companyName:
+          type: string
+        companyNpwp:
+          anyOf:
+            - type: string
+            - type: 'null'
+        periodLabel:
+          type: string
+        employee:
+          type: object
+          additionalProperties: false
+          properties:
+            name:
+              type: string
+            nip:
+              type: string
+            position:
+              type: string
+            department:
+              type: string
+            ptkp:
+              type: string
+            npwp:
+              anyOf:
+                - type: string
+                - type: 'null'
+          required:
+            - name
+            - nip
+            - position
+            - department
+            - ptkp
+            - npwp
+        earnings:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              label:
+                type: string
+              amount:
+                type: integer
+            required:
+              - label
+              - amount
+        deductions:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              label:
+                type: string
+              amount:
+                type: integer
+            required:
+              - label
+              - amount
+        employerContributions:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              label:
+                type: string
+              amount:
+                type: integer
+            required:
+              - label
+              - amount
+        totalEarnings:
+          type: integer
+        totalDeductions:
+          type: integer
+        netPay:
+          type: integer
+        taxableIncome:
+          type: integer
+        pph21Method:
+          anyOf:
+            - type: string
+            - type: 'null'
+        status:
+          type: string
+          enum:
+            - Pending
+            - Dibayar
+        paidAt:
+          anyOf:
+            - type: string
+            - type: 'null'
+      required:
+        - id
+        - companyName
+        - companyNpwp
+        - periodLabel
+        - employee
+        - earnings
+        - deductions
+        - employerContributions
+        - totalEarnings
+        - totalDeductions
+        - netPay
+        - taxableIncome
+        - pph21Method
+        - status
+        - paidAt
+    PayrollComponentInput:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 1000
+        type:
+          type: string
+          enum:
+            - ALLOWANCE
+            - DEDUCTION
+        amount:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+      required:
+        - name
+        - type
+        - amount
+    PayrollComponent:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          minLength: 1
+        name:
+          type: string
+          minLength: 2
+          maxLength: 1000
+        type:
+          type: string
+          enum:
+            - ALLOWANCE
+            - DEDUCTION
+        amount:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+      required:
+        - id
+        - name
+        - type
+        - amount
+    PayrollGeneration:
+      type: object
+      additionalProperties: false
+      properties:
+        processed:
+          type: integer
+        skippedPaid:
+          type: integer
+      required:
+        - processed
+        - skippedPaid
+    PayrollPayment:
+      type: object
+      additionalProperties: false
+      properties:
+        count:
+          type: integer
+      required:
+        - count
+    DashboardStats:
+      oneOf:
+        - type: object
+          additionalProperties: false
+          properties:
+            type:
+              const: PERSONAL
+            stats:
+              type: object
+              additionalProperties: false
+              properties:
+                attendanceStatus:
+                  type: string
+                checkInTime:
+                  anyOf:
+                    - type: string
+                    - type: 'null'
+                remainingLeave:
+                  type: integer
+                totalSalaryReceived:
+                  type: integer
+              required:
+                - attendanceStatus
+                - checkInTime
+                - remainingLeave
+                - totalSalaryReceived
+          required:
+            - type
+            - stats
+        - type: object
+          additionalProperties: false
+          properties:
+            type:
+              const: ORGANIZATIONAL
+            stats:
+              type: object
+              additionalProperties: false
+              properties:
+                totalEmployees:
+                  type: integer
+                presentToday:
+                  type: integer
+                leaveRequests:
+                  type: integer
+                efficiency:
+                  type: integer
+              required:
+                - totalEmployees
+                - presentToday
+                - leaveRequests
+                - efficiency
+          required:
+            - type
+            - stats
+    DashboardOverview:
+      type: object
+      additionalProperties: false
+      properties:
+        latestLeave:
+          anyOf:
+            - type: object
+              additionalProperties: false
+              properties:
+                id:
+                  type: string
+                  minLength: 1
+                type:
+                  type: string
+                  enum:
+                    - ANNUAL
+                    - SICK
+                    - EMERGENCY
+                    - UNPAID
+                startDate:
+                  type: string
+                endDate:
+                  type: string
+                duration:
+                  type: integer
+                status:
+                  type: string
+                  enum:
+                    - PENDING
+                    - MANAGER_APPROVED
+                    - HR_APPROVED
+                    - REJECTED
+                    - CANCELLED
+                nextStep:
+                  anyOf:
+                    - type: string
+                    - type: 'null'
+              required:
+                - id
+                - type
+                - startDate
+                - endDate
+                - duration
+                - status
+                - nextStep
+            - type: 'null'
+        latestSalary:
+          anyOf:
+            - type: object
+              additionalProperties: false
+              properties:
+                id:
+                  type: string
+                  minLength: 1
+                periodLabel:
+                  type: string
+                totalNet:
+                  type: integer
+                isPaid:
+                  type: boolean
+              required:
+                - id
+                - periodLabel
+                - totalNet
+                - isPaid
+            - type: 'null'
+      required:
+        - latestLeave
+        - latestSalary
+    SalaryTrendItem:
+      type: object
+      additionalProperties: false
+      properties:
+        month:
+          type: string
+        total:
+          type: integer
+      required:
+        - month
+        - total
+    DepartmentDistributionItem:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+        count:
+          type: integer
+      required:
+        - name
+        - count
+    AttendanceReport:
+      type: object
+      additionalProperties: false
+      properties:
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/MonthlyAttendanceRow'
+        totals:
+          $ref: '#/components/schemas/AttendanceTotals'
+        attendanceRate:
+          type: number
+        trend:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              label:
+                type: string
+              hadir:
+                type: integer
+              terlambat:
+                type: integer
+              izin:
+                type: integer
+              sakit:
+                type: integer
+              alpha:
+                type: integer
+            required:
+              - label
+              - hadir
+              - terlambat
+              - izin
+              - sakit
+              - alpha
+      required:
+        - rows
+        - totals
+        - attendanceRate
+        - trend
+    SalaryReport:
+      type: object
+      additionalProperties: false
+      properties:
+        totals:
+          type: object
+          additionalProperties: false
+          properties:
+            slip:
+              type: integer
+            dibayar:
+              type: integer
+            pending:
+              type: integer
+            totalGross:
+              type: integer
+            totalNet:
+              type: integer
+            totalLembur:
+              type: integer
+            totalPotongan:
+              type: integer
+            totalPph21:
+              type: integer
+            totalBpjsKaryawan:
+              type: integer
+            totalBpjsPerusahaan:
+              type: integer
+          required:
+            - slip
+            - dibayar
+            - pending
+            - totalGross
+            - totalNet
+            - totalLembur
+            - totalPotongan
+            - totalPph21
+            - totalBpjsKaryawan
+            - totalBpjsPerusahaan
+        byDepartment:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              divisi:
+                type: string
+              jumlahKaryawan:
+                type: integer
+              totalGross:
+                type: integer
+              totalNet:
+                type: integer
+            required:
+              - divisi
+              - jumlahKaryawan
+              - totalGross
+              - totalNet
+        trend:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              label:
+                type: string
+              total:
+                type: integer
+            required:
+              - label
+              - total
+      required:
+        - totals
+        - byDepartment
+        - trend
+    EmployeeReport:
+      type: object
+      additionalProperties: false
+      properties:
+        totals:
+          type: object
+          additionalProperties: false
+          properties:
+            total:
+              type: integer
+            aktif:
+              type: integer
+            percobaan:
+              type: integer
+            baru:
+              type: integer
+          required:
+            - total
+            - aktif
+            - percobaan
+            - baru
+        byStatus:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              label:
+                type: string
+              value:
+                type: integer
+            required:
+              - label
+              - value
+        byDepartment:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              label:
+                type: string
+              value:
+                type: integer
+            required:
+              - label
+              - value
+        byEmploymentType:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              label:
+                type: string
+              value:
+                type: integer
+            required:
+              - label
+              - value
+        rows:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              nip:
+                type: string
+              nama:
+                type: string
+              divisi:
+                type: string
+              jabatan:
+                type: string
+              status:
+                type: string
+              tanggalMasuk:
+                type: string
+              keterangan:
+                type: string
+            required:
+              - nip
+              - nama
+              - divisi
+              - jabatan
+              - status
+              - tanggalMasuk
+              - keterangan
+      required:
+        - totals
+        - byStatus
+        - byDepartment
+        - byEmploymentType
+        - rows
+    LeaveReport:
+      type: object
+      additionalProperties: false
+      properties:
+        totals:
+          type: object
+          additionalProperties: false
+          properties:
+            pengajuan:
+              type: integer
+            disetujui:
+              type: integer
+            menunggu:
+              type: integer
+            ditolak:
+              type: integer
+            hariCuti:
+              type: integer
+          required:
+            - pengajuan
+            - disetujui
+            - menunggu
+            - ditolak
+            - hariCuti
+        byType:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              label:
+                type: string
+              value:
+                type: integer
+            required:
+              - label
+              - value
+        rows:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              nip:
+                type: string
+              nama:
+                type: string
+              tahunan:
+                type: integer
+              sakit:
+                type: integer
+              penting:
+                type: integer
+              diluarTanggungan:
+                type: integer
+              total:
+                type: integer
+            required:
+              - nip
+              - nama
+              - tahunan
+              - sakit
+              - penting
+              - diluarTanggungan
+              - total
+      required:
+        - totals
+        - byType
+        - rows
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: ems_session
